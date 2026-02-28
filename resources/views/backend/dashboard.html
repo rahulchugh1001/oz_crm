@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing Traceability System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            font-size: 13px;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Modal animations */
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .modal-content {
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: all 0.2s ease;
+        }
+        
+        /* Status colors */
+        .status-available { background-color: #dcfce7; color: #166534; }
+        .status-in-use { background-color: #dbeafe; color: #1e40af; }
+        .status-completed { background-color: #e5e7eb; color: #374151; }
+        .status-running { background-color: #dcfce7; color: #166534; }
+        .status-stopped { background-color: #fee2e2; color: #991b1b; }
+        
+        /* Corporate Color Palette */
+        :root {
+            --corporate-blue: #1d4ed8;
+            --corporate-navy: #1e3a8a;
+            --corporate-teal: #0d9488;
+            --corporate-emerald: #059669;
+            --corporate-amber: #d97706;
+            --corporate-coral: #dc2626;
+            --corporate-slate: #334155;
+            --corporate-gray: #f8fafc;
+        }
+        
+        .gradient-primary {
+            background: linear-gradient(135deg, var(--corporate-navy) 0%, var(--corporate-blue) 100%);
+        }
+        
+        .gradient-success {
+            background: linear-gradient(135deg, var(--corporate-teal) 0%, var(--corporate-emerald) 100%);
+        }
+        
+        .gradient-warning {
+            background: linear-gradient(135deg, var(--corporate-amber) 0%, #f59e0b 100%);
+        }
+        
+        .gradient-danger {
+            background: linear-gradient(135deg, var(--corporate-coral) 0%, #ef4444 100%);
+        }
+        
+        .shadow-subtle {
+            box-shadow: 0 2px 12px rgba(30, 58, 138, 0.08);
+        }
+        
+        .shadow-elevated {
+            box-shadow: 0 8px 24px rgba(30, 58, 138, 0.12);
+        }
+        
+        .border-corporate {
+            border-color: #e2e8f0;
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            transition: transform 0.2s ease;
+        }
+        
+        /* Table styles */
+        .report-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 12px;
+        }
+        
+        .report-table th {
+            background-color: #f8fafc;
+            font-weight: 600;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            padding: 8px 4px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .report-table td {
+            border: 1px solid #e2e8f0;
+            padding: 6px 4px;
+            text-align: center;
+        }
+        
+        .report-table input {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .report-table input:focus {
+            outline: none;
+            border-color: #1d4ed8;
+            ring: 2px solid #1d4ed8;
+        }
+        
+        .machine-name {
+            text-align: left;
+            padding-left: 8px !important;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/javascript">
+        // Initialize Lucide icons
+        lucide.createIcons();
+        
+        // Manufacturing Data
+        const manufacturingData = {
+            coils: [
+                {
+                    id: 1,
+                    coilNo: 'CRIUS26A0043(6/28)',
+                    coilSize: '65.5x1.00',
+                    coilMake: 'Uttam / Tata',
+                    thickness: '0.950',
+                    netWeight: '161 / 345 / 200',
+                    totalWeight: 161,
+                    status: 'available'
+                },
+                {
+                    id: 2,
+                    coilNo: 'CRIUS26A0044(6/28)',
+                    coilSize: '65.5x1.00',
+                    coilMake: 'Uttam',
+                    thickness: '0.950',
+                    netWeight: '175 / 350 / 210',
+                    totalWeight: 175,
+                    status: 'available'
+                },
+                {
+                    id: 3,
+                    coilNo: 'CRIUS26A0045(6/28)',
+                    coilSize: '70.0x1.20',
+                    coilMake: 'Tata',
+                    thickness: '1.150',
+                    netWeight: '185 / 380 / 225',
+                    totalWeight: 185,
+                    status: 'in-use'
+                },
+                {
+                    id: 4,
+                    coilNo: 'CRIUS26A0046(6/28)',
+                    coilSize: '68.0x1.10',
+                    coilMake: 'JSW',
+                    thickness: '1.050',
+                    netWeight: '170 / 360 / 215',
+                    totalWeight: 170,
+                    status: 'completed'
+                },
+            ],
+            machines: [
+                {
+                    id: 1,
+                    machine: 'M-01',
+                    coilNo: 'CRIUS26A0043(6/28)',
+                    coilSize: '65.5x1.00',
+                    coilMake: 'Uttam / Tata',
+                    thickness: '0.950',
+                    netWeight: '161',
+                    remainingWeight: '123.4',
+                    loadTime: '06/28/2023 08:15',
+                    unloadTime: '',
+                    status: 'running'
+                },
+                {
+                    id: 2,
+                    machine: 'M-05',
+                    coilNo: 'CRIUS26A0044(6/28)',
+                    coilSize: '65.5x1.00',
+                    coilMake: 'Uttam',
+                    thickness: '0.950',
+                    netWeight: '175',
+                    remainingWeight: '145.2',
+                    loadTime: '06/28/2023 10:30',
+                    unloadTime: '',
+                    status: 'running'
+                },
+                {
+                    id: 3,
+                    machine: 'M-10',
+                    coilNo: '',
+                    coilSize: '',
+                    coilMake: '',
+                    thickness: '',
+                    netWeight: '',
+                    remainingWeight: '',
+                    loadTime: '',
+                    unloadTime: '',
+                    status: 'stopped'
+                },
+                {
+                    id: 4,
+                    machine: 'M-12',
+                    coilNo: '',
+                    coilSize: '',
+                    coilMake: '',
+                    thickness: '',
+                    netWeight: '',
+                    remainingWeight: '',
+                    loadTime: '',
+                    unloadTime: '',
+                    status: 'stopped'
+                },
+            ],
+            productionRecords: [
+                {
+                    id: 1,
+                    date: '2023-06-28',
+                    shift: 'Day',
+                    supervisor: 'Aditya',
+                    operator: 'Devender',
+                    product: 'SC-35',
+                    part: '05',
+                    productSize: '300',
+                    binNumber: '342',
+                    binWeight: 51.2,
+                    avgPartWeight: 0.142,
+                    productionWeight: 181.6,
+                    productionQuantity: 1478,
+                    scrapWeight: 12.5,
+                    rejection: 'Surface Defects',
+                    heatNo: 'HT-2456',
+                    inspection: 'Passed',
+                    chemicalComposition: 'C:0.18%, Mn:1.2%, Si:0.3%',
+                    mechanicalProps: 'YS: 350 MPa, UTS: 480 MPa',
+                    hardness: '85 HRB',
+                    remarks: 'Standard production run'
+                },
+                {
+                    id: 2,
+                    date: '2023-06-28',
+                    shift: 'Night',
+                    supervisor: 'Rajesh',
+                    operator: 'Suresh',
+                    product: 'SC-40',
+                    part: '07',
+                    productSize: '350',
+                    binNumber: '345',
+                    binWeight: 48.5,
+                    avgPartWeight: 0.155,
+                    productionWeight: 165.3,
+                    productionQuantity: 1067,
+                    scrapWeight: 8.2,
+                    rejection: 'Dimensional Issue',
+                    heatNo: 'HT-2457',
+                    inspection: 'Passed',
+                    chemicalComposition: 'C:0.22%, Mn:1.4%, Si:0.25%',
+                    mechanicalProps: 'YS: 380 MPa, UTS: 520 MPa',
+                    hardness: '88 HRB',
+                    remarks: 'Quality check passed'
+                },
+                {
+                    id: 3,
+                    date: '2023-06-27',
+                    shift: 'Day',
+                    supervisor: 'Aditya',
+                    operator: 'Devender',
+                    product: 'SC-35',
+                    part: '05',
+                    productSize: '300',
+                    binNumber: '340',
+                    binWeight: 52.1,
+                    avgPartWeight: 0.142,
+                    productionWeight: 178.9,
+                    productionQuantity: 1260,
+                    scrapWeight: 10.3,
+                    rejection: 'Edge Burr',
+                    heatNo: 'HT-2455',
+                    inspection: 'Rework',
+                    chemicalComposition: 'C:0.18%, Mn:1.2%, Si:0.3%',
+                    mechanicalProps: 'YS: 345 MPa, UTS: 475 MPa',
+                    hardness: '84 HRB',
+                    remarks: 'Minor rework required'
+                },
+            ],
+            hourlyReports: [
+                {
+                    id: 1,
+                    date: '2023-06-28',
+                    shift: 'Day',
+                    rfSet: 'RF-01',
+                    machineNo: '01',
+                    machineName: 'Outer-SF-1',
+                    slideSize: '65.5',
+                    totalSetShift: 120,
+                    setPerHour: 10,
+                    hourlyData: [8, 9, 10, 11, 12, 10, 9, 8, 7, 6, 5, 4],
+                    actualSetShift: 99,
+                    staff: 2,
+                    workman: 3
+                }
+            ]
+        };
+
+        // React-like components
+        const StatusBadge = (status) => {
+            const config = {
+                'available': { color: 'bg-emerald-100 text-emerald-800', icon: 'check-circle', text: 'Available' },
+                'in-use': { color: 'bg-blue-100 text-blue-800', icon: 'loader', text: 'In Use' },
+                'completed': { color: 'bg-slate-100 text-slate-800', icon: 'check-circle', text: 'Completed' },
+                'running': { color: 'bg-emerald-100 text-emerald-800', icon: 'play-circle', text: 'Running' },
+                'stopped': { color: 'bg-rose-100 text-rose-800', icon: 'pause-circle', text: 'Stopped' },
+            };
+            
+            const { color, icon, text } = config[status] || config.available;
+            
+            return `
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${color}">
+                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                    ${text}
+                </span>
+            `;
+        };
+
+        const Modal = (title, content, size = 'md', onClose) => {
+            const sizeClasses = {
+                sm: 'max-w-md',
+                md: 'max-w-2xl',
+                lg: 'max-w-4xl',
+                xl: 'max-w-6xl',
+                '2xl': 'max-w-7xl',
+            };
+            
+            return `
+                <div class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div class="modal-content ${sizeClasses[size]} w-full bg-white rounded-2xl shadow-xl">
+                        <div class="px-6 py-4 border-b border-gray-200 gradient-primary rounded-t-2xl">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-white">${title}</h3>
+                                <button onclick="${onClose}" class="p-1 hover:bg-white/20 rounded-lg">
+                                    <i data-lucide="x" class="w-5 h-5 text-white"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        };
+
+        // Application State
+        let appState = {
+            activePage: 'dashboard',
+            userRole: 'supervisor',
+            selectedCoil: null,
+            notifications: 3,
+            coils: JSON.parse(JSON.stringify(manufacturingData.coils)),
+            machines: JSON.parse(JSON.stringify(manufacturingData.machines)),
+            productionRecords: JSON.parse(JSON.stringify(manufacturingData.productionRecords)),
+            hourlyReports: JSON.parse(JSON.stringify(manufacturingData.hourlyReports)),
+            showProductionModal: false,
+            showUnloadModal: false,
+            selectedMachine: null,
+            mastersDropdownOpen: false,
+            selectedRecord: null,
+            formDate: '2023-06-28',
+            formShift: 'Day'
+        };
+
+        // Navigation Functions
+        function navigateTo(page, recordId = null) {
+            appState.activePage = page;
+            if (recordId) {
+                if (page === 'hourly-report-view') {
+                    appState.selectedRecord = appState.hourlyReports.find(r => r.id === recordId);
+                } else {
+                    appState.selectedRecord = appState.productionRecords.find(r => r.id === recordId);
+                }
+            }
+            renderApp();
+        }
+
+        function toggleMastersDropdown() {
+            appState.mastersDropdownOpen = !appState.mastersDropdownOpen;
+            renderApp();
+        }
+
+        function updateCoilStatus(coilId, newStatus) {
+            appState.coils = appState.coils.map(coil => 
+                coil.id === coilId ? { ...coil, status: newStatus } : coil
+            );
+        }
+
+        function updateMachine(machineId, updates) {
+            appState.machines = appState.machines.map(machine => 
+                machine.id === machineId ? { ...machine, ...updates } : machine
+            );
+        }
+
+        function addProductionRecord(formData) {
+            const newRecord = {
+                id: appState.productionRecords.length + 1,
+                date: formData.date || appState.formDate,
+                shift: formData.shift || appState.formShift,
+                supervisor: formData.supervisor,
+                operator: formData.operator,
+                product: formData.product,
+                part: formData.part,
+                productSize: formData.productSize,
+                binNumber: formData.binNumber,
+                binWeight: parseFloat(formData.binWeight),
+                avgPartWeight: parseFloat(formData.avgPartWeight),
+                productionWeight: parseFloat(formData.productionWeight),
+                productionQuantity: parseInt(formData.productionQuantity),
+                scrapWeight: parseFloat(formData.scrapWeight),
+                rejection: formData.rejection,
+                heatNo: formData.heatNo,
+                inspection: formData.inspection,
+                chemicalComposition: formData.chemicalComposition,
+                mechanicalProps: formData.mechanicalProps,
+                hardness: formData.hardness,
+                remarks: formData.remarks
+            };
+            appState.productionRecords = [newRecord, ...appState.productionRecords];
+            appState.notifications++;
+        }
+
+        function addHourlyReport(formData) {
+            const newReport = {
+                id: appState.hourlyReports.length + 1,
+                date: appState.formDate,
+                shift: appState.formShift,
+                ...formData
+            };
+            appState.hourlyReports = [newReport, ...appState.hourlyReports];
+            appState.notifications++;
+        }
+
+        // Calculate total for hourly inputs
+        function calculateTotal(rowId) {
+            let total = 0;
+            for (let i = 0; i < 12; i++) {
+                const input = document.getElementById(`${rowId}_hour_${i}`);
+                if (input && input.value) {
+                    total += parseFloat(input.value) || 0;
+                }
+            }
+            const totalElement = document.getElementById(`${rowId}_total`);
+            if (totalElement) {
+                totalElement.textContent = total;
+            }
+            return total;
+        }
+
+        // Render Components
+        function renderSidebar() {
+            const isActive = (page) => appState.activePage === page ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200';
+            
+            return `
+                <div class="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-gray-200 h-screen fixed left-0 top-0 flex flex-col z-40 shadow-elevated">
+                    <div class="p-6 border-b border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div>
+                               <img src="ozone-logo-white.png" alt="Logo" style="padding: 0px; height: 50px; object-fit: contain; margin-top: 2px;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <nav class="flex-1 p-4 overflow-y-auto">
+                        <div class="space-y-1">
+                            <button onclick="navigateTo('dashboard')" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift ${isActive('dashboard')}">
+                                <div class="w-8 h-8 rounded-lg ${appState.activePage === 'dashboard' ? 'gradient-primary' : 'bg-white/5'} flex items-center justify-center">
+                                    <i data-lucide="home" class="w-4 h-4 ${appState.activePage === 'dashboard' ? 'text-white' : 'text-gray-400'}"></i>
+                                </div>
+                                <span class="font-medium">Dashboard</span>
+                            </button>
+                            
+                            <div class="mt-6">
+                                <div class="text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-2">SF1 Operations</div>
+                                <div class="space-y-1">
+                                    <button onclick="navigateTo('coil-stock')" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift ${isActive('coil-stock')}">
+                                        <div class="w-8 h-8 rounded-lg ${appState.activePage === 'coil-stock' ? 'gradient-primary' : 'bg-white/5'} flex items-center justify-center">
+                                            <i data-lucide="database" class="w-4 h-4 ${appState.activePage === 'coil-stock' ? 'text-white' : 'text-gray-400'}"></i>
+                                        </div>
+                                        <span class="font-medium">Coil Stock</span>
+                                    </button>
+                                    <button onclick="navigateTo('operations')" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift ${isActive('operations')}">
+                                        <div class="w-8 h-8 rounded-lg ${appState.activePage === 'operations' ? 'gradient-primary' : 'bg-white/5'} flex items-center justify-center">
+                                            <i data-lucide="cogs" class="w-4 h-4 ${appState.activePage === 'operations' ? 'text-white' : 'text-gray-400'}"></i>
+                                        </div>
+                                        <span class="font-medium">Operations</span>
+                                    </button>
+                                    <button onclick="navigateTo('completed')" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift ${isActive('completed')}">
+                                        <div class="w-8 h-8 rounded-lg ${appState.activePage === 'completed' ? 'gradient-primary' : 'bg-white/5'} flex items-center justify-center">
+                                            <i data-lucide="check-circle" class="w-4 h-4 ${appState.activePage === 'completed' ? 'text-white' : 'text-gray-400'}"></i>
+                                        </div>
+                                        <span class="font-medium">Completed</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <button onclick="toggleMastersDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover:bg-white/10">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                                            <i data-lucide="settings" class="w-4 h-4 text-gray-400"></i>
+                                        </div>
+                                        <span class="font-medium">Masters</span>
+                                    </div>
+                                    <i data-lucide="${appState.mastersDropdownOpen ? 'chevron-down' : 'chevron-right'}" class="w-4 h-4 text-gray-400"></i>
+                                </button>
+                                
+                                ${appState.mastersDropdownOpen ? `
+                                    <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3">
+                                        ${[
+                                            { page: 'supervisor', icon: 'user', label: 'Supervisor' },
+                                            { page: 'shift', icon: 'clock', label: 'Shift' },
+                                            { page: 'operator', icon: 'users', label: 'Operator' },
+                                            { page: 'machine-no', icon: 'cog', label: 'Machine No' },
+                                            { page: 'coil-size', icon: 'ruler', label: 'Coil Size' },
+                                            { page: 'coil-number', icon: 'hash', label: 'Coil Number' },
+                                            { page: 'coil-make', icon: 'factory', label: 'Coil Make' },
+                                            { page: 'bin-detail', icon: 'package', label: 'Bin Detail' }
+                                        ].map(item => `
+                                            <button onclick="navigateTo('${item.page}')" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all ${isActive(item.page)}">
+                                                <i data-lucide="${item.icon}" class="w-3 h-3"></i>
+                                                <span class="text-sm">${item.label}</span>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    <div class="p-4 border-t border-white/10">
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-white/5">
+                            <div class="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-white">John Doe</p>
+                                <p class="text-sm text-gray-400 capitalize">${appState.userRole}</p>
+                            </div>
+                            <button class="p-1 hover:bg-white/10 rounded-lg">
+                                <i data-lucide="log-out" class="w-4 h-4 text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHeader() {
+            const breadcrumbs = {
+                'dashboard': ['Dashboard'],
+                'coil-stock': ['SF1', 'Coil Stock'],
+                'operations': ['SF1', 'Operations'],
+                'update-production': ['SF1', 'Update Production'],
+                'completed': ['SF1', 'Completed'],
+                'supervisor': ['Masters', 'Supervisor'],
+                'shift': ['Masters', 'Shift'],
+                'operator': ['Masters', 'Operator'],
+                'machine-no': ['Masters', 'Machine No'],
+                'coil-size': ['Masters', 'Coil Size'],
+                'coil-number': ['Masters', 'Coil Number'],
+                'coil-make': ['Masters', 'Coil Make'],
+                'bin-detail': ['Masters', 'Bin Detail'],
+            };
+            
+            const pageTitles = {
+                'dashboard': 'Production Command Dashboard',
+                'coil-stock': 'SF1 – Coil Stock',
+                'operations': 'SF1 – Operations',
+                'update-production': 'SF1 – Roll Forming Hourly Production Report',
+                'completed': 'SF1 – Production Traceability',
+                'supervisor': 'Supervisor Master',
+                'shift': 'Shift Master',
+                'operator': 'Operator Master',
+                'machine-no': 'Machine No Master',
+                'coil-size': 'Coil Size Master',
+                'coil-number': 'Coil Number Master',
+                'coil-make': 'Coil Make Master',
+                'bin-detail': 'Bin Detail Master',
+            };
+            
+            const crumbs = breadcrumbs[appState.activePage] || [];
+            
+            return `
+                <header class="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-subtle">
+                    <div class="px-8 py-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-slate-900">${pageTitles[appState.activePage] || 'Dashboard'}</h1>
+                                <div class="flex items-center gap-1 mt-1 text-sm text-slate-600">
+                                    ${crumbs.map((crumb, index) => `
+                                        ${index > 0 ? '<i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>' : ''}
+                                        <span class="${index === crumbs.length - 1 ? 'font-medium text-slate-900' : 'text-slate-600'}">
+                                            ${crumb}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="relative">
+                                    <button class="p-2 hover:bg-slate-100 rounded-lg relative transition-all">
+                                        <i data-lucide="bell" class="w-5 h-5 text-slate-600"></i>
+                                        ${appState.notifications > 0 ? `
+                                            <span class="absolute -top-1 -right-1 w-5 h-5 gradient-danger text-white text-xs rounded-full flex items-center justify-center">
+                                                ${appState.notifications}
+                                            </span>
+                                        ` : ''}
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-slate-600"></i>
+                                    <span class="text-slate-700">June 28, 2023</span>
+                                </div>
+                                <div class="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                                    <div class="w-8 h-8 rounded-full gradient-primary flex items-center justify-center">
+                                        <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-slate-900">Shift ${appState.formShift}</p>
+                                        <p class="text-xs text-slate-500">${appState.formShift === 'Day' ? '08:00 - 20:00' : '20:00 - 08:00'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            `;
+        }
+
+        function renderDashboard() {
+            return `
+                <div class="p-6 space-y-6">
+                    <!-- 1. Plant Health Overview -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                    <i class="fas fa-tachometer-alt text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Plant Health Overview</h2>
+                                    <p class="text-sm text-slate-500">Real-time operational metrics</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-slate-500">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                <span>Updated just now</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                            ${[
+                                { label: 'Total Production Today', value: '18,750', detail: '3,125 Units | 6,850 Kg in SF1', trend: '+4.2%', color: 'blue', icon: 'package' },
+                                { label: 'Active Machines', value: '12', detail: '80% Operational | 3 Down', trend: '+1', color: 'emerald', icon: 'cog' },
+                                { label: 'Stopped Machines', value: '3', detail: 'M-07, M-09, M-12', trend: '-2', color: 'rose', icon: 'alert-circle' },
+                                { label: 'Manpower Working', value: '84', detail: '91% Attendance | 8 Absent', trend: '-8', color: 'indigo', icon: 'users' },
+                                { label: 'Scrap + Rejection', value: '1,240', detail: '6.6% Rate | Above Target', trend: '+12%', color: 'amber', icon: 'alert-triangle' },
+                                { label: 'Plant Efficiency', value: '86.4%', detail: 'Target: 90% | -3.6% Variance', trend: '-0.3%', color: 'teal', icon: 'trending-up' },
+                            ].map(stat => `
+                                <div class="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-elevated transition-all hover-lift">
+                                    <div class="flex items-start justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-3">
+                                                <div class="w-8 h-8 rounded-lg bg-${stat.color}-50 flex items-center justify-center">
+                                                    <i data-lucide="${stat.icon}" class="w-4 h-4 text-${stat.color}-600"></i>
+                                                </div>
+                                            </div>
+                                            <p class="text-sm font-medium text-slate-600">${stat.label}</p>
+                                            <div class="flex items-baseline gap-2 mt-2">
+                                                <p class="text-2xl font-bold text-slate-900">${stat.value}</p>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-2">${stat.detail}</p>
+                                        </div>
+                                        <div class="text-sm font-semibold ${stat.trend.startsWith('+') ? 'text-emerald-600' : stat.trend.startsWith('-') ? 'text-rose-600' : 'text-slate-600'}">
+                                            ${stat.trend}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- 2. Production Stage Performance -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ${[
+                            { 
+                                title: 'SF1 - Primary Processing', 
+                                status: 'Healthy', 
+                                statusColor: 'emerald',
+                                icon: 'cog',
+                                metrics: [
+                                    { label: 'Production Weight', value: '6,850 Kg', progress: 92, color: 'blue', trend: '+2.1%' },
+                                    { label: 'Efficiency', value: '92.1%', progress: 92, color: 'emerald', trend: '+1.3%' },
+                                    { label: 'Machines Running', value: '5 / 5', progress: 100, color: 'emerald', trend: '100%' },
+                                    { label: 'Scrap Rate', value: '4.7%', progress: 47, color: 'amber', trend: '-0.5%' }
+                                ]
+                            },
+                            { 
+                                title: 'SF2 - Secondary Processing', 
+                                status: 'Warning', 
+                                statusColor: 'amber',
+                                icon: 'hammer',
+                                bottleneck: true,
+                                metrics: [
+                                    { label: 'Production Weight', value: '5,230 Kg', progress: 70, color: 'amber', trend: '-12.3%' },
+                                    { label: 'Efficiency', value: '76.3%', progress: 76, color: 'rose', trend: '-8.7%' },
+                                    { label: 'Machines Running', value: '3 / 5', progress: 60, color: 'rose', trend: '-40%' },
+                                    { label: 'Scrap Rate', value: '13.0%', progress: 100, color: 'rose', trend: '+6.2%' }
+                                ]
+                            },
+                            { 
+                                title: 'SF3 - Finishing', 
+                                status: 'Critical', 
+                                statusColor: 'rose',
+                                icon: 'check-circle',
+                                metrics: [
+                                    { label: 'Production Weight', value: '6,670 Kg', progress: 89, color: 'blue', trend: '+3.8%' },
+                                    { label: 'Efficiency', value: '88.9%', progress: 89, color: 'amber', trend: '-1.1%' },
+                                    { label: 'Machines Running', value: '4 / 5', progress: 80, color: 'amber', trend: '-20%' },
+                                    { label: 'Scrap Rate', value: '3.6%', progress: 36, color: 'emerald', trend: '-0.4%' }
+                                ]
+                            }
+                        ].map(stage => `
+                            <div class="bg-white rounded-2xl border ${stage.bottleneck ? 'border-2 border-rose-200' : 'border-slate-200'} shadow-subtle p-6 hover-lift transition-all">
+                                ${stage.bottleneck ? `
+                                    <div class="absolute top-4 right-4 gradient-danger text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1">
+                                        <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+                                        <span>Bottleneck</span>
+                                    </div>
+                                ` : ''}
+                                <div class="flex items-center justify-between mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 rounded-xl ${stage.statusColor === 'emerald' ? 'gradient-success' : stage.statusColor === 'amber' ? 'gradient-warning' : 'gradient-danger'} flex items-center justify-center">
+                                            <i data-lucide="${stage.icon}" class="w-6 h-6 text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-slate-900">${stage.title}</h3>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <div class="w-2 h-2 rounded-full bg-${stage.statusColor}-500"></div>
+                                                <span class="text-sm text-slate-600">${stage.status}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    ${stage.metrics.map(metric => `
+                                        <div class="group">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-sm font-medium text-slate-700">${metric.label}</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-sm font-bold text-slate-900">${metric.value}</span>
+                                                    <span class="text-xs font-semibold ${metric.trend.startsWith('+') ? 'text-emerald-600' : metric.trend.startsWith('-') ? 'text-rose-600' : 'text-slate-600'}">
+                                                        ${metric.trend}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="relative w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                <div class="absolute inset-0 bg-${metric.color}-500/20 rounded-full"></div>
+                                                <div class="absolute h-full rounded-full bg-gradient-to-r ${metric.color === 'blue' ? 'from-blue-500 to-blue-600' : metric.color === 'emerald' ? 'from-emerald-500 to-teal-500' : metric.color === 'amber' ? 'from-amber-500 to-orange-500' : 'from-rose-500 to-pink-500'}" style="width: ${metric.progress}%"></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- 3. Machine Status Grid -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                    <i data-lucide="cogs" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Machine Status Grid</h2>
+                                    <p class="text-sm text-slate-500">15 Machines | Real-time monitoring</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full">
+                                    <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                    <span class="text-sm font-medium text-emerald-700">Running: 12</span>
+                                </div>
+                                <div class="flex items-center gap-2 bg-rose-50 px-3 py-1.5 rounded-full">
+                                    <div class="w-2 h-2 bg-rose-500 rounded-full"></div>
+                                    <span class="text-sm font-medium text-rose-700">Stopped: 3</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                            ${[
+                                { id: 'M-01', stage: 'SF1', status: 'running', coil: 'C-2456', weight: '125 Kg', time: '7.2 hrs' },
+                                { id: 'M-02', stage: 'SF1', status: 'running', coil: 'C-2457', weight: '87 Kg', time: '6.8 hrs' },
+                                { id: 'M-03', stage: 'SF1', status: 'running', coil: 'C-2458', weight: '210 Kg', time: '5.5 hrs' },
+                                { id: 'M-04', stage: 'SF1', status: 'running', coil: 'C-2459', weight: '95 Kg', time: '8.1 hrs' },
+                                { id: 'M-05', stage: 'SF1', status: 'running', coil: 'C-2460', weight: '0 Kg', time: '0.5 hrs' },
+                                { id: 'M-06', stage: 'SF2', status: 'running', coil: 'C-2448', weight: '165 Kg', time: '4.2 hrs' },
+                                { id: 'M-07', stage: 'SF2', status: 'stopped', coil: 'C-2449', weight: '0 Kg', time: '2.5 hrs' },
+                                { id: 'M-08', stage: 'SF2', status: 'running', coil: 'C-2450', weight: '72 Kg', time: '6.3 hrs' },
+                                { id: 'M-09', stage: 'SF2', status: 'stopped', coil: 'C-2451', weight: '0 Kg', time: '4.2 hrs' },
+                                { id: 'M-10', stage: 'SF2', status: 'running', coil: 'C-2452', weight: '188 Kg', time: '5.9 hrs' },
+                                { id: 'M-11', stage: 'SF3', status: 'running', coil: 'C-2442', weight: '110 Kg', time: '7.8 hrs' },
+                                { id: 'M-12', stage: 'SF3', status: 'stopped', coil: 'C-2443', weight: '0 Kg', time: '1.8 hrs' },
+                                { id: 'M-13', stage: 'SF3', status: 'running', coil: 'C-2444', weight: '95 Kg', time: '6.5 hrs' },
+                                { id: 'M-14', stage: 'SF3', status: 'running', coil: 'C-2445', weight: '205 Kg', time: '4.9 hrs' },
+                                { id: 'M-15', stage: 'SF3', status: 'running', coil: 'C-2446', weight: '0 Kg', time: '0.2 hrs' }
+                            ].map(machine => `
+                                <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border ${machine.status === 'running' ? 'border-l-4 border-emerald-500' : 'border-l-4 border-rose-500'} p-4 hover:shadow-subtle transition-all hover-lift">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <div class="text-lg font-bold text-slate-900">${machine.id}</div>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-xs px-2 py-1 rounded-full ${machine.stage === 'SF1' ? 'bg-blue-100 text-blue-700' : machine.stage === 'SF2' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'} font-medium">${machine.stage}</span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-1 px-2 py-1 rounded-full ${machine.status === 'running' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">
+                                            <div class="w-1.5 h-1.5 rounded-full ${machine.status === 'running' ? 'bg-emerald-500' : 'bg-rose-500'}"></div>
+                                            <span class="text-xs font-medium">${machine.status === 'running' ? 'Running' : 'Stopped'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-3 pt-3 border-t border-slate-100">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs text-slate-500">Coil</span>
+                                            <span class="text-sm font-medium text-slate-900">${machine.coil}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs text-slate-500">Remaining</span>
+                                            <span class="text-sm font-semibold ${machine.weight === '0 Kg' ? 'text-amber-600' : 'text-slate-900'}">${machine.weight}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-xs text-slate-500">Runtime</span>
+                                            <span class="text-xs font-medium text-slate-700">${machine.time}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- 4. Manpower & Production Trend -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Manpower Distribution Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                    <i data-lucide="users" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Manpower Distribution</h2>
+                                    <p class="text-sm text-slate-500">Current shift allocation</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-5 gap-3 mb-6">
+                                ${[
+                                    { value: '8', label: 'Supervisors', color: 'blue', icon: 'user-check' },
+                                    { value: '24', label: 'Operators', color: 'indigo', icon: 'user' },
+                                    { value: '32', label: 'Skilled', color: 'teal', icon: 'award' },
+                                    { value: '20', label: 'Unskilled', color: 'slate', icon: 'user-plus' },
+                                    { value: '8', label: 'Absent', color: 'rose', icon: 'user-x', warning: true }
+                                ].map(item => `
+                                    <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border ${item.warning ? 'border-2 border-rose-200' : 'border-slate-200'} p-4 text-center hover:shadow-subtle transition-all">
+                                        <div class="w-10 h-10 rounded-lg mx-auto mb-3 ${item.warning ? 'bg-rose-50' : 'bg-white'} border border-slate-100 flex items-center justify-center">
+                                            <i data-lucide="${item.icon}" class="w-5 h-5 ${item.warning ? 'text-rose-500' : `text-${item.color}-500`}"></i>
+                                        </div>
+                                        <div class="text-2xl font-bold text-slate-900">${item.value}</div>
+                                        <div class="text-xs font-medium ${item.warning ? 'text-rose-600' : 'text-slate-600'} mt-1">${item.label}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                                    <i data-lucide="sitemap" class="w-4 h-4 text-slate-600"></i>
+                                </div>
+                                <h3 class="text-md font-semibold text-slate-900">Stage-wise Allocation</h3>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                ${[
+                                    { title: 'SF1 - Primary', supervisors: 3, operators: 8, workers: 19, total: 30, color: 'blue' },
+                                    { title: 'SF2 - Secondary', supervisors: 2, operators: 7, workers: 15, total: 24, color: 'amber', warning: true },
+                                    { title: 'SF3 - Finishing', supervisors: 3, operators: 9, workers: 22, total: 34, color: 'teal' }
+                                ].map(stage => `
+                                    <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border border-slate-200 p-4">
+                                        <div class="flex items-center gap-2 mb-4">
+                                            <div class="w-3 h-3 rounded-full bg-${stage.color}-500"></div>
+                                            <div class="font-semibold text-slate-900">${stage.title}</div>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <div class="flex justify-between">
+                                                <span class="text-sm text-slate-600">Supervisors</span>
+                                                <span class="font-medium text-slate-900">${stage.supervisors}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-sm text-slate-600">Operators</span>
+                                                <span class="font-medium text-slate-900">${stage.operators}</span>
+                                            </div>
+                                            <div class="flex justify-between ${stage.warning ? 'text-amber-600 font-medium' : ''}">
+                                                <span class="text-sm ${stage.warning ? 'text-amber-600' : 'text-slate-600'}">Workers</span>
+                                                <span class="font-medium">${stage.workers}</span>
+                                            </div>
+                                            <div class="pt-3 border-t border-slate-100 flex justify-between">
+                                                <span class="font-bold text-slate-900">Total</span>
+                                                <span class="font-bold text-slate-900">${stage.total}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Production Trend Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                        <i data-lucide="trending-up" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-bold text-slate-900">Production Trend</h2>
+                                        <p class="text-sm text-slate-500">Weekly weight production</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                                    <i data-lucide="arrow-up" class="w-4 h-4"></i>
+                                    <span>+8.3% vs last week</span>
+                                </div>
+                            </div>
+                            <div class="space-y-5">
+                                ${[
+                                    { day: 'Jun 22', weight: 180, trend: 'up' },
+                                    { day: 'Jun 23', weight: 160, trend: 'down' },
+                                    { day: 'Jun 24', weight: 210, trend: 'up' },
+                                    { day: 'Jun 25', weight: 190, trend: 'down' },
+                                    { day: 'Jun 26', weight: 220, trend: 'up' },
+                                    { day: 'Jun 27', weight: 200, trend: 'down' },
+                                    { day: 'Jun 28', weight: 181.6, trend: 'down' },
+                                ].map(item => `
+                                    <div class="flex items-center justify-between group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg ${item.trend === 'up' ? 'bg-emerald-50' : 'bg-rose-50'} flex items-center justify-center">
+                                                <i data-lucide="${item.trend === 'up' ? 'trending-up' : 'trending-down'}" class="w-3 h-3 ${item.trend === 'up' ? 'text-emerald-600' : 'text-rose-600'}"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-sm font-medium text-slate-900">${item.day}</span>
+                                                ${item.day === 'Jun 28' ? '<span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Today</span>' : ''}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-6">
+                                            <div class="w-48 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                                <div class="h-full rounded-full gradient-primary" style="width: ${(item.weight / 250) * 100}%"></div>
+                                            </div>
+                                            <span class="text-sm font-bold text-slate-900 min-w-[60px] text-right">${item.weight} Kg</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 5. Production vs Scrap Analysis -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Production vs Scrap Analysis</h2>
+                                    <p class="text-sm text-slate-500">Quality control metrics</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-rose-600 font-medium">
+                                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                                <span>Scrap rate above target</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-4 gap-4 mb-8">
+                            ${[
+                                { value: '18,750', label: 'Total Production', status: '+4.2% vs Target', color: 'emerald', icon: 'package-check' },
+                                { value: '420', label: 'Design Scrap', status: 'Within Limit', color: 'emerald', icon: 'check-circle' },
+                                { value: '560', label: 'Material Rejection', status: '+12% vs Target', color: 'rose', icon: 'alert-triangle', warning: true },
+                                { value: '260', label: 'Machine Rejection', status: '+3% vs Target', color: 'amber', icon: 'cpu' }
+                            ].map(item => `
+                                <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border ${item.warning ? 'border-2 border-rose-200' : 'border-slate-200'} p-5 text-center hover:shadow-subtle transition-all">
+                                    <div class="w-12 h-12 rounded-lg mx-auto mb-4 ${item.color === 'emerald' ? 'bg-emerald-50' : item.color === 'rose' ? 'bg-rose-50' : 'bg-amber-50'} flex items-center justify-center">
+                                        <i data-lucide="${item.icon}" class="w-6 h-6 ${item.color === 'emerald' ? 'text-emerald-600' : item.color === 'rose' ? 'text-rose-600' : 'text-amber-600'}"></i>
+                                    </div>
+                                    <div class="text-2xl font-bold text-slate-900">${item.value}</div>
+                                    <div class="text-sm font-medium text-slate-600 mt-1">${item.label}</div>
+                                    <div class="text-xs ${item.color === 'emerald' ? 'text-emerald-600' : item.color === 'rose' ? 'text-rose-600' : 'text-amber-600'} font-medium mt-2">${item.status}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="bg-gradient-to-r from-white to-slate-50 rounded-xl border border-slate-200 p-6">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <div class="text-sm font-medium text-slate-600">Overall Scrap Percentage</div>
+                                    <div class="text-4xl font-bold text-rose-600 mt-2">6.6%</div>
+                                    <div class="text-sm text-slate-500 mt-2">Total Scrap: 1,240 Kg</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="inline-flex items-center gap-2 bg-rose-50 px-4 py-2 rounded-lg">
+                                        <i data-lucide="target" class="w-4 h-4 text-rose-600"></i>
+                                        <div>
+                                            <div class="font-bold text-slate-900">Target: 5.0%</div>
+                                            <div class="text-rose-600 font-medium mt-1 flex items-center gap-1">
+                                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                                <span>1.6% Above Target</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-slate-600 mt-4">Primary Issue: Raw Material Quality</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 6. Shift Performance & Traceability -->
+                    <div class="grid grid-cols-1 gap-6">
+                        <!-- Shift Performance Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                        <i data-lucide="clock" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-bold text-slate-900">Shift Performance</h2>
+                                        <p class="text-sm text-slate-500">24-hour cycle comparison</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-blue-600 font-medium">
+                                    <i data-lucide="zap" class="w-4 h-4"></i>
+                                    <span>Shift B leads</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                                ${[
+                                    { 
+                                        title: 'Shift A', 
+                                        time: '06:00-14:00',
+                                        status: 'Completed',
+                                        best: false,
+                                        current: false,
+                                        metrics: [
+                                            { label: 'Production', value: '6,120 Kg', trend: '+2.1%' },
+                                            { label: 'Efficiency', value: '88.2%', trend: '-1.8%' },
+                                            { label: 'Scrap Rate', value: '6.2%', trend: '+0.2%' },
+                                            { label: 'Machines Up', value: '11 / 15', trend: '-27%' }
+                                        ]
+                                    },
+                                    { 
+                                        title: 'Shift B', 
+                                        time: '14:00-22:00',
+                                        status: 'Best Performer',
+                                        best: true,
+                                        current: false,
+                                        metrics: [
+                                            { label: 'Production', value: '7,350 Kg', trend: '+12.3%' },
+                                            { label: 'Efficiency', value: '91.5%', trend: '+1.5%' },
+                                            { label: 'Scrap Rate', value: '6.0%', trend: '-0.8%' },
+                                            { label: 'Machines Up', value: '13 / 15', trend: '+8%' }
+                                        ]
+                                    },
+                                    { 
+                                        title: 'Shift C', 
+                                        time: '22:00-06:00',
+                                        status: 'Current Shift',
+                                        best: false,
+                                        current: true,
+                                        metrics: [
+                                            { label: 'Production', value: '5,280 Kg', trend: '-11.2%' },
+                                            { label: 'Efficiency', value: '79.8%', trend: '-10.2%' },
+                                            { label: 'Scrap Rate', value: '7.9%', trend: '+2.9%' },
+                                            { label: 'Machines Up', value: '9 / 15', trend: '-40%' }
+                                        ]
+                                    }
+                                ].map(shift => `
+                                    <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border ${shift.best ? 'border-2 border-emerald-200' : shift.current ? 'border-2 border-blue-200' : 'border-slate-200'} p-4">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <div>
+                                                <div class="font-bold text-slate-900">${shift.title}</div>
+                                                <div class="text-xs text-slate-500">${shift.time}</div>
+                                            </div>
+                                            ${shift.best ? 
+                                                '<div class="gradient-success text-white text-xs font-bold px-2.5 py-1 rounded-full">Best</div>' : 
+                                                shift.current ? 
+                                                '<div class="gradient-primary text-white text-xs font-bold px-2.5 py-1 rounded-full">Live</div>' : 
+                                                '<div class="text-xs text-slate-500">Completed</div>'
+                                            }
+                                        </div>
+                                        <div class="space-y-3">
+                                            ${shift.metrics.map(metric => `
+                                                <div>
+                                                    <div class="flex justify-between items-center">
+                                                        <span class="text-xs text-slate-600">${metric.label}</span>
+                                                        <div class="flex items-center gap-1">
+                                                            <span class="text-sm font-bold text-slate-900">${metric.value}</span>
+                                                            <span class="text-xs font-semibold ${metric.trend.startsWith('+') ? 'text-emerald-600' : 'text-rose-600'}">
+                                                                ${metric.trend}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Traceability System Card -->
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                        <i data-lucide="activity" class="w-5 h-5 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-lg font-bold text-slate-900">Traceability System</h2>
+                                        <p class="text-sm text-slate-500">Data coverage & health</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm text-emerald-600 font-medium">
+                                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                                    <span>98.7% Healthy</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                                ${[
+                                    { value: '48', label: 'Coils Loaded', status: 'On Target', color: 'emerald', icon: 'package' },
+                                    { value: '42', label: 'Coils Completed', status: '87.5% Progress', color: 'emerald', icon: 'check-circle' },
+                                    { value: '125 Kg', label: 'Avg Remaining', status: '+5% vs Target', color: 'amber', icon: 'scale' },
+                                    { value: '98.7%', label: 'Data Coverage', status: 'Excellent', color: 'emerald', icon: 'database' },
+                                    { value: '6', label: 'Data Alerts', status: 'Requires Attention', color: 'rose', icon: 'alert-triangle', alert: true }
+                                ].map(item => `
+                                    <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border ${item.alert ? 'border-2 border-rose-200' : 'border-slate-200'} p-4 text-center hover:shadow-subtle transition-all">
+                                        <div class="w-10 h-10 rounded-lg mx-auto mb-3 ${item.alert ? 'bg-rose-50' : 'bg-white'} border border-slate-100 flex items-center justify-center">
+                                            <i data-lucide="${item.icon}" class="w-5 h-5 ${item.alert ? 'text-rose-500' : `text-${item.color}-500`}"></i>
+                                        </div>
+                                        <div class="text-xl font-bold text-slate-900">${item.value}</div>
+                                        <div class="text-xs font-medium text-slate-600 mt-1">${item.label}</div>
+                                        <div class="text-xs ${item.alert ? 'text-rose-600' : `text-${item.color}-600`} font-medium mt-2">${item.status}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 7. Priority Alerts -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Priority Action Items</h2>
+                                    <p class="text-sm text-slate-500">Requiring immediate attention</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-rose-600 font-medium">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                <span>5 active alerts</span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            ${[
+                                { 
+                                    title: '3 Machines Stopped > 2 Hours', 
+                                    desc: 'M-07, M-09, M-12 idle beyond operational threshold',
+                                    time: '2.5 hrs',
+                                    type: 'critical',
+                                    icon: 'cpu'
+                                },
+                                { 
+                                    title: 'Scrap Rate Above Target (6.6%)', 
+                                    desc: 'Raw material rejection increased by 12% from yesterday',
+                                    time: 'Today',
+                                    type: 'warning',
+                                    icon: 'alert-triangle'
+                                },
+                                { 
+                                    title: 'Bottleneck at SF2 Stage', 
+                                    desc: 'Efficiency at 76.3% with 2 machines down',
+                                    time: 'Active',
+                                    type: 'critical',
+                                    icon: 'hourglass'
+                                },
+                                { 
+                                    title: 'Manpower Shortage at SF2', 
+                                    desc: '4 workers absent, affecting production output',
+                                    time: 'Since Shift A',
+                                    type: 'warning',
+                                    icon: 'users'
+                                },
+                                { 
+                                    title: 'Machine M-09 Idle > 4 Hours', 
+                                    desc: 'Awaiting maintenance team inspection',
+                                    time: '4.2 hrs',
+                                    type: 'critical',
+                                    icon: 'tool'
+                                }
+                            ].map(alert => `
+                                <div class="group flex items-center gap-4 p-4 rounded-xl border border-slate-200 hover:border-${alert.type === 'critical' ? 'rose' : 'amber'}-200 hover:shadow-subtle transition-all cursor-pointer">
+                                    <div class="w-12 h-12 rounded-xl ${alert.type === 'critical' ? 'bg-rose-50' : 'bg-amber-50'} flex items-center justify-center">
+                                        <i data-lucide="${alert.icon}" class="w-5 h-5 ${alert.type === 'critical' ? 'text-rose-600' : 'text-amber-600'}"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-start">
+                                            <div>
+                                                <h4 class="font-bold text-slate-900">${alert.title}</h4>
+                                                <p class="text-sm text-slate-600 mt-1">${alert.desc}</p>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="text-xs font-medium ${alert.type === 'critical' ? 'text-rose-600' : 'text-amber-600'} px-2.5 py-1 rounded-full ${alert.type === 'critical' ? 'bg-rose-50' : 'bg-amber-50'}">
+                                                    ${alert.type === 'critical' ? 'Critical' : 'Warning'}
+                                                </span>
+                                                <span class="text-xs text-slate-500 font-medium whitespace-nowrap">${alert.time}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:text-slate-600"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCoilStock() {
+            return `
+                <div class="p-6">
+                    <!-- Available Coils Table -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Available Coils</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Raw material inventory for SF1 production line</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button class="flex items-center gap-2 px-4 py-2 gradient-primary text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                        Add New Coil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Coil No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Coil Size</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Coil Make</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Thickness</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Net Weight (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    ${appState.coils.map(coil => `
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-slate-900">${coil.coilNo}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-700">${coil.coilSize}</td>
+                                            <td class="px-6 py-4 text-slate-700">${coil.coilMake}</td>
+                                            <td class="px-6 py-4 text-slate-700">${coil.thickness}</td>
+                                            <td class="px-6 py-4 text-slate-700">${coil.netWeight}</td>
+                                            <td class="px-6 py-4">${StatusBadge(coil.status)}</td>
+                                            <td class="px-6 py-4">
+                                                ${coil.status === 'available' ? `
+                                                    <button onclick="handleLoadCoil(${JSON.stringify(coil).replace(/"/g, '&quot;')})" 
+                                                            class="flex items-center gap-2 px-4 py-2 gradient-primary text-white text-sm font-medium rounded-lg hover:shadow-elevated transition-all">
+                                                        <i data-lucide="truck" class="w-4 h-4"></i>
+                                                        Load Coil
+                                                    </button>
+                                                ` : `
+                                                    <span class="text-sm text-slate-500">
+                                                        ${coil.status === 'in-use' ? 'In Production' : 'Completed'}
+                                                    </span>
+                                                `}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Transfer Section -->
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle mt-6 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Stock Transfer</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Transaction history for inventory movement</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Document / Transfer ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Transaction By</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Item Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Item Code</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Quantity</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">UOM</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    ${[
+                                        { date: '2023-06-28', docId: 'TRF-2023-06-28-001', by: 'John Doe', itemName: 'Steel Coil CR4', itemCode: 'SC-CR4-65.5', quantity: '10', uom: 'Pcs' },
+                                        { date: '2023-06-27', docId: 'TRF-2023-06-27-002', by: 'Jane Smith', itemName: 'Aluminum Sheet', itemCode: 'AL-SHT-1.2', quantity: '25', uom: 'Pcs' },
+                                        { date: '2023-06-26', docId: 'TRF-2023-06-26-003', by: 'Robert Brown', itemName: 'Copper Wire', itemCode: 'CU-WIR-2.5', quantity: '50', uom: 'Kg' },
+                                        { date: '2023-06-25', docId: 'TRF-2023-06-25-004', by: 'Alice Johnson', itemName: 'Steel Coil MS', itemCode: 'SC-MS-70.0', quantity: '15', uom: 'Pcs' },
+                                        { date: '2023-06-24', docId: 'TRF-2023-06-24-005', by: 'Michael Lee', itemName: 'Stainless Sheet', itemCode: 'SS-SHT-1.5', quantity: '30', uom: 'Pcs' }
+                                    ].map(transfer => `
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-slate-900">${transfer.date}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.docId}</td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.by}</td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.itemName}</td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.itemCode}</td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.quantity}</td>
+                                            <td class="px-6 py-4 text-slate-700">${transfer.uom}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleLoadCoil(coil) {
+            appState.selectedCoil = coil;
+            updateCoilStatus(coil.id, 'in-use');
+            navigateTo('operations');
+        }
+
+        function renderOperations() {
+            const runningCount = appState.machines.filter(m => m.status === 'running').length;
+            const stoppedCount = appState.machines.filter(m => m.status === 'stopped').length;
+            
+            return `
+                <div class="p-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Production Operations</h2>
+                                    <div class="flex items-center gap-4 mt-2">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                            <span class="text-sm text-slate-600">Running: ${runningCount}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-3 h-3 bg-rose-500 rounded-full"></div>
+                                            <span class="text-sm text-slate-600">Stopped: ${stoppedCount}</span>
+                                        </div>
+                                        ${appState.selectedCoil ? `
+                                            <div class="flex items-center gap-2 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                                                <i data-lucide="truck" class="w-4 h-4 text-blue-600"></i>
+                                                <span class="text-sm font-medium text-blue-700">Selected: ${appState.selectedCoil.coilNo}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="navigateTo('coil-stock')" class="flex items-center gap-2 px-4 py-2 gradient-primary text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                        Load New Coil
+                                    </button>
+                                    <button onclick="navigateTo('update-production')" class="flex items-center gap-2 px-4 py-2 gradient-success text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                        <i data-lucide="edit" class="w-4 h-4"></i>
+                                        Update Production
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Machine</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Coil No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Coil Size</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Thickness</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Net Weight (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Remaining (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Load Time</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    ${appState.machines.map(machine => `
+                                        <tr class="${machine.status === 'running' ? 'bg-emerald-50 hover:bg-emerald-100' : 'hover:bg-slate-50'} transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="font-semibold text-slate-900">${machine.machine}</div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium text-slate-900">${machine.coilNo || '—'}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-700">${machine.coilSize || '—'}</td>
+                                            <td class="px-6 py-4 text-slate-700">${machine.thickness || '—'}</td>
+                                            <td class="px-6 py-4 text-slate-700">${machine.netWeight || '—'}</td>
+                                            <td class="px-6 py-4">
+                                                <div class="font-medium ${machine.remainingWeight ? 'text-slate-900' : 'text-slate-400'}">
+                                                    ${machine.remainingWeight || '—'}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-slate-700">${machine.loadTime || '—'}</td>
+                                            <td class="px-6 py-4">${StatusBadge(machine.status)}</td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-2">
+                                                    ${machine.status === 'stopped' ? `
+                                                        <button onclick="assignCoilToMachine(${machine.id})" 
+                                                                class="flex items-center gap-1 px-3 py-1.5 gradient-primary text-white text-sm rounded-lg font-medium">
+                                                            <i data-lucide="truck" class="w-4 h-4"></i>
+                                                            Load
+                                                        </button>
+                                                    ` : machine.coilNo ? `
+                                                        <button onclick="showUnloadModal(${machine.id})" 
+                                                                class="flex items-center gap-1 px-3 py-1.5 gradient-danger text-white text-sm rounded-lg font-medium">
+                                                            <i data-lucide="truck" class="w-4 h-4"></i>
+                                                            Unload
+                                                        </button>
+                                                    ` : `
+                                                        <button onclick="navigateTo('coil-stock')" 
+                                                                class="flex items-center gap-1 px-3 py-1.5 gradient-primary text-white text-sm rounded-lg font-medium">
+                                                            <i data-lucide="truck" class="w-4 h-4"></i>
+                                                            Load Coil
+                                                        </button>
+                                                    `}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-slate-900">${runningCount}</div>
+                                    <div class="text-sm text-slate-600">Active Machines</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-slate-900">181.6</div>
+                                    <div class="text-sm text-slate-600">Today's Production (Kg)</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-slate-900">92.4%</div>
+                                    <div class="text-sm text-slate-600">Average Efficiency</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${appState.showUnloadModal ? renderUnloadModal() : ''}
+            `;
+        }
+
+        function assignCoilToMachine(machineId) {
+            if (!appState.selectedCoil) {
+                navigateTo('coil-stock');
+                return;
+            }
+            
+            updateMachine(machineId, {
+                coilNo: appState.selectedCoil.coilNo,
+                coilSize: appState.selectedCoil.coilSize,
+                coilMake: appState.selectedCoil.coilMake,
+                thickness: appState.selectedCoil.thickness,
+                netWeight: appState.selectedCoil.totalWeight,
+                remainingWeight: appState.selectedCoil.totalWeight,
+                loadTime: new Date().toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }),
+                status: 'running'
+            });
+            
+            appState.selectedCoil = null;
+            renderApp();
+        }
+
+        function showUnloadModal(machineId) {
+            appState.selectedMachine = appState.machines.find(m => m.id === machineId);
+            appState.showUnloadModal = true;
+            renderApp();
+        }
+
+        function renderUpdateProduction() {
+            return `
+                <div class="p-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+                        <!-- Header with Date and Shift -->
+                        <div class="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-8">
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-sm font-medium text-slate-700">Date:</span>
+                                        <input type="date" id="formDate" value="${appState.formDate}" 
+                                               class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                               onchange="updateFormDate(this.value)">
+                                    </div>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-sm font-medium text-slate-700">Shift:</span>
+                                        <div class="flex items-center gap-3">
+                                            <label class="flex items-center gap-1.5">
+                                                <input type="radio" name="shift" value="Day" ${appState.formShift === 'Day' ? 'checked' : ''} onchange="updateFormShift('Day')" class="w-4 h-4 text-blue-600">
+                                                <span class="text-sm text-slate-700">Day</span>
+                                            </label>
+                                            <label class="flex items-center gap-1.5">
+                                                <input type="radio" name="shift" value="Night" ${appState.formShift === 'Night' ? 'checked' : ''} onchange="updateFormShift('Night')" class="w-4 h-4 text-blue-600">
+                                                <span class="text-sm text-slate-700">Night</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-sm font-medium text-slate-700">
+                                    Ghiloth - Roll Forming - Production Report - Hourly
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form onsubmit="handleUpdateProductionSubmit(event)" class="p-6 overflow-x-auto">
+                            <table class="report-table min-w-[2000px]">
+                                <!-- Table Header -->
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2">RF Set</th>
+                                        <th rowspan="2">RF Machine</th>
+                                        <th rowspan="2">Slide Size (mm)</th>
+                                        <th colspan="2">Production Plan</th>
+                                        <th colspan="12">Roll Forming - Production Actual - Hourly - Set</th>
+                                        <th rowspan="2">Actual Set/Shift</th>
+                                        <th colspan="2">Manpower</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Set/Shift</th>
+                                        <th>Set/Hour</th>
+                                        <th>8-9AM</th>
+                                        <th>9-10AM</th>
+                                        <th>10-11AM</th>
+                                        <th>11-12Noon</th>
+                                        <th>12-1PM</th>
+                                        <th>1-2PM</th>
+                                        <th>2-3PM</th>
+                                        <th>3-4PM</th>
+                                        <th>4-5PM</th>
+                                        <th>5-6PM</th>
+                                        <th>6-7PM</th>
+                                        <th>7-8PM</th>
+                                        <th>Staff</th>
+                                        <th>Workman</th>
+                                    </tr>
+                                </thead>
+                                
+                                <tbody>
+                                    <!-- RF-01 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-01</td>
+                                        <td class="machine-name">Machine No. 01 Outer-SF-1</td>
+                                        <td><input type="text" id="size_01" name="size_01" value="65.5"></td>
+                                        <td><input type="number" id="totalPlan_01" name="totalPlan_01" value="120"></td>
+                                        <td><input type="number" id="setPerHour_01" name="setPerHour_01" value="10"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf01_01_hour_${i}" name="rf01_01_hour_${i}" value="${8 + i}" onchange="calculateTotal('rf01_01')"></td>
+                                        `).join('')}
+                                        <td id="rf01_01_total" class="font-medium">99</td>
+                                        <td><input type="number" id="staff_01" name="staff_01" value="2"></td>
+                                        <td><input type="number" id="workman_01" name="workman_01" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 02 Middle-SF-1</td>
+                                        <td><input type="text" id="size_02" name="size_02" value="65.5"></td>
+                                        <td><input type="number" id="totalPlan_02" name="totalPlan_02" value="115"></td>
+                                        <td><input type="number" id="setPerHour_02" name="setPerHour_02" value="9.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf01_02_hour_${i}" name="rf01_02_hour_${i}" value="${7 + i}" onchange="calculateTotal('rf01_02')"></td>
+                                        `).join('')}
+                                        <td id="rf01_02_total" class="font-medium">94</td>
+                                        <td><input type="number" id="staff_02" name="staff_02" value="2"></td>
+                                        <td><input type="number" id="workman_02" name="workman_02" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 03 Inner-SF-1</td>
+                                        <td><input type="text" id="size_03" name="size_03" value="65.5"></td>
+                                        <td><input type="number" id="totalPlan_03" name="totalPlan_03" value="110"></td>
+                                        <td><input type="number" id="setPerHour_03" name="setPerHour_03" value="9"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf01_03_hour_${i}" name="rf01_03_hour_${i}" value="${6 + i}" onchange="calculateTotal('rf01_03')"></td>
+                                        `).join('')}
+                                        <td id="rf01_03_total" class="font-medium">78</td>
+                                        <td><input type="number" id="staff_03" name="staff_03" value="2"></td>
+                                        <td><input type="number" id="workman_03" name="workman_03" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- RF-02 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-02</td>
+                                        <td class="machine-name">Machine No. 04 Outer-SF-1</td>
+                                        <td><input type="text" id="size_04" name="size_04" value="70.0"></td>
+                                        <td><input type="number" id="totalPlan_04" name="totalPlan_04" value="125"></td>
+                                        <td><input type="number" id="setPerHour_04" name="setPerHour_04" value="10.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf02_01_hour_${i}" name="rf02_01_hour_${i}" value="${8 + i}" onchange="calculateTotal('rf02_01')"></td>
+                                        `).join('')}
+                                        <td id="rf02_01_total" class="font-medium">102</td>
+                                        <td><input type="number" id="staff_04" name="staff_04" value="2"></td>
+                                        <td><input type="number" id="workman_04" name="workman_04" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 05 Middle-SF-1</td>
+                                        <td><input type="text" id="size_05" name="size_05" value="70.0"></td>
+                                        <td><input type="number" id="totalPlan_05" name="totalPlan_05" value="120"></td>
+                                        <td><input type="number" id="setPerHour_05" name="setPerHour_05" value="10"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf02_02_hour_${i}" name="rf02_02_hour_${i}" value="${7 + i}" onchange="calculateTotal('rf02_02')"></td>
+                                        `).join('')}
+                                        <td id="rf02_02_total" class="font-medium">90</td>
+                                        <td><input type="number" id="staff_05" name="staff_05" value="2"></td>
+                                        <td><input type="number" id="workman_05" name="workman_05" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 06 Inner-SF-1</td>
+                                        <td><input type="text" id="size_06" name="size_06" value="70.0"></td>
+                                        <td><input type="number" id="totalPlan_06" name="totalPlan_06" value="115"></td>
+                                        <td><input type="number" id="setPerHour_06" name="setPerHour_06" value="9.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf02_03_hour_${i}" name="rf02_03_hour_${i}" value="${6 + i}" onchange="calculateTotal('rf02_03')"></td>
+                                        `).join('')}
+                                        <td id="rf02_03_total" class="font-medium">72</td>
+                                        <td><input type="number" id="staff_06" name="staff_06" value="2"></td>
+                                        <td><input type="number" id="workman_06" name="workman_06" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- RF-03 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-03</td>
+                                        <td class="machine-name">Machine No. 07 Outer-SF-1</td>
+                                        <td><input type="text" id="size_07" name="size_07" value="75.0"></td>
+                                        <td><input type="number" id="totalPlan_07" name="totalPlan_07" value="130"></td>
+                                        <td><input type="number" id="setPerHour_07" name="setPerHour_07" value="11"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf03_01_hour_${i}" name="rf03_01_hour_${i}" value="${9 + i}" onchange="calculateTotal('rf03_01')"></td>
+                                        `).join('')}
+                                        <td id="rf03_01_total" class="font-medium">114</td>
+                                        <td><input type="number" id="staff_07" name="staff_07" value="2"></td>
+                                        <td><input type="number" id="workman_07" name="workman_07" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 08 Middle-SF-1</td>
+                                        <td><input type="text" id="size_08" name="size_08" value="75.0"></td>
+                                        <td><input type="number" id="totalPlan_08" name="totalPlan_08" value="125"></td>
+                                        <td><input type="number" id="setPerHour_08" name="setPerHour_08" value="10.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf03_02_hour_${i}" name="rf03_02_hour_${i}" value="${8 + i}" onchange="calculateTotal('rf03_02')"></td>
+                                        `).join('')}
+                                        <td id="rf03_02_total" class="font-medium">102</td>
+                                        <td><input type="number" id="staff_08" name="staff_08" value="2"></td>
+                                        <td><input type="number" id="workman_08" name="workman_08" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 09 Inner-SF-1</td>
+                                        <td><input type="text" id="size_09" name="size_09" value="75.0"></td>
+                                        <td><input type="number" id="totalPlan_09" name="totalPlan_09" value="120"></td>
+                                        <td><input type="number" id="setPerHour_09" name="setPerHour_09" value="10"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf03_03_hour_${i}" name="rf03_03_hour_${i}" value="${7 + i}" onchange="calculateTotal('rf03_03')"></td>
+                                        `).join('')}
+                                        <td id="rf03_03_total" class="font-medium">90</td>
+                                        <td><input type="number" id="staff_09" name="staff_09" value="2"></td>
+                                        <td><input type="number" id="workman_09" name="workman_09" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- RF-04 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-04</td>
+                                        <td class="machine-name">Machine No. 10 Outer-SF-1</td>
+                                        <td><input type="text" id="size_10" name="size_10" value="80.0"></td>
+                                        <td><input type="number" id="totalPlan_10" name="totalPlan_10" value="135"></td>
+                                        <td><input type="number" id="setPerHour_10" name="setPerHour_10" value="11.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf04_01_hour_${i}" name="rf04_01_hour_${i}" value="${10 + i}" onchange="calculateTotal('rf04_01')"></td>
+                                        `).join('')}
+                                        <td id="rf04_01_total" class="font-medium">126</td>
+                                        <td><input type="number" id="staff_10" name="staff_10" value="2"></td>
+                                        <td><input type="number" id="workman_10" name="workman_10" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 11 Middle-SF-1</td>
+                                        <td><input type="text" id="size_11" name="size_11" value="80.0"></td>
+                                        <td><input type="number" id="totalPlan_11" name="totalPlan_11" value="130"></td>
+                                        <td><input type="number" id="setPerHour_11" name="setPerHour_11" value="11"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf04_02_hour_${i}" name="rf04_02_hour_${i}" value="${9 + i}" onchange="calculateTotal('rf04_02')"></td>
+                                        `).join('')}
+                                        <td id="rf04_02_total" class="font-medium">114</td>
+                                        <td><input type="number" id="staff_11" name="staff_11" value="2"></td>
+                                        <td><input type="number" id="workman_11" name="workman_11" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 12 Inner-SF-1</td>
+                                        <td><input type="text" id="size_12" name="size_12" value="80.0"></td>
+                                        <td><input type="number" id="totalPlan_12" name="totalPlan_12" value="125"></td>
+                                        <td><input type="number" id="setPerHour_12" name="setPerHour_12" value="10.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf04_03_hour_${i}" name="rf04_03_hour_${i}" value="${8 + i}" onchange="calculateTotal('rf04_03')"></td>
+                                        `).join('')}
+                                        <td id="rf04_03_total" class="font-medium">102</td>
+                                        <td><input type="number" id="staff_12" name="staff_12" value="2"></td>
+                                        <td><input type="number" id="workman_12" name="workman_12" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- RF-05 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-05</td>
+                                        <td class="machine-name">Machine No. 13 Outer-SF-1</td>
+                                        <td><input type="text" id="size_13" name="size_13" value="85.0"></td>
+                                        <td><input type="number" id="totalPlan_13" name="totalPlan_13" value="140"></td>
+                                        <td><input type="number" id="setPerHour_13" name="setPerHour_13" value="12"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf05_01_hour_${i}" name="rf05_01_hour_${i}" value="${11 + i}" onchange="calculateTotal('rf05_01')"></td>
+                                        `).join('')}
+                                        <td id="rf05_01_total" class="font-medium">138</td>
+                                        <td><input type="number" id="staff_13" name="staff_13" value="2"></td>
+                                        <td><input type="number" id="workman_13" name="workman_13" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 14 Middle-SF-1</td>
+                                        <td><input type="text" id="size_14" name="size_14" value="85.0"></td>
+                                        <td><input type="number" id="totalPlan_14" name="totalPlan_14" value="135"></td>
+                                        <td><input type="number" id="setPerHour_14" name="setPerHour_14" value="11.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf05_02_hour_${i}" name="rf05_02_hour_${i}" value="${10 + i}" onchange="calculateTotal('rf05_02')"></td>
+                                        `).join('')}
+                                        <td id="rf05_02_total" class="font-medium">126</td>
+                                        <td><input type="number" id="staff_14" name="staff_14" value="2"></td>
+                                        <td><input type="number" id="workman_14" name="workman_14" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 15 Inner-SF-1</td>
+                                        <td><input type="text" id="size_15" name="size_15" value="85.0"></td>
+                                        <td><input type="number" id="totalPlan_15" name="totalPlan_15" value="130"></td>
+                                        <td><input type="number" id="setPerHour_15" name="setPerHour_15" value="11"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf05_03_hour_${i}" name="rf05_03_hour_${i}" value="${9 + i}" onchange="calculateTotal('rf05_03')"></td>
+                                        `).join('')}
+                                        <td id="rf05_03_total" class="font-medium">114</td>
+                                        <td><input type="number" id="staff_15" name="staff_15" value="2"></td>
+                                        <td><input type="number" id="workman_15" name="workman_15" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- RF-06 Section -->
+                                    <tr>
+                                        <td rowspan="3" class="font-medium">RF-06</td>
+                                        <td class="machine-name">Machine No. 16 Outer-SF-1</td>
+                                        <td><input type="text" id="size_16" name="size_16" value="90.0"></td>
+                                        <td><input type="number" id="totalPlan_16" name="totalPlan_16" value="145"></td>
+                                        <td><input type="number" id="setPerHour_16" name="setPerHour_16" value="12.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf06_01_hour_${i}" name="rf06_01_hour_${i}" value="${12 + i}" onchange="calculateTotal('rf06_01')"></td>
+                                        `).join('')}
+                                        <td id="rf06_01_total" class="font-medium">150</td>
+                                        <td><input type="number" id="staff_16" name="staff_16" value="2"></td>
+                                        <td><input type="number" id="workman_16" name="workman_16" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 17 Middle-SF-1</td>
+                                        <td><input type="text" id="size_17" name="size_17" value="90.0"></td>
+                                        <td><input type="number" id="totalPlan_17" name="totalPlan_17" value="140"></td>
+                                        <td><input type="number" id="setPerHour_17" name="setPerHour_17" value="12"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf06_02_hour_${i}" name="rf06_02_hour_${i}" value="${11 + i}" onchange="calculateTotal('rf06_02')"></td>
+                                        `).join('')}
+                                        <td id="rf06_02_total" class="font-medium">138</td>
+                                        <td><input type="number" id="staff_17" name="staff_17" value="2"></td>
+                                        <td><input type="number" id="workman_17" name="workman_17" value="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 18 Inner-SF-1</td>
+                                        <td><input type="text" id="size_18" name="size_18" value="90.0"></td>
+                                        <td><input type="number" id="totalPlan_18" name="totalPlan_18" value="135"></td>
+                                        <td><input type="number" id="setPerHour_18" name="setPerHour_18" value="11.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="rf06_03_hour_${i}" name="rf06_03_hour_${i}" value="${10 + i}" onchange="calculateTotal('rf06_03')"></td>
+                                        `).join('')}
+                                        <td id="rf06_03_total" class="font-medium">126</td>
+                                        <td><input type="number" id="staff_18" name="staff_18" value="2"></td>
+                                        <td><input type="number" id="workman_18" name="workman_18" value="3"></td>
+                                    </tr>
+                                    
+                                    <!-- Ball Cage Section -->
+                                    <tr>
+                                        <td rowspan="2" class="font-medium">Ball Cage</td>
+                                        <td class="machine-name">Machine No. 02</td>
+                                        <td><input type="text" id="size_ball_02" name="size_ball_02" value="45.0"></td>
+                                        <td><input type="number" id="totalPlan_ball_02" name="totalPlan_ball_02" value="80"></td>
+                                        <td><input type="number" id="setPerHour_ball_02" name="setPerHour_ball_02" value="6.5"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="ball_02_hour_${i}" name="ball_02_hour_${i}" value="${5 + i}" onchange="calculateTotal('ball_02')"></td>
+                                        `).join('')}
+                                        <td id="ball_02_total" class="font-medium">66</td>
+                                        <td><input type="number" id="staff_ball_02" name="staff_ball_02" value="1"></td>
+                                        <td><input type="number" id="workman_ball_02" name="workman_ball_02" value="2"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="machine-name">Machine No. 04</td>
+                                        <td><input type="text" id="size_ball_04" name="size_ball_04" value="45.0"></td>
+                                        <td><input type="number" id="totalPlan_ball_04" name="totalPlan_ball_04" value="75"></td>
+                                        <td><input type="number" id="setPerHour_ball_04" name="setPerHour_ball_04" value="6"></td>
+                                        ${Array.from({length: 12}, (_, i) => `
+                                            <td><input type="number" id="ball_04_hour_${i}" name="ball_04_hour_${i}" value="${4 + i}" onchange="calculateTotal('ball_04')"></td>
+                                        `).join('')}
+                                        <td id="ball_04_total" class="font-medium">54</td>
+                                        <td><input type="number" id="staff_ball_04" name="staff_ball_04" value="1"></td>
+                                        <td><input type="number" id="workman_ball_04" name="workman_ball_04" value="2"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <!-- Form Actions -->
+                            <div class="mt-6 flex items-center justify-end gap-3">
+                                <button type="button" onclick="navigateTo('operations')" 
+                                        class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium text-sm">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="px-6 py-2 gradient-primary text-white rounded-lg font-medium hover:shadow-elevated transition-all text-sm">
+                                    Save Production Report
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateTotal(rowId) {
+            let total = 0;
+            for (let i = 0; i < 12; i++) {
+                const input = document.getElementById(`${rowId}_hour_${i}`);
+                if (input && input.value) {
+                    total += parseFloat(input.value) || 0;
+                }
+            }
+            const totalElement = document.getElementById(`${rowId}_total`);
+            if (totalElement) {
+                totalElement.textContent = total;
+            }
+        }
+
+        function updateFormDate(value) {
+            appState.formDate = value;
+        }
+
+        function updateFormShift(value) {
+            appState.formShift = value;
+        }
+
+        function handleUpdateProductionSubmit(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+            
+            // Add date and shift
+            formObject.date = appState.formDate;
+            formObject.shift = appState.formShift;
+            
+            console.log('Hourly Report Data:', formObject);
+            
+            // Add to hourly reports
+            appState.hourlyReports.push({
+                id: appState.hourlyReports.length + 1,
+                date: appState.formDate,
+                shift: appState.formShift,
+                ...formObject
+            });
+            
+            appState.notifications++;
+            navigateTo('completed');
+        }
+
+        function renderUnloadModal() {
+            const machine = appState.selectedMachine;
+            
+            return Modal('Unload Coil', `
+                <form onsubmit="handleUnloadCoil(event)" class="px-6 py-6">
+                    <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div class="flex items-start gap-3">
+                            <i data-lucide="alert-circle" class="text-amber-600 mt-0.5 w-5 h-5"></i>
+                            <div>
+                                <h4 class="font-medium text-amber-900">Unload Confirmation</h4>
+                                <p class="text-sm text-amber-700 mt-1">
+                                    This will stop machine <strong>${machine.machine}</strong> and move coil 
+                                    <strong>${machine.coilNo}</strong> to completed production.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Machine</label>
+                            <input type="text" value="${machine.machine}" disabled 
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Coil Number</label>
+                            <input type="text" value="${machine.coilNo}" disabled 
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Final Remaining Weight (Kg) *</label>
+                            <input type="number" step="0.1" name="remainingWeight" value="${machine.remainingWeight}" required 
+                                   class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <p class="text-sm text-slate-500 mt-1">Enter the actual remaining weight after production</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-slate-200">
+                        <div class="flex items-center justify-end gap-3">
+                            <button type="button" onclick="closeUnloadModal()" 
+                                    class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">
+                                Cancel
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 gradient-danger text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                Update & Unload
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            `, 'sm', 'closeUnloadModal()');
+        }
+
+        function handleUnloadCoil(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const remainingWeight = formData.get('remainingWeight');
+            
+            if (appState.selectedMachine) {
+                updateMachine(appState.selectedMachine.id, {
+                    status: 'stopped',
+                    unloadTime: new Date().toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
+                    remainingWeight
+                });
+                
+                // Update coil status to completed
+                const coil = appState.coils.find(c => c.coilNo === appState.selectedMachine.coilNo);
+                if (coil) {
+                    updateCoilStatus(coil.id, 'completed');
+                }
+            }
+            
+            appState.showUnloadModal = false;
+            appState.selectedMachine = null;
+            renderApp();
+        }
+
+        function closeUnloadModal() {
+            appState.showUnloadModal = false;
+            appState.selectedMachine = null;
+            renderApp();
+        }
+
+        function renderCompleted() {
+            // Group records by date
+            const groupedRecords = appState.productionRecords.reduce((groups, record) => {
+                if (!groups[record.date]) {
+                    groups[record.date] = [];
+                }
+                groups[record.date].push(record);
+                return groups;
+            }, {});
+            
+            const sortedDates = Object.keys(groupedRecords).sort().reverse();
+            
+            return `
+                <div class="p-6">
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+                        <div class="px-6 py-4 border-b border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-900">Production Traceability</h2>
+                                    <p class="text-sm text-slate-500 mt-1">Complete audit trail of all production runs</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button onclick="navigateTo('update-production')" class="flex items-center gap-2 px-4 py-2 gradient-success text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                        New Production Report
+                                    </button>
+                                                                        <button class="flex items-center gap-2 px-4 py-2 gradient-primary text-white rounded-lg font-medium hover:shadow-elevated transition-all">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                        Export Report
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Filter Tabs -->
+                            <div class="flex gap-2 mt-4">
+                                ${['Today', 'Yesterday', 'Last 7 Days', 'Last 30 Days', 'Select Range'].map(filter => `
+                                    <button class="px-4 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors">
+                                        ${filter}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Shift</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Supervisor</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Operator</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Product</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Part</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Bin #</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Bin Wt (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Avg Wt (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Prod Wt (Kg)</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Quantity</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Heat No</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Inspection</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    ${sortedDates.length > 0 ? sortedDates.map(date => `
+                                        <tr class="bg-slate-50">
+                                            <td colspan="13" class="px-6 py-3">
+                                                <div class="flex items-center gap-2">
+                                                    <i data-lucide="calendar" class="text-slate-500 w-4 h-4"></i>
+                                                    <span class="font-medium text-slate-900">
+                                                        ${new Date(date).toLocaleDateString('en-US', { 
+                                                            month: 'short', 
+                                                            day: 'numeric', 
+                                                            year: 'numeric' 
+                                                        })}
+                                                    </span>
+                                                    <span class="text-sm text-slate-500 ml-2">
+                                                        ${date === '2023-06-28' ? '(Today)' : '(Previous)'}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        ${groupedRecords[date].map(record => `
+                                            <tr class="hover:bg-slate-50 transition-colors">
+                                                <td class="px-6 py-4 text-slate-500 text-sm">
+                                                    ${new Date(record.date).toLocaleDateString('en-US', { weekday: 'short' })}
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium 
+                                                           ${record.shift === 'Day' ? 'bg-blue-100 text-blue-800' : 
+                                                             'bg-violet-100 text-violet-800'}">
+                                                        ${record.shift}
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-4 font-medium text-slate-900">${record.supervisor}</td>
+                                                <td class="px-6 py-4 text-slate-700">${record.operator}</td>
+                                                <td class="px-6 py-4 font-medium text-slate-900">${record.product}</td>
+                                                <td class="px-6 py-4 text-slate-700">${record.part}</td>
+                                                <td class="px-6 py-4 text-slate-700">${record.binNumber}</td>
+                                                <td class="px-6 py-4 text-right font-medium text-slate-900">${record.binWeight.toFixed(1)}</td>
+                                                <td class="px-6 py-4 text-right font-medium text-slate-900">${record.avgPartWeight.toFixed(3)}</td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <div class="font-bold text-slate-900">${record.productionWeight.toFixed(1)}</div>
+                                                </td>
+                                                <td class="px-6 py-4 text-right">
+                                                    <div class="font-bold text-slate-900">${record.productionQuantity.toLocaleString()}</div>
+                                                </td>
+                                                <td class="px-6 py-4 text-slate-700">${record.heatNo || '—'}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                                           ${record.inspection === 'Passed' ? 'bg-emerald-100 text-emerald-800' : 
+                                                             record.inspection === 'Rework' ? 'bg-amber-100 text-amber-800' : 
+                                                             record.inspection === 'Rejected' ? 'bg-rose-100 text-rose-800' : 
+                                                             'bg-slate-100 text-slate-800'}">
+                                                        ${record.inspection || '—'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    `).join('') : `
+                                        <tr>
+                                            <td colspan="13" class="px-6 py-12 text-center">
+                                                <div class="text-slate-500">
+                                                    <i data-lucide="file-text" class="w-12 h-12 mx-auto mb-4 opacity-50"></i>
+                                                    <p class="text-lg font-medium text-slate-900">No production records found</p>
+                                                    <p class="text-slate-600 mt-1">Production updates will appear here</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="px-6 py-4 border-t border-slate-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-6">
+                                    <div>
+                                        <div class="text-sm text-slate-600">Total Production</div>
+                                        <div class="text-lg font-bold text-slate-900">
+                                            ${appState.productionRecords.reduce((sum, r) => sum + r.productionWeight, 0).toFixed(1)} Kg
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-slate-600">Total Quantity</div>
+                                        <div class="text-lg font-bold text-slate-900">
+                                            ${appState.productionRecords.reduce((sum, r) => sum + r.productionQuantity, 0).toLocaleString()} parts
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-slate-600">Hourly Reports</div>
+                                        <div class="text-lg font-bold text-slate-900">
+                                            ${appState.hourlyReports.length}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderApp() {
+            const root = document.getElementById('root');
+            
+            let pageContent = '';
+            switch(appState.activePage) {
+                case 'dashboard':
+                    pageContent = renderDashboard();
+                    break;
+                case 'coil-stock':
+                    pageContent = renderCoilStock();
+                    break;
+                case 'operations':
+                    pageContent = renderOperations();
+                    break;
+                case 'update-production':
+                    pageContent = renderUpdateProduction();
+                    break;
+                case 'completed':
+                    pageContent = renderCompleted();
+                    break;
+                default:
+                    pageContent = renderDashboard();
+            }
+            
+            root.innerHTML = `
+                ${renderSidebar()}
+                <div class="ml-64">
+                    ${renderHeader()}
+                    <main class="min-h-[calc(100vh-80px)]">
+                        ${pageContent}
+                    </main>
+                </div>
+            `;
+            
+            // Re-initialize icons
+            lucide.createIcons();
+            
+            // Load FontAwesome for dashboard icons
+            if (!document.querySelector('link[href*="font-awesome"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+                document.head.appendChild(link);
+            }
+        }
+
+        // Initialize the app
+        renderApp();
+    </script>
+</body>
+</html>
+
+
+                                    
