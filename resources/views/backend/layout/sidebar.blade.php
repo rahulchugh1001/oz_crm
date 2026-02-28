@@ -17,9 +17,9 @@
                 <span class="font-medium">Dashboard</span>
             </a>
 
-            <a href="#" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift hover:bg-white/10 text-gray-200">
-                <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                    <i data-lucide="box" class="w-4 h-4 text-gray-400"></i>
+            <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.items.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.items.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                    <i data-lucide="box" class="w-4 h-4 {{ request()->routeIs('admin.items.*') ? 'text-white' : 'text-gray-400' }}"></i>
                 </div>
                 <span class="font-medium">Items</span>
             </a>
@@ -35,7 +35,7 @@
                     </a>
                     <a href="#" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift hover:bg-white/10 text-gray-200">
                         <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                            <i data-lucide="cogs" class="w-4 h-4 text-gray-400"></i>
+                            <i data-lucide="cog" class="w-4 h-4 text-gray-400"></i>
                         </div>
                         <span class="font-medium">Operations</span>
                     </a>
