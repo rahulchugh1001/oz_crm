@@ -23,6 +23,20 @@
                 </div>
                 <span class="font-medium">Items</span>
             </a>
+
+            <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.machines.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.machines.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                    <i data-lucide="cog" class="w-4 h-4 {{ request()->routeIs('admin.machines.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                </div>
+                <span class="font-medium">Machines</span>
+            </a>
+
+            <a href="{{ route('admin.production-reports.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                </div>
+                <span class="font-medium">Production Reports</span>
+            </a>
             
             <div class="mt-6">
                 <div class="text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-2">SF1 Operations</div>
@@ -72,7 +86,7 @@
                         <i data-lucide="users" class="w-3 h-3"></i>
                         <span class="text-sm">Operator</span>
                     </a>
-                    <a href="#" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200">
+                    <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all {{ request()->routeIs('admin.machines.*') ? 'bg-white/10 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                         <i data-lucide="cog" class="w-3 h-3"></i>
                         <span class="text-sm">Machine No</span>
                     </a>
