@@ -88,6 +88,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Code</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Size</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Weight</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Total Production Count</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -100,6 +101,7 @@
                         <td class="px-6 py-4 text-sm text-slate-600">{{ $item->code }}</td>
                         <td class="px-6 py-4 text-sm text-slate-900">{{ $item->size ?: '-' }}</td>
                         <td class="px-6 py-4 text-sm text-slate-900 font-medium">{{ number_format((float) $item->weight, 2) }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-900 font-medium">{{ number_format((float) ($item->total_production_count ?? 0), 2) }}</td>
                         <td class="px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $item->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
                                 {{ $item->status ? 'Active' : 'Inactive' }}
@@ -127,7 +129,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <i data-lucide="inbox" class="w-12 h-12 text-slate-300"></i>
                                 <p class="text-slate-500">No items found</p>

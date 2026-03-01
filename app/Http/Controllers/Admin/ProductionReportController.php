@@ -8,7 +8,9 @@ use App\Models\Machine;
 use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\ValidationException;
 
 class ProductionReportController extends Controller
 {
@@ -62,7 +64,7 @@ class ProductionReportController extends Controller
     /**
      * Store a newly created production report in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         // Validate arrays
         $validated = $request->validate([
@@ -114,24 +116,25 @@ class ProductionReportController extends Controller
         $selectedMachines = $validated['selected_machines'] ?? [];
         
         if (empty($selectedMachines)) {
-            return redirect()->route('admin.production-reports.index')
-                ->with('error', 'Please select at least one machine.');
-        }
-
-        $count = count($validated['machine_id']);
-        $createdCount = 0;
-
-        for ($i = 0; $i < $count; $i++) {
-            // Only create records for selected machines
-            if (!in_array($validated['machine_id'][$i], $selectedMachines)) {
-                continue;
+            $message = 'Please select at least one machine.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
             }
 
+            return redirect()->route('admin.production-reports.index')
+                ->with('error', $message);
+        }
+
+        $this->validateDuplicateCombinations($validated);
+
+        $createdCount = 0;
+
+        foreach ($selectedMachines as $i => $machineId) {
             $data = [
-                'machine_id' => $validated['machine_id'][$i],
-                'slide_size_id' => $validated['slide_size_id'][$i],
-                'report_date' => $validated['report_date'][$i],
-                'shift' => $validated['shift'][$i],
+                'machine_id' => $machineId,
+                'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
+                'report_date' => $validated['report_date'][$i] ?? null,
+                'shift' => $validated['shift'][$i] ?? null,
                 'total_set_shift' => $validated['total_set_shift'][$i] ?? 0,
                 'set_per_hour' => $validated['set_per_hour'][$i] ?? 0,
                 'actual_set_shift' => $validated['actual_set_shift'][$i] ?? 0,
@@ -157,8 +160,17 @@ class ProductionReportController extends Controller
             $createdCount++;
         }
 
+        $message = "$createdCount production report(s) created successfully.";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'redirect' => route('admin.production-reports.index'),
+            ]);
+        }
+
         return redirect()->route('admin.production-reports.index')
-            ->with('success', "$createdCount production report(s) created successfully.");
+            ->with('success', $message);
     }
 
     /**
@@ -183,7 +195,7 @@ class ProductionReportController extends Controller
     /**
      * Update the specified production report in storage.
      */
-    public function update(Request $request, ProductionReport $productionReport): RedirectResponse
+    public function update(Request $request, ProductionReport $productionReport): RedirectResponse|JsonResponse
     {
 
    
@@ -236,19 +248,20 @@ class ProductionReportController extends Controller
         $selectedMachines = $validated['selected_machines'] ?? [];
         
         if (empty($selectedMachines)) {
+            $message = 'Please select at least one machine.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
+            }
+
             return redirect()->route('admin.production-reports.index')
-                ->with('error', 'Please select at least one machine.');
+                ->with('error', $message);
         }
+
+        $this->validateDuplicateCombinations($validated, $productionReport);
 
         $updatedCount = 0;
 
-        // Loop through all machine_ids and find matching selected machines
-        foreach ($validated['machine_id'] as $i => $machineId) {
-            // Only process records for selected machines
-            if (!in_array($machineId, $selectedMachines)) {
-                continue;
-            }
-
+        foreach ($selectedMachines as $i => $machineId) {
             $data = [
                 'machine_id' => $machineId,
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
@@ -286,8 +299,48 @@ class ProductionReportController extends Controller
             $updatedCount++;
         }
 
+        $message = "Production report(s) updated successfully. ({$updatedCount} machine(s) updated)";
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'redirect' => route('admin.production-reports.index'),
+            ]);
+        }
+
         return redirect()->route('admin.production-reports.index')
-            ->with('success', "Production report(s) updated successfully. ({$updatedCount} machine(s) updated)");
+            ->with('success', $message);
+    }
+
+    private function validateDuplicateCombinations(array $validated, ?ProductionReport $currentReport = null): void
+    {
+        $selectedMachines = $validated['selected_machines'] ?? [];
+        $errors = [];
+
+        foreach ($selectedMachines as $i => $machineId) {
+            $slideSizeId = $validated['slide_size_id'][$i] ?? null;
+            $reportDate = $validated['report_date'][$i] ?? null;
+            $shift = $validated['shift'][$i] ?? null;
+
+            $query = ProductionReport::query()
+                ->where('machine_id', $machineId)
+                ->where('slide_size_id', $slideSizeId)
+                ->where('report_date', $reportDate)
+                ->where('shift', $shift)
+                ->where('is_deleted', false);
+
+            if ($currentReport && (int) $machineId === (int) $currentReport->machine_id) {
+                $query->where('id', '!=', $currentReport->id);
+            }
+
+            if ($query->exists()) {
+                $errors["slide_size_id.$i"] = 'Duplicate entry not allowed: same machine, date, slide size, and shift already exists.';
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
     }
 
     /**

@@ -80,53 +80,54 @@
 
         <!-- Production Reports Table -->
         <div class="overflow-x-auto">
-            <table class="w-full">
+            <table class="w-full text-[13px]">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Machine</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Slide Size</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Report Date</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Shift</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Total Set</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Actual Set</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Workman</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Staff</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Machine</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Slide Size</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Report Date</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Shift</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Achieved Set</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Workman</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Staff</th>
+                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="px-3 py-2.5 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($productionReports as $report)
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-sm text-slate-900 font-medium">#{{ $report->id }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900 font-semibold">{{ $report->machine->name ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-600">{{ $report->slideSize->name ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900">{{ $report->report_date ? \Carbon\Carbon::parse($report->report_date)->format('d M Y') : '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900">{{ $report->shift }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900 font-medium">{{ $report->total_set_shift ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900 font-medium">{{ $report->actual_set_shift ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900">{{ $report->workman_count ?? '-' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900">{{ $report->staff_count ?? '-' }}</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $report->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
-                                {{ $report->status ? 'Active' : 'Inactive' }}
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">#{{ $report->id }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-semibold">{{ $report->machine->name ?? '-' }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-600">{{ $report->slideSize->name ?? '-' }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->report_date ? \Carbon\Carbon::parse($report->report_date)->format('d M Y') : '-' }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->shift }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">{{ ($report->actual_set_shift ?? '-') }}/{{ ($report->total_set_shift ?? '-') }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->workman_count ?? '-' }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->staff_count ?? '-' }}</td>
+                        <td class="px-3 py-2.5">
+                            @php
+                                $isAchieved = ($report->total_set_shift ?? 0) > 0 && ($report->actual_set_shift ?? 0) >= ($report->total_set_shift ?? 0);
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $isAchieved ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                {{ $isAchieved ? 'Achieved' : 'Not Achieved' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-3 py-2.5 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('admin.production-reports.show', $report) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                <a href="{{ route('admin.production-reports.show', $report) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                 </a>
-                                <a href="{{ route('admin.production-reports.edit', $report) }}" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
-                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                <a href="{{ route('admin.production-reports.edit', $report) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
+                                    <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                 </a>
                                 @if(!$report->is_deleted)
                                     <form action="{{ route('admin.production-reports.destroy', $report) }}" method="POST" class="inline js-swal-delete-form" data-item-name="Report #{{ $report->id }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                         </button>
                                     </form>
                                 @endif
@@ -135,7 +136,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="px-6 py-12 text-center">
+                        <td colspan="10" class="px-3 py-8 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <i data-lucide="inbox" class="w-12 h-12 text-slate-300"></i>
                                 <p class="text-slate-500">No production reports found</p>
@@ -149,10 +150,43 @@
 
         <!-- Pagination -->
         @if($productionReports->hasPages())
-        <div class="px-6 py-4 border-t border-slate-200">
+        <div class="px-3 py-3 border-t border-slate-200">
             {{ $productionReports->links() }}
         </div>
         @endif
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    lucide.createIcons();
+
+    (() => {
+        const deleteForms = document.querySelectorAll('.js-swal-delete-form');
+        if (!deleteForms.length || typeof Swal === 'undefined') return;
+
+        deleteForms.forEach((form) => {
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const itemName = form.getAttribute('data-item-name') || 'this report';
+
+                const result = await Swal.fire({
+                    title: 'Delete report?',
+                    text: `Are you sure you want to delete ${itemName}?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, delete it',
+                    cancelButtonText: 'Cancel',
+                });
+
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    })();
+</script>
+@endpush

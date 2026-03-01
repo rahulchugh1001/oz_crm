@@ -38,6 +38,7 @@
                 <span class="font-medium">Production Reports</span>
             </a>
             
+            {{-- Hidden Menu Section
             <div class="mt-6">
                 <div class="text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-2">SF1 Operations</div>
                 <div class="space-y-1">
@@ -108,6 +109,7 @@
                     </a>
                 </div>
             </div>
+            --}}
         </div>
     </nav>
     

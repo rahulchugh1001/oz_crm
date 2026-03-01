@@ -38,7 +38,15 @@ class ItemController extends Controller
             });
         }
 
-        $items = $query->latest()->paginate(10)->withQueryString();
+        $items = $query
+            ->withSum([
+                'productionReports as total_production_count' => function ($builder) {
+                    $builder->where('is_deleted', false);
+                }
+            ], 'actual_set_shift')
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
         return view('backend.items.index', compact('items', 'mode', 'search'));
     }

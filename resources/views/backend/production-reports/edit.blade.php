@@ -25,7 +25,7 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.production-reports.update', $productionReport) }}" method="POST" class="p-6">
+        <form id="productionReportEditForm" action="{{ route('admin.production-reports.update', $productionReport) }}" method="POST" class="p-6">
             @csrf
             @method('PUT')
 
@@ -55,7 +55,7 @@
                             id="shift"
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             required
-                            onchange="updateShiftLabels(this.value)"
+                            onchange="updateShiftLabels(this.value); syncCommonFields();"
                         >
                             <option value="">Select Shift</option>
                             <option value="Morning" {{ old('shift', $productionReport->shift) == 'Morning' ? 'selected' : '' }}>Morning</option>
@@ -63,17 +63,11 @@
                         </select>
                     </div>
 
-                    <!-- Select All Checkbox -->
-                    <div class="flex items-end">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                id="select_all"
-                                onclick="toggleAllRows(this.checked)"
-                                class="w-4 h-4 rounded border-slate-300"
-                            >
-                            <span class="text-sm font-medium text-slate-700">Select All Machines</span>
-                        </label>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Machine</label>
+                        <div class="w-full px-3 py-2 border border-slate-200 bg-slate-50 rounded-lg text-sm text-slate-800 font-medium">
+                            {{ $productionReport->machine->name ?? 'N/A' }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -88,7 +82,6 @@
                 <table class="w-full border-collapse" id="productionTable">
                     <thead class="bg-slate-100">
                         <tr>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-50 min-w-20">Select</th>
                             <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-44">Machine</th>
                             <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-40">Slide Size</th>
                             <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">Total Set/Shift</th>
@@ -122,7 +115,7 @@
                 <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
-                <button type="submit" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
+                <button type="submit" id="editSubmitBtn" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
                     Update Production Report
                 </button>
             </div>
@@ -135,39 +128,15 @@
     const slideSizes = @json($slideSizes);
     const existingReport = @json($productionReport);
 
-    function toggleRowInputs(checkbox) {
-        const row = checkbox.closest('tr');
-        const inputs = row.querySelectorAll('.row-input');
-        const hourInputs = row.querySelectorAll('.hour-input');
-        const selectedMachineInput = row.querySelector('.selected-machine-input');
-        
-        if (checkbox.checked) {
-            inputs.forEach(input => input.disabled = false);
-            hourInputs.forEach(input => input.disabled = false);
-            if (selectedMachineInput) selectedMachineInput.disabled = false;
-        } else {
-            inputs.forEach(input => input.disabled = true);
-            hourInputs.forEach(input => input.disabled = true);
-            if (selectedMachineInput) selectedMachineInput.disabled = true;
-        }
-        
-        updateSelectAllCheckbox();
-    }
+    function syncCommonFields() {
+        const reportDate = document.getElementById('report_date').value;
+        const shift = document.getElementById('shift').value || 'Morning';
 
-    function toggleAllRows(checked) {
-        const checkboxes = document.querySelectorAll('.machine-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = checked;
-            toggleRowInputs(checkbox);
-        });
-    }
+        const reportDateInput = document.querySelector('input[name="report_date[]"]');
+        const shiftInput = document.querySelector('input[name="shift[]"]');
 
-    function updateSelectAllCheckbox() {
-        const selectAll = document.getElementById('select_all');
-        const checkboxes = document.querySelectorAll('.machine-checkbox');
-        const checkedCount = document.querySelectorAll('.machine-checkbox:checked').length;
-        
-        selectAll.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+        if (reportDateInput) reportDateInput.value = reportDate;
+        if (shiftInput) shiftInput.value = shift;
     }
 
     function addMachineRow(machine, prefillData = null) {
@@ -201,8 +170,6 @@
             </td>`;
         });
 
-        const isChecked = prefillData ? 'checked' : '';
-        const disabledClass = prefillData ? '' : 'disabled';
         const totalSetShift = prefillData ? parseFloat(prefillData.total_set_shift) || 0 : 0;
         const setPerHour = prefillData ? parseFloat(prefillData.set_per_hour) || 0 : 0;
         const actualSet = prefillData ? parseFloat(prefillData.actual_set_shift) || 0 : 0;
@@ -210,20 +177,16 @@
         const staffCount = prefillData ? parseInt(prefillData.staff_count) || 0 : 0;
 
         row.innerHTML = `
-            <td class="border border-slate-300 px-3 py-2 text-center">
-                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 machine-checkbox" onchange="toggleRowInputs(this)" ${isChecked}>
-                <input type="hidden" name="selected_machines[]" value="${machine.id}" class="selected-machine-input" ${disabledClass}>
-            </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
                 ${machine.name}
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input" ${disabledClass} required>
+                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input" required>
                     ${sizeOptions}
                 </select>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="total_set_shift[]" step="0.01" value="${totalSetShift}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" ${disabledClass}>
+                <input type="number" name="total_set_shift[]" step="0.01" value="${totalSetShift}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()">
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="set_per_hour[]" step="0.01" value="${setPerHour.toFixed(2)}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
@@ -233,11 +196,12 @@
                 <input type="number" name="actual_set_shift[]" step="0.01" value="${actualSet.toFixed(2)}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="workman_count[]" step="1" min="0" value="${workmanCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" ${disabledClass}>
+                <input type="number" name="workman_count[]" step="1" min="0" value="${workmanCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="staff_count[]" step="1" min="0" value="${staffCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" ${disabledClass}>
+                <input type="number" name="staff_count[]" step="1" min="0" value="${staffCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
             </td>
+            <input type="hidden" name="selected_machines[]" value="${machine.id}">
             <input type="hidden" name="machine_id[]" value="${machine.id}">
             <input type="hidden" name="report_date[]" value="${reportDate}">
             <input type="hidden" name="shift[]" value="${shift}">
@@ -298,20 +262,111 @@
 
     // Initialize with all machines as rows
     window.addEventListener('load', function() {
-        machines.forEach(machine => {
-            // Check if this machine has the existing report
-            const prefillData = machine.id === existingReport.machine_id ? existingReport : null;
-            addMachineRow(machine, prefillData);
-        });
+        const reportMachine = machines.find(machine => Number(machine.id) === Number(existingReport.machine_id));
+        if (reportMachine) {
+            addMachineRow(reportMachine, existingReport);
+        }
         
         // Update shift labels based on current shift
         const currentShift = document.getElementById('shift').value;
         if (currentShift) {
             updateShiftLabels(currentShift);
         }
+
+        syncCommonFields();
+
+        document.getElementById('report_date').addEventListener('change', syncCommonFields);
+        document.getElementById('shift').addEventListener('change', syncCommonFields);
         
         if (typeof feather !== 'undefined') {
             feather.replace();
+        }
+    });
+
+    function validateFormSubmission() {
+        const slideSize = document.querySelector('select[name="slide_size_id[]"]');
+        if (!slideSize || !slideSize.value) {
+            return { valid: false, message: 'Please select slide size for all selected machines.' };
+        }
+
+        return { valid: true, message: '' };
+    }
+
+    function clearValidationErrors() {
+        document.querySelectorAll('.border-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        });
+        document.querySelectorAll('.machine-row.bg-red-50').forEach(row => {
+            row.classList.remove('bg-red-50');
+        });
+    }
+
+    function markValidationErrors(errors) {
+        if (!errors) return;
+
+        Object.keys(errors).forEach(key => {
+            const match = key.match(/^(\w+)\.(\d+)$/);
+            if (!match) return;
+
+            const field = match[1];
+            const index = parseInt(match[2], 10);
+            const inputs = document.querySelectorAll(`[name="${field}[]"]`);
+            const input = inputs[index];
+
+            if (input) {
+                input.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                const row = input.closest('.machine-row');
+                if (row) row.classList.add('bg-red-50');
+            }
+        });
+    }
+
+    document.getElementById('productionReportEditForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        clearValidationErrors();
+
+        const validation = validateFormSubmission();
+        if (!validation.valid) {
+            alert(validation.message);
+            return;
+        }
+
+        const submitBtn = document.getElementById('editSubmitBtn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData(this)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                window.location.href = data.redirect || "{{ route('admin.production-reports.index') }}";
+                return;
+            }
+
+            if (response.status === 422) {
+                markValidationErrors(data.errors);
+                const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
+                alert(firstError);
+                return;
+            }
+
+            alert(data.message || 'Something went wrong. Please try again.');
+        } catch (error) {
+            alert('Network error. Please check your connection and try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
         }
     });
 </script>
@@ -319,13 +374,6 @@
 <style>
     table {
         border-collapse: collapse;
-    }
-    tr.machine-row:not(:has(.machine-checkbox:checked)) {
-        background-color: #f1f5f9 !important;
-        opacity: 0.6;
-    }
-    tr.machine-row:not(:has(.machine-checkbox:checked)):hover {
-        background-color: #e2e8f0 !important;
     }
 </style>
 @endsection

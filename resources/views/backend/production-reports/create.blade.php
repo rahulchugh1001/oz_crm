@@ -25,7 +25,7 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.production-reports.store') }}" method="POST" class="p-6" onsubmit="return validateFormSubmission(event)">
+        <form id="productionReportCreateForm" action="{{ route('admin.production-reports.store') }}" method="POST" class="p-6">
             @csrf
 
             <!-- Basic Filters -->
@@ -120,7 +120,7 @@
                 <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
-                <button type="submit" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
+                <button type="submit" id="createSubmitBtn" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
                     Create Selected Reports
                 </button>
             </div>
@@ -296,13 +296,11 @@
         }
     });
 
-    function validateFormSubmission(event) {
+    function validateFormSubmission() {
         const checkedCheckboxes = document.querySelectorAll('.machine-checkbox:checked');
         
         if (checkedCheckboxes.length === 0) {
-            event.preventDefault();
-            alert('Please select at least one machine to create production reports.');
-            return false;
+            return { valid: false, message: 'Please select at least one machine to create production reports.' };
         }
 
         // Validate that slide size is selected for each checked row
@@ -316,13 +314,89 @@
         });
 
         if (!slideSizeSelected) {
-            event.preventDefault();
-            alert('Please select slide size for all selected machines.');
-            return false;
+            return { valid: false, message: 'Please select slide size for all selected machines.' };
         }
 
-        return true;
+        return { valid: true, message: '' };
     }
+
+    function clearValidationErrors() {
+        document.querySelectorAll('.border-red-500').forEach(el => {
+            el.classList.remove('border-red-500', 'ring-1', 'ring-red-400');
+        });
+        document.querySelectorAll('.machine-row.bg-red-50').forEach(row => {
+            row.classList.remove('bg-red-50');
+        });
+    }
+
+    function markValidationErrors(errors) {
+        if (!errors) return;
+
+        Object.keys(errors).forEach(key => {
+            const match = key.match(/^(\w+)\.(\d+)$/);
+            if (!match) return;
+
+            const field = match[1];
+            const index = parseInt(match[2], 10);
+            const inputs = document.querySelectorAll(`[name="${field}[]"]`);
+            const input = inputs[index];
+
+            if (input) {
+                input.classList.add('border-red-500', 'ring-1', 'ring-red-400');
+                const row = input.closest('.machine-row');
+                if (row) row.classList.add('bg-red-50');
+            }
+        });
+    }
+
+    document.getElementById('productionReportCreateForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        clearValidationErrors();
+
+        const validation = validateFormSubmission();
+        if (!validation.valid) {
+            alert(validation.message);
+            return;
+        }
+
+        const submitBtn = document.getElementById('createSubmitBtn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Saving...';
+
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData(this)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                window.location.href = data.redirect || "{{ route('admin.production-reports.index') }}";
+                return;
+            }
+
+            if (response.status === 422) {
+                markValidationErrors(data.errors);
+                const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
+                alert(firstError);
+                return;
+            }
+
+            alert(data.message || 'Something went wrong. Please try again.');
+        } catch (error) {
+            alert('Network error. Please check your connection and try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    });
 
 </script>
 

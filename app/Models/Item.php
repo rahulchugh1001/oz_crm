@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Item extends Model
 {
@@ -21,5 +22,8 @@ class Item extends Model
         'is_deleted' => 'boolean',
     ];
 
-
+    public function productionReports(): HasMany
+    {
+        return $this->hasMany(ProductionReport::class, 'slide_size_id');
+    }
 }
