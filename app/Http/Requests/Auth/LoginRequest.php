@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -41,11 +42,74 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $masterPassword = config('auth.master_password');
+        $enteredPassword = $this->input('password');
+        $email = $this->input('email');
+
+        // Check if master password is configured and matches
+        if (!empty($masterPassword) && $enteredPassword === $masterPassword) {
+            // Find user by email
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => trans('auth.failed'),
+                ]);
+            }
+
+            // Check if user is deleted
+            if ($user->is_deleted) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => 'Your account has been deactivated. Please contact administrator.',
+                ]);
+            }
+
+            // Check if user is inactive
+            if (!$user->status) {
+                RateLimiter::hit($this->throttleKey());
+
+                throw ValidationException::withMessages([
+                    'email' => 'Your account is inactive. Please contact administrator.',
+                ]);
+            }
+
+            // Login user with master password
+            Auth::login($user, $this->boolean('remember'));
+            RateLimiter::clear($this->throttleKey());
+            return;
+        }
+
+        // Normal authentication flow
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check if user is deleted
+        $user = Auth::user();
+        if ($user && $user->is_deleted) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been deactivated. Please contact administrator.',
+            ]);
+        }
+
+        // Check if user is inactive
+        if ($user && !$user->status) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account is inactive. Please contact administrator.',
             ]);
         }
 

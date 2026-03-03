@@ -37,6 +37,16 @@
                 if (shiftName) shiftName.textContent = 'Shift Night';
                 if (shiftTime) shiftTime.textContent = '20:00 - 08:00';
             }
+            
+            // Auto-expand profile dropdown if on a profile page
+            const profileDropdown = document.getElementById('profile-dropdown');
+            const profileChevron = document.getElementById('profile-chevron');
+            if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
+                if (profileChevron) {
+                    profileChevron.setAttribute('data-lucide', 'chevron-down');
+                }
+            }
+            
             lucide.createIcons();
         });
 
@@ -44,6 +54,20 @@
         function toggleMastersDropdown() {
             const dropdown = document.getElementById('masters-dropdown');
             const chevron = document.getElementById('masters-chevron');
+            dropdown.classList.toggle('hidden');
+            
+            if (dropdown.classList.contains('hidden')) {
+                chevron.setAttribute('data-lucide', 'chevron-right');
+            } else {
+                chevron.setAttribute('data-lucide', 'chevron-down');
+            }
+            lucide.createIcons();
+        }
+
+        // Toggle Profile Dropdown
+        function toggleProfileDropdown() {
+            const dropdown = document.getElementById('profile-dropdown');
+            const chevron = document.getElementById('profile-chevron');
             dropdown.classList.toggle('hidden');
             
             if (dropdown.classList.contains('hidden')) {

@@ -27,12 +27,18 @@ class AdminUserSeeder extends Seeder
                     'name' => 'Super Admin',
                     'email' => 'super.admin@ozone.com',
                     'password' => Hash::make('password'),
+                    'role' => 'Admin',
+                    'status' => true,
+                    'is_deleted' => false,
                     'email_verified_at' => now(),
                 ],
                 [
                     'name' => 'Admin',
                     'email' => 'admin@ozone.com',
                     'password' => Hash::make('password'),
+                    'role' => 'Admin',
+                    'status' => true,
+                    'is_deleted' => false,
                     'email_verified_at' => now(),
                 ],
             ];

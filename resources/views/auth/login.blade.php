@@ -57,8 +57,8 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <div class="min-h-screen flex">
+<body class="bg-slate-50 h-screen overflow-hidden">
+    <div class="h-screen flex">
         <!-- Left Side - Branding & Info -->
         <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden">
             <!-- Background Pattern -->
@@ -246,13 +246,14 @@
                     </form>
                 </div>
                 
-                <!-- Footer Links -->
+                {{-- <!-- Footer Links - Hidden -->
                 <div class="mt-6 text-center text-sm text-slate-600">
                     Don't have an account? 
                     <a href="#" class="font-medium text-blue-600 hover:text-blue-700 transition-colors">
                         Contact Administrator
                     </a>
                 </div>
+                --}}
             </div>
         </div>
     </div>

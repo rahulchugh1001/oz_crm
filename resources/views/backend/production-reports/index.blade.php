@@ -20,6 +20,14 @@
     </div>
     @endif
 
+    <!-- Error Message -->
+    @if(session('error'))
+    <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-3">
+        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+        <p class="text-sm text-rose-800">{{ session('error') }}</p>
+    </div>
+    @endif
+
     <!-- Header with Add Button -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="p-6 border-b border-slate-200">

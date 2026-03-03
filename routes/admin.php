@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\MachineController;
 use App\Http\Controllers\Admin\ProductionReportController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,27 +19,42 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.active.user'])->group(function () {
     
-    // Items Routes
-    Route::get('/items', [ItemController::class, 'index'])->name('items.index');
-    Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
-    Route::post('/items', [ItemController::class, 'store'])->name('items.store');
-    Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
-    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
-    Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
-    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+    // Admin Only Routes
+    Route::middleware(['check.admin.role'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        
+        // Items Routes
+        Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+        Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
+        Route::post('/items', [ItemController::class, 'store'])->name('items.store');
+        Route::get('/items/{item}', [ItemController::class, 'show'])->name('items.show');
+        Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
+        Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
+        Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
 
-    // Machines Routes
-    Route::get('/machines', [MachineController::class, 'index'])->name('machines.index');
-    Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');
-    Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
-    Route::get('/machines/{machine}', [MachineController::class, 'show'])->name('machines.show');
-    Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
-    Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
-    Route::delete('/machines/{machine}', [MachineController::class, 'destroy'])->name('machines.destroy');
+        // Machines Routes
+        Route::get('/machines', [MachineController::class, 'index'])->name('machines.index');
+        Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');
+        Route::post('/machines', [MachineController::class, 'store'])->name('machines.store');
+        Route::get('/machines/{machine}', [MachineController::class, 'show'])->name('machines.show');
+        Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
+        Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
+        Route::delete('/machines/{machine}', [MachineController::class, 'destroy'])->name('machines.destroy');
 
+        // Users Routes
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        Route::post('/users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    });
+
+    // Routes accessible to all authenticated users (Admin & User)
     // Production Reports Routes
     Route::get('/production-reports', [ProductionReportController::class, 'index'])->name('production-reports.index');
     Route::get('/production-reports/create', [ProductionReportController::class, 'create'])->name('production-reports.create');
@@ -46,5 +63,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified'])->group(
     Route::get('/production-reports/{productionReport}/edit', [ProductionReportController::class, 'edit'])->name('production-reports.edit');
     Route::put('/production-reports/{productionReport}', [ProductionReportController::class, 'update'])->name('production-reports.update');
     Route::delete('/production-reports/{productionReport}', [ProductionReportController::class, 'destroy'])->name('production-reports.destroy');
+
+    // Profile Management Routes
+    Route::get('/profile/manage-password', [ProfileController::class, 'managePassword'])->name('profile.manage-password');
+    Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::get('/profile/manage-profile', [ProfileController::class, 'manageProfile'])->name('profile.manage-profile');
+    Route::post('/profile/update-profile', [ProfileController::class, 'updateProfile'])->name('profile.update-profile');
 });
 

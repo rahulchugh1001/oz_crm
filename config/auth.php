@@ -112,4 +112,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Master Password
+    |--------------------------------------------------------------------------
+    |
+    | Master password allows admin/support to login as any user for support
+    | purposes. Set a strong password in your .env file as MASTER_PASSWORD.
+    | Leave empty to disable this feature.
+    |
+    */
+
+    'master_password' => env('MASTER_PASSWORD', null),
+
 ];

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Crypt;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'is_deleted',
+        'status'
     ];
 
     /**
@@ -44,5 +48,26 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the value of the model's route key (encrypted).
+     */
+    public function getRouteKey(): mixed
+    {
+        return Crypt::encryptString($this->getKey());
+    }
+
+    /**
+     * Retrieve the model for a bound value (decrypt).
+     */
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        try {
+            $decryptedId = Crypt::decryptString($value);
+            return $this->where($this->getKeyName(), $decryptedId)->first();
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

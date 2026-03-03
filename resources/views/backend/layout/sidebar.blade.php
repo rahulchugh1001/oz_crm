@@ -10,6 +10,7 @@
     
     <nav class="flex-1 p-4 overflow-y-auto">
         <div class="space-y-1">
+            @if(auth()->user()->role === 'Admin')
             <a href="{{ route('admin.dashboard') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                 <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                     <i data-lucide="home" class="w-4 h-4 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-gray-400' }}"></i>
@@ -30,6 +31,7 @@
                 </div>
                 <span class="font-medium">Machines</span>
             </a>
+            @endif
 
             <a href="{{ route('admin.production-reports.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                 <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
@@ -37,6 +39,39 @@
                 </div>
                 <span class="font-medium">Production Reports</span>
             </a>
+
+            @if(auth()->user()->role === 'Admin')
+            <a href="{{ route('admin.users.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.users.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.users.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                    <i data-lucide="users" class="w-4 h-4 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                </div>
+                <span class="font-medium">Users</span>
+            </a>
+            @endif
+
+            <!-- Manage Profile Dropdown -->
+            <div class="mt-2">
+                <button onclick="toggleProfileDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.profile.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.profile.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="user-circle" class="w-4 h-4 {{ request()->routeIs('admin.profile.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">Manage Profile</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="profile-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+                
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.profile.*') ? '' : 'hidden' }}" id="profile-dropdown">
+                    <a href="{{ route('admin.profile.manage-password') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.profile.manage-password') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="key" class="w-3 h-3"></i>
+                        <span class="text-sm">Manage Password</span>
+                    </a>
+                    <a href="{{ route('admin.profile.manage-profile') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.profile.manage-profile') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="user" class="w-3 h-3"></i>
+                        <span class="text-sm">Manage Profile</span>
+                    </a>
+                </div>
+            </div>
             
             {{-- Hidden Menu Section
             <div class="mt-6">
