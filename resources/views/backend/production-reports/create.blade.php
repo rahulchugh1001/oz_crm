@@ -62,15 +62,18 @@
                         </select>
                     </div>
 
-                    <!-- Select All Checkbox -->
+                    <!-- Select All Toggle -->
                     <div class="flex items-end">
                         <label class="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                id="select_all"
-                                onclick="toggleAllRows(this.checked)"
-                                class="w-4 h-4 rounded border-slate-300"
-                            >
+                            <div class="relative">
+                                <input
+                                    type="checkbox"
+                                    id="select_all"
+                                    onclick="toggleAllRows(this.checked)"
+                                    class="sr-only machine-toggle"
+                                >
+                                <div class="toggle-bg"></div>
+                            </div>
                             <span class="text-sm font-medium text-slate-700">Select All Machines</span>
                         </label>
                     </div>
@@ -78,12 +81,26 @@
             </div>
 
             <!-- Production Table -->
-            <div class="mb-8 overflow-x-auto">
+            <div class="mb-8">
                 <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="text-sm text-blue-800">
                         <strong>How to use:</strong> Check the checkbox next to each machine to enable data entry. The selected machines will be included when you save the form. All fields must be filled for selected rows.
                     </p>
                 </div>
+                <div class="mb-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="scrollTableHorizontal('left')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        Left
+                    </button>
+                    <button type="button" onclick="scrollTableHorizontal('right')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                        Right
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <div id="topScrollContainer" class="overflow-x-auto mb-2">
+                    <div id="topScrollContent" class="h-1"></div>
+                </div>
+                <div id="tableScrollContainer" class="overflow-x-auto">
                 <table class="w-full border-collapse" id="productionTable">
                     <thead class="bg-slate-100">
                         <tr>
@@ -114,6 +131,7 @@
                         <!-- Rows will be added here by JavaScript -->
                     </tbody>
                 </table>
+                </div>
                 </div>
             </div>
 
@@ -158,13 +176,18 @@
         let hourInputs = '';
         hourFields.forEach(field => {
             hourInputs += `<td class="border border-slate-300 px-2 py-2">
-                <input type="number" name="${field}[]" step="0.01" value="0" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
+                <input type="number" name="${field}[]" step="0.01" min="0" value="0" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
             </td>`;
         });
 
         row.innerHTML = `
             <td class="border border-slate-300 px-3 py-2 text-center">
-                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 machine-checkbox" onchange="toggleRowInputs(this)">
+                <label class="inline-flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" class="sr-only machine-checkbox machine-toggle" onchange="toggleRowInputs(this)">
+                        <div class="toggle-bg"></div>
+                    </div>
+                </label>
                 <input type="hidden" name="selected_machines[]" value="${machine.id}" class="selected-machine-input" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
@@ -176,14 +199,14 @@
                 </select>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="total_set_shift[]" step="0.01" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
+                <input type="number" name="total_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="set_per_hour[]" step="0.01" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
+                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
             </td>
             ${hourInputs}
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="actual_set_shift[]" step="0.01" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
+                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="workman_count[]" step="1" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
@@ -245,7 +268,7 @@
         const row = input.closest('tr');
         if (!row) return;
 
-        const totalSetShift = parseFloat(input.value) || 0;
+        const totalSetShift = Math.max(parseFloat(input.value) || 0, 0);
         const setPerHour = totalSetShift / 12; // Divide by 12 hours
 
         const setPerHourInput = row.querySelector('.set-per-hour');
@@ -261,7 +284,7 @@
         const hourInputs = row.querySelectorAll('input[name^="hour_"]');
         let total = 0;
         hourInputs.forEach(inp => {
-            total += parseFloat(inp.value) || 0;
+            total += Math.max(parseFloat(inp.value) || 0, 0);
         });
 
         const actualSetInput = row.querySelector('.actual-set');
@@ -288,11 +311,113 @@
         });
     }
 
+    let negativeWarningTimeout;
+    function showNegativeWarning() {
+        let warning = document.getElementById('negativeValueWarning');
+
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.id = 'negativeValueWarning';
+            warning.className = 'negative-warning-toast';
+            warning.textContent = 'Negative values are not allowed. Value reset to 0.';
+            document.body.appendChild(warning);
+        }
+
+        warning.classList.add('show');
+        clearTimeout(negativeWarningTimeout);
+        negativeWarningTimeout = setTimeout(() => {
+            warning.classList.remove('show');
+        }, 1800);
+    }
+
+    function enforceNonNegative(input) {
+        if (!input || input.type !== 'number') return;
+
+        if (input.value === '') return;
+
+        const numericValue = parseFloat(input.value);
+        if (Number.isNaN(numericValue)) return;
+
+        if (numericValue < 0) {
+            input.value = '0';
+            showNegativeWarning();
+            if (typeof input.onchange === 'function') {
+                input.onchange();
+            }
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function scrollTableHorizontal(direction) {
+        const tableScrollContainer = document.getElementById('tableScrollContainer');
+        if (!tableScrollContainer) return;
+
+        const amount = 450;
+        const delta = direction === 'left' ? -amount : amount;
+
+        tableScrollContainer.scrollBy({
+            left: delta,
+            behavior: 'auto'
+        });
+    }
+
+    function initializeTopScroll() {
+        const topScrollContainer = document.getElementById('topScrollContainer');
+        const topScrollContent = document.getElementById('topScrollContent');
+        const tableScrollContainer = document.getElementById('tableScrollContainer');
+        const productionTable = document.getElementById('productionTable');
+
+        if (!topScrollContainer || !topScrollContent || !tableScrollContainer || !productionTable) {
+            return;
+        }
+
+        let syncingFromTop = false;
+        let syncingFromTable = false;
+
+        const syncTopWidth = () => {
+            topScrollContent.style.width = `${productionTable.scrollWidth}px`;
+        };
+
+        topScrollContainer.addEventListener('scroll', () => {
+            if (syncingFromTable) return;
+            syncingFromTop = true;
+            tableScrollContainer.scrollLeft = topScrollContainer.scrollLeft;
+            syncingFromTop = false;
+        });
+
+        tableScrollContainer.addEventListener('scroll', () => {
+            if (syncingFromTop) return;
+            syncingFromTable = true;
+            topScrollContainer.scrollLeft = tableScrollContainer.scrollLeft;
+            syncingFromTable = false;
+        });
+
+        syncTopWidth();
+        window.addEventListener('resize', syncTopWidth);
+    }
+
     // Initialize with all machines as rows
     window.addEventListener('load', function() {
         machines.forEach(machine => {
             addMachineRow(machine);
         });
+
+        const productionForm = document.getElementById('productionReportCreateForm');
+        if (productionForm) {
+            productionForm.addEventListener('input', function (event) {
+                if (event.target && event.target.matches('input[type="number"]')) {
+                    enforceNonNegative(event.target);
+                }
+            });
+
+            productionForm.addEventListener('blur', function (event) {
+                if (event.target && event.target.matches('input[type="number"]')) {
+                    enforceNonNegative(event.target);
+                }
+            }, true);
+        }
+
+        initializeTopScroll();
         if (typeof feather !== 'undefined') {
             feather.replace();
         }
@@ -403,9 +528,133 @@
 </script>
 
 <style>
+    .negative-warning-toast {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 9999;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+        border-radius: 0.5rem;
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        box-shadow: 0 10px 20px -10px rgba(185, 28, 28, 0.35);
+        opacity: 0;
+        transform: translateY(-8px);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .negative-warning-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+
+    #topScrollContainer,
+    #tableScrollContainer {
+        scrollbar-width: thin;
+        scrollbar-color: #64748b #e2e8f0;
+    }
+
+    #topScrollContainer::-webkit-scrollbar,
+    #tableScrollContainer::-webkit-scrollbar {
+        height: 12px;
+    }
+
+    #topScrollContainer::-webkit-scrollbar-track,
+    #tableScrollContainer::-webkit-scrollbar-track {
+        background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 100%);
+        border-radius: 9999px;
+        border: 1px solid #cbd5e1;
+    }
+
+    #topScrollContainer::-webkit-scrollbar-thumb,
+    #tableScrollContainer::-webkit-scrollbar-thumb {
+        background: linear-gradient(90deg, #64748b 0%, #475569 100%);
+        border-radius: 9999px;
+        border: 2px solid #e2e8f0;
+    }
+
+    #topScrollContainer::-webkit-scrollbar-thumb:hover,
+    #tableScrollContainer::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(90deg, #475569 0%, #334155 100%);
+    }
+
+    #topScrollContainer {
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        background: #f8fafc;
+        padding: 2px;
+    }
+
+    #tableScrollContainer {
+        border-radius: 0.5rem;
+    }
+
     table {
         border-collapse: collapse;
     }
+    /* Toggle Switch Styles */
+    .machine-toggle + .toggle-bg {
+        display: block;
+        width: 44px;
+        height: 24px;
+        background-color: #cbd5e1;
+        border-radius: 9999px;
+        position: relative;
+        transition: background-color 0.2s ease;
+    }
+
+    .machine-toggle + .toggle-bg:after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .machine-toggle:checked + .toggle-bg {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .machine-toggle:checked + .toggle-bg:after {
+        transform: translateX(20px);
+    }
+
+    .machine-toggle:focus + .toggle-bg {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
     tr.machine-row:not(:has(.machine-checkbox:checked)) {
         background-color: #f1f5f9 !important;
         opacity: 0.6;
