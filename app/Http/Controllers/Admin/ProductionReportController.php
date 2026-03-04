@@ -51,6 +51,58 @@ class ProductionReportController extends Controller
     }
 
     /**
+     * Display production reports for SF001.
+     */
+    public function sf001(Request $request): View
+    {
+        $search = trim((string) $request->query('search', ''));
+        $mode = $request->query('mode', 'active');
+
+        $query = ProductionReport::query();
+
+        if ($mode === 'deleted') {
+            $query->where('is_deleted', true);
+        } elseif ($mode === 'all') {
+            // no filter
+        } else {
+            $mode = 'active';
+            $query->where('is_deleted', false);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->whereHas('machine', function ($builder) use ($search) {
+                    $builder->where('name', 'like', "%{$search}%");
+                })->orWhere('report_date', 'like', "%{$search}%")
+                  ->orWhere('shift', 'like', "%{$search}%");
+            });
+        }
+
+        $productionReports = $query->with(['machine', 'slideSize'])
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+             return view('backend.production-reports.index', compact('productionReports', 'mode', 'search'));
+    }
+
+    /**
+     * Display production reports for SF002.
+     */
+    public function sf002(Request $request): View
+    {
+        return view('backend.production-reports.sf002.list');
+    }
+
+    /**
+     * Display production reports for SF003.
+     */
+    public function sf003(Request $request): View
+    {
+        return view('backend.production-reports.sf003.list');
+    }
+
+    /**
      * Show the form for creating a new production report.
      */
     public function create(): View

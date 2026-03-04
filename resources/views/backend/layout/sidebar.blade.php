@@ -33,12 +33,33 @@
             </a>
             @endif
 
-            <a href="{{ route('admin.production-reports.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
-                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                    <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') ? 'text-white' : 'text-gray-400' }}"></i>
+            <!-- Production Reports Dropdown -->
+            <div class="mt-2">
+                <button onclick="toggleProductionDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">Production Reports</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="production-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+                
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.*') ? '' : 'hidden' }}" id="production-dropdown">
+                    <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="layers" class="w-3 h-3"></i>
+                        <span class="text-sm">SF001</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf002') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="layers" class="w-3 h-3"></i>
+                        <span class="text-sm">SF002  <small>(Upcoming)</small> </span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf003') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="layers" class="w-3 h-3"></i>
+                        <span class="text-sm">SF003 <small>(Upcoming)</small>  </span>
+                    </a>
                 </div>
-                <span class="font-medium">Production Reports</span>
-            </a>
+            </div>
 
             @if(auth()->user()->role === 'Admin')
             <a href="{{ route('admin.users.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.users.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">

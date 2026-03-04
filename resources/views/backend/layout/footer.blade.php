@@ -64,6 +64,20 @@
             lucide.createIcons();
         }
 
+        // Toggle Production Reports Dropdown
+        function toggleProductionDropdown() {
+            const dropdown = document.getElementById('production-dropdown');
+            const chevron = document.getElementById('production-chevron');
+            dropdown.classList.toggle('hidden');
+            
+            if (dropdown.classList.contains('hidden')) {
+                chevron.setAttribute('data-lucide', 'chevron-right');
+            } else {
+                chevron.setAttribute('data-lucide', 'chevron-down');
+            }
+            lucide.createIcons();
+        }
+
         // Toggle Profile Dropdown
         function toggleProfileDropdown() {
             const dropdown = document.getElementById('profile-dropdown');

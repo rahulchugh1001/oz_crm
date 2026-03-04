@@ -1,11 +1,13 @@
 @extends('backend.layout.app')
 
-@section('title', 'View Production Report')
+@section('title', 'SF001 Process - View Production Report')
 
-@section('page-title', 'Production Reports Management')
+@section('page-title', 'SF001 Process Management')
 
 @section('breadcrumb')
     <a href="{{ route('admin.production-reports.index') }}" class="text-slate-600 hover:text-slate-900">Production Reports</a>
+    <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
+    <span class="text-slate-600">SF001 Process</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">View Report #{{ $productionReport->id }}</span>
 @endsection
@@ -20,8 +22,8 @@
                         <i data-lucide="eye" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Production Report Details</h2>
-                        <p class="text-sm text-slate-500">Report #{{ $productionReport->id }} - {{ $productionReport->report_date }}</p>
+                        <h2 class="text-lg font-bold text-slate-900">SF001 Process - Production Report Details</h2>
+                        <p class="text-sm text-slate-500">SF001 Report #{{ $productionReport->id }} - {{ $productionReport->report_date }}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
