@@ -54,7 +54,7 @@
                         <select
                             id="shift"
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            onchange="updateShiftLabels(this.value)"
+                            onchange="handleShiftChange(this)"
                         >
                             <option value="">Select Shift</option>
                             <option value="Morning" selected>Morning</option>
@@ -202,11 +202,11 @@
                 <input type="number" name="total_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
+                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour calc-input" style="pointer-events: none;" disabled>
             </td>
             ${hourInputs}
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
+                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="workman_count[]" step="1" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
@@ -231,7 +231,7 @@
         const row = checkbox.closest('tr');
         if (!row) return;
 
-        const inputs = row.querySelectorAll('.row-input, .hour-input');
+        const inputs = row.querySelectorAll('.row-input, .hour-input, .calc-input');
         const selectedInput = row.querySelector('.selected-machine-input');
         const isChecked = checkbox.checked;
 
@@ -293,6 +293,43 @@
         }
     }
 
+    let previousShiftValue = '';
+
+    function handleShiftChange(selectElement) {
+        const newShift = selectElement.value;
+        
+        // If there's a previous value and it's different, show confirmation
+        if (previousShiftValue && previousShiftValue !== newShift) {
+            Swal.fire({
+                title: 'Change Shift?',
+                text: 'Are you sure you want to change the shift? This will update all row shifts.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, change it',
+                cancelButtonText: 'Cancel',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    updateShiftLabels(newShift);
+                    updateAllRowShifts(newShift);
+                    previousShiftValue = newShift;
+                } else {
+                    // Revert to previous value
+                    selectElement.value = previousShiftValue;
+                }
+            });
+            return;
+        }
+        
+        // Update the labels and all row shifts
+        updateShiftLabels(newShift);
+        updateAllRowShifts(newShift);
+        
+        // Store the new value as previous for next change
+        previousShiftValue = newShift;
+    }
+
     function updateShiftLabels(shift) {
         const labels = document.querySelectorAll('.hour-label');
         const timePeriod = shift === 'Night' ? 'PM' : 'AM';
@@ -307,6 +344,20 @@
         labels.forEach((label, index) => {
             if (selectedLabels[index]) {
                 label.textContent = selectedLabels[index];
+            }
+        });
+    }
+
+    function updateAllRowShifts(newShift) {
+        // Update all hidden shift inputs in table rows
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody) return;
+
+        const rows = tableBody.querySelectorAll('tr.machine-row');
+        rows.forEach(row => {
+            const shiftInput = row.querySelector('input[name="shift[]"]');
+            if (shiftInput) {
+                shiftInput.value = newShift;
             }
         });
     }
@@ -398,6 +449,19 @@
 
     // Initialize with all machines as rows
     window.addEventListener('load', function() {
+        // Auto-select shift based on current time (8 AM to 8 PM = Morning, else Night)
+        const currentHour = new Date().getHours();
+        const shiftDropdown = document.getElementById('shift');
+        if (shiftDropdown) {
+            if (currentHour >= 8 && currentHour < 20) {
+                shiftDropdown.value = 'Morning';
+            } else {
+                shiftDropdown.value = 'Night';
+            }
+            // Set the initial value so confirmation triggers on first change
+            previousShiftValue = shiftDropdown.value;
+        }
+
         machines.forEach(machine => {
             addMachineRow(machine);
         });
@@ -476,14 +540,54 @@
         });
     }
 
+    function recalculateAllFields() {
+        // Get all checked machines (only those will be submitted)
+        const checkedRows = document.querySelectorAll('tr.machine-row:has(.machine-checkbox:checked)');
+        
+        checkedRows.forEach(row => {
+            // Get total_set_shift value
+            const totalSetShiftInput = row.querySelector('.total-set-shift');
+            if (totalSetShiftInput) {
+                const totalValue = parseFloat(totalSetShiftInput.value) || 0;
+                const setPerHourInput = row.querySelector('.set-per-hour');
+                if (setPerHourInput) {
+                    const calculatedValue = totalValue / 12;
+                    setPerHourInput.value = calculatedValue.toFixed(2);
+                    setPerHourInput.disabled = false;  // Ensure it's not disabled for submission
+                }
+            }
+
+            // Get sum of all hour inputs for actual_set_shift
+            const hourInputs = row.querySelectorAll('input[name^="hour_"]');
+            let totalHours = 0;
+            hourInputs.forEach(input => {
+                totalHours += parseFloat(input.value) || 0;
+            });
+            const actualSetInput = row.querySelector('.actual-set');
+            if (actualSetInput) {
+                actualSetInput.value = totalHours.toFixed(2);
+                actualSetInput.disabled = false;  // Ensure it's not disabled for submission
+            }
+        });
+    }
+
     document.getElementById('productionReportCreateForm').addEventListener('submit', async function (event) {
         event.preventDefault();
+
+        // Recalculate all fields before submission
+        recalculateAllFields();
 
         clearValidationErrors();
 
         const validation = validateFormSubmission();
         if (!validation.valid) {
-            alert(validation.message);
+            Swal.fire({
+                title: 'Invalid Form',
+                text: validation.message,
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
             return;
         }
 
@@ -493,32 +597,68 @@
         submitBtn.textContent = 'Saving...';
 
         try {
+            // Create form data and explicitly verify calculated fields are included
+            const formData = new FormData(this);
+            
+            // Verify set_per_hour and actual_set_shift are in FormData
+            const setPerHourValues = formData.getAll('set_per_hour[]');
+            const actualSetValues = formData.getAll('actual_set_shift[]');
+            
+            console.log('set_per_hour values:', setPerHourValues);
+            console.log('actual_set_shift values:', actualSetValues);
+
             const response = await fetch(this.action, {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest'
                 },
-                body: new FormData(this)
+                body: formData
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                window.location.href = data.redirect || "{{ route('admin.production-reports.index') }}";
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Production reports created successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
+                });
                 return;
             }
 
             if (response.status === 422) {
                 markValidationErrors(data.errors);
                 const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
-                alert(firstError);
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: firstError,
+                    icon: 'error',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                });
                 return;
             }
 
-            alert(data.message || 'Something went wrong. Please try again.');
+            Swal.fire({
+                title: 'Error',
+                text: data.message || 'Something went wrong. Please try again.',
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
         } catch (error) {
-            alert('Network error. Please check your connection and try again.');
+            Swal.fire({
+                title: 'Network Error',
+                text: 'Please check your connection and try again.',
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;

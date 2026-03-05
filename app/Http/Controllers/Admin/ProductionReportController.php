@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class ProductionReportController extends Controller
 {
@@ -166,6 +167,12 @@ class ProductionReportController extends Controller
         ]);
 
         $selectedMachines = $validated['selected_machines'] ?? [];
+        
+        // Log incoming data to debug set_per_hour and actual_set_shift
+        Log::info('ProductionReport store() - Debug data:', [
+            'set_per_hour_array' => $validated['set_per_hour'] ?? [],
+            'actual_set_shift_array' => $validated['actual_set_shift'] ?? [],
+        ]);
         
         if (empty($selectedMachines)) {
             $message = 'Please select at least one machine.';

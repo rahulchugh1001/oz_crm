@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\MachineController;
 use App\Http\Controllers\Admin\ProductionReportController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SF001Controller;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -58,6 +59,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     // Production Reports Routes
     Route::get('/production-reports', [ProductionReportController::class, 'index'])->name('production-reports.index');
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
+    Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');
     Route::get('/production-reports/create', [ProductionReportController::class, 'create'])->name('production-reports.create');

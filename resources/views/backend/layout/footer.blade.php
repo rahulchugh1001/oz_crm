@@ -78,6 +78,20 @@
             lucide.createIcons();
         }
 
+        // Toggle SF001 Dropdown
+        function toggleSF001Dropdown() {
+            const dropdown = document.getElementById('sf001-dropdown');
+            const chevron = document.getElementById('sf001-chevron');
+            dropdown.classList.toggle('hidden');
+            
+            if (dropdown.classList.contains('hidden')) {
+                chevron.setAttribute('data-lucide', 'chevron-right');
+            } else {
+                chevron.setAttribute('data-lucide', 'chevron-down');
+            }
+            lucide.createIcons();
+        }
+
         // Toggle Profile Dropdown
         function toggleProfileDropdown() {
             const dropdown = document.getElementById('profile-dropdown');
