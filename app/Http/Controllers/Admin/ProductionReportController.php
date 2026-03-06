@@ -115,6 +115,32 @@ class ProductionReportController extends Controller
     }
 
     /**
+     * Check duplicate for report_date + shift + machine.
+     */
+    public function checkDuplicate(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'machine_id' => 'required|exists:machines,id',
+            'report_date' => 'required|date',
+            'shift' => 'required|string|in:Morning,Night',
+        ]);
+
+        $exists = ProductionReport::query()
+            ->where('machine_id', $validated['machine_id'])
+            ->where('report_date', $validated['report_date'])
+            ->where('shift', $validated['shift'])
+            ->where('is_deleted', false)
+            ->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists
+                ? 'Report date, shift and machine data already exists.'
+                : 'This machine is available for the selected report date and shift.',
+        ]);
+    }
+
+    /**
      * Store a newly created production report in storage.
      */
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -377,23 +403,21 @@ class ProductionReportController extends Controller
         $errors = [];
 
         foreach ($selectedMachines as $i => $machineId) {
-            $slideSizeId = $validated['slide_size_id'][$i] ?? null;
             $reportDate = $validated['report_date'][$i] ?? null;
             $shift = $validated['shift'][$i] ?? null;
 
             $query = ProductionReport::query()
                 ->where('machine_id', $machineId)
-                ->where('slide_size_id', $slideSizeId)
                 ->where('report_date', $reportDate)
                 ->where('shift', $shift)
                 ->where('is_deleted', false);
 
-            if ($currentReport && (int) $machineId === (int) $currentReport->machine_id) {
+            if ($currentReport) {
                 $query->where('id', '!=', $currentReport->id);
             }
 
             if ($query->exists()) {
-                $errors["slide_size_id.$i"] = 'Duplicate entry not allowed: same machine, date, slide size, and shift already exists.';
+                $errors["machine_id.$i"] = 'Duplicate entry not allowed: same report date, shift, and machine already exists.';
             }
         }
 

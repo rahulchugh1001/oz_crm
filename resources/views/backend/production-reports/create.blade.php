@@ -151,6 +151,78 @@
 <script>
     const machines = @json($machines);
     const slideSizes = @json($slideSizes);
+    const duplicateCheckUrl = "{{ route('admin.production-reports.check-duplicate') }}";
+
+    async function validateMachineDuplicate(machineId, reportDate, shift) {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value;
+
+        const response = await fetch(duplicateCheckUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken || ''
+            },
+            body: JSON.stringify({
+                machine_id: machineId,
+                report_date: reportDate,
+                shift: shift,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return {
+                allowed: false,
+                message: data.message || 'Unable to validate machine selection right now.',
+            };
+        }
+
+        return {
+            allowed: !data.exists,
+            message: data.message,
+        };
+    }
+
+    async function canSelectMachineForCurrentFilters(row, showErrorPopup = true) {
+        const machineId = row.dataset.machineId;
+        const machineName = (row.querySelector('td:nth-child(2)')?.textContent || '').trim() || 'Selected machine';
+        const reportDate = document.getElementById('report_date')?.value;
+        const shift = document.getElementById('shift')?.value;
+
+        if (!reportDate || !shift) {
+            if (showErrorPopup) {
+                Swal.fire({
+                    title: 'Missing Filters',
+                    text: 'Please select report date and shift first.',
+                    icon: 'warning',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                });
+            }
+
+            return { allowed: false, reason: 'missing' };
+        }
+
+        const result = await validateMachineDuplicate(machineId, reportDate, shift);
+        if (!result.allowed) {
+            if (showErrorPopup) {
+                Swal.fire({
+                    title: 'Duplicate Not Allowed',
+                    text: `${machineName}: Report date, shift and machine data already exists.`,
+                    icon: 'error',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                });
+            }
+
+            return { allowed: false, reason: 'duplicate' };
+        }
+
+        return { allowed: true, reason: null };
+    }
 
     function addMachineRow(machine) {
         const tableBody = document.getElementById('tableBody');
@@ -227,9 +299,21 @@
         }
     }
 
-    function toggleRowInputs(checkbox) {
+    async function toggleRowInputs(checkbox) {
         const row = checkbox.closest('tr');
         if (!row) return;
+
+        if (checkbox.checked) {
+            checkbox.disabled = true;
+            const selectionCheck = await canSelectMachineForCurrentFilters(row, true);
+            checkbox.disabled = false;
+
+            if (!selectionCheck.allowed) {
+                checkbox.checked = false;
+                updateSelectAllCheckbox();
+                return;
+            }
+        }
 
         const inputs = row.querySelectorAll('.row-input, .hour-input, .calc-input');
         const selectedInput = row.querySelector('.selected-machine-input');
@@ -246,11 +330,44 @@
         updateSelectAllCheckbox();
     }
 
-    function toggleAllRows(selectAll) {
-        document.querySelectorAll('.machine-checkbox').forEach(checkbox => {
-            checkbox.checked = selectAll;
+    async function toggleAllRows(selectAll) {
+        const checkboxes = document.querySelectorAll('.machine-checkbox');
+
+        if (!selectAll) {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                toggleRowInputs(checkbox);
+            });
+            return;
+        }
+
+        let skippedCount = 0;
+
+        for (const checkbox of checkboxes) {
+            const row = checkbox.closest('tr');
+            if (!row) continue;
+
+            const selectionCheck = await canSelectMachineForCurrentFilters(row, false);
+            if (!selectionCheck.allowed) {
+                checkbox.checked = false;
+                toggleRowInputs(checkbox);
+                skippedCount++;
+                continue;
+            }
+
+            checkbox.checked = true;
             toggleRowInputs(checkbox);
-        });
+        }
+
+        if (skippedCount > 0) {
+            Swal.fire({
+                title: 'Some Machines Were Skipped',
+                text: `${skippedCount} machine(s) were not selected because report date, shift and machine data already exists.`,
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
+        }
     }
 
     function updateSelectAllCheckbox() {
@@ -362,6 +479,19 @@
         });
     }
 
+    function updateAllRowDates(newReportDate) {
+        const tableBody = document.getElementById('tableBody');
+        if (!tableBody) return;
+
+        const rows = tableBody.querySelectorAll('tr.machine-row');
+        rows.forEach(row => {
+            const reportDateInput = row.querySelector('input[name="report_date[]"]');
+            if (reportDateInput) {
+                reportDateInput.value = newReportDate;
+            }
+        });
+    }
+
     let negativeWarningTimeout;
     function showNegativeWarning() {
         let warning = document.getElementById('negativeValueWarning');
@@ -460,6 +590,13 @@
             }
             // Set the initial value so confirmation triggers on first change
             previousShiftValue = shiftDropdown.value;
+        }
+
+        const reportDateInput = document.getElementById('report_date');
+        if (reportDateInput) {
+            reportDateInput.addEventListener('change', function () {
+                updateAllRowDates(this.value);
+            });
         }
 
         machines.forEach(machine => {
