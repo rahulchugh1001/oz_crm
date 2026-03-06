@@ -57,14 +57,14 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Coil Stock</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf001ProductionContext && !request()->routeIs('admin.production-reports.sf001.coil-stock') ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf001ProductionContext && !request()->routeIs('admin.production-reports.sf001.coil-stock') && !request()->routeIs('admin.production-reports.sf001.stock*') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Production</span>
                     </a>
-                    <div class="w-full flex items-center gap-2 p-2 rounded-lg text-gray-200">
+                    <a href="{{ route('admin.production-reports.sf001.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001.stock*') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Stock</span>
-                    </div>
+                    </a>
                 </div>
             </div>
 

@@ -60,6 +60,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::redirect('/production-reports', '/admin/production-reports/sf001')->name('production-reports.index');
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
+    Route::get('/production-reports/sf001/stock', [SF001Controller::class, 'stock'])->name('production-reports.sf001.stock');
+    Route::get('/production-reports/sf001/stock/{itemId}/history', [SF001Controller::class, 'stockHistory'])->name('production-reports.sf001.stock.history');
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');
     Route::get('/production-reports/create', [ProductionReportController::class, 'create'])->name('production-reports.create');
