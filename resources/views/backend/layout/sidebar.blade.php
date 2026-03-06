@@ -1,3 +1,11 @@
+@php
+    $isSf001ProductionContext = request()->routeIs('admin.production-reports.sf001*')
+        || request()->routeIs('admin.production-reports.index')
+        || request()->routeIs('admin.production-reports.create')
+        || request()->routeIs('admin.production-reports.show')
+        || request()->routeIs('admin.production-reports.edit');
+@endphp
+
 <!-- Sidebar -->
 <div class="w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-gray-200 h-screen fixed left-0 top-0 flex flex-col z-40 shadow-elevated">
     <div class="p-6 border-b border-white/10">
@@ -35,17 +43,17 @@
 
             <!-- Production Reports Dropdown -->
             <div class="mt-2">
-                <button onclick="toggleProductionDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') && !request()->routeIs('admin.production-reports.sf001*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <button onclick="toggleProductionDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') && !request()->routeIs('admin.production-reports.sf001*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                            <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') && !request()->routeIs('admin.production-reports.sf001*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
                         <span class="font-medium">Production Reports</span>
                     </div>
                     <i data-lucide="chevron-right" id="production-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
                 
-                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.*') && !request()->routeIs('admin.production-reports.sf001*') ? '' : 'hidden' }}" id="production-dropdown">
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? '' : 'hidden' }}" id="production-dropdown">
                         {{-- <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001') ? 'bg-white/10 text-white' : '' }}">
                             <i data-lucide="layers" class="w-3 h-3"></i>
                             <span class="text-sm">SF001</span>
@@ -62,22 +70,22 @@
             </div>
 
             <div class="mt-2">
-                <button onclick="toggleSF001Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf001*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <button onclick="toggleSF001Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isSf001ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf001*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                            <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf001*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        <div class="w-8 h-8 rounded-lg {{ $isSf001ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="layers" class="w-4 h-4 {{ $isSf001ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
                         <span class="font-medium">SF001</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf001-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
 
-                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf001*') ? '' : 'hidden' }}" id="sf001-dropdown">
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isSf001ProductionContext ? '' : 'hidden' }}" id="sf001-dropdown">
                     <a href="{{ route('admin.production-reports.sf001.coil-stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001.coil-stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Coil Stock</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001') ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf001ProductionContext && !request()->routeIs('admin.production-reports.sf001.coil-stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Production</span>
                     </a>
