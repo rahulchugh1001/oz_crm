@@ -57,7 +57,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
 
     // Routes accessible to all authenticated users (Admin & User)
     // Production Reports Routes
-    Route::get('/production-reports', [ProductionReportController::class, 'index'])->name('production-reports.index');
+    Route::redirect('/production-reports', '/admin/production-reports/sf001')->name('production-reports.index');
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
