@@ -64,10 +64,10 @@
             lucide.createIcons();
         }
 
-        // Toggle Production Reports Dropdown
-        function toggleProductionDropdown() {
-            const dropdown = document.getElementById('production-dropdown');
-            const chevron = document.getElementById('production-chevron');
+        // Toggle SF001 Dropdown
+        function toggleSF001Dropdown() {
+            const dropdown = document.getElementById('sf001-dropdown');
+            const chevron = document.getElementById('sf001-chevron');
             dropdown.classList.toggle('hidden');
             
             if (dropdown.classList.contains('hidden')) {
@@ -78,12 +78,26 @@
             lucide.createIcons();
         }
 
-        // Toggle SF001 Dropdown
-        function toggleSF001Dropdown() {
-            const dropdown = document.getElementById('sf001-dropdown');
-            const chevron = document.getElementById('sf001-chevron');
+        // Toggle SF002 Dropdown
+        function toggleSF002Dropdown() {
+            const dropdown = document.getElementById('sf002-dropdown');
+            const chevron = document.getElementById('sf002-chevron');
             dropdown.classList.toggle('hidden');
-            
+
+            if (dropdown.classList.contains('hidden')) {
+                chevron.setAttribute('data-lucide', 'chevron-right');
+            } else {
+                chevron.setAttribute('data-lucide', 'chevron-down');
+            }
+            lucide.createIcons();
+        }
+
+        // Toggle SF003 Dropdown
+        function toggleSF003Dropdown() {
+            const dropdown = document.getElementById('sf003-dropdown');
+            const chevron = document.getElementById('sf003-chevron');
+            dropdown.classList.toggle('hidden');
+
             if (dropdown.classList.contains('hidden')) {
                 chevron.setAttribute('data-lucide', 'chevron-right');
             } else {

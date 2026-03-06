@@ -41,34 +41,6 @@
             </a>
             @endif
 
-            <!-- Production Reports Dropdown -->
-            <div class="mt-2">
-                <button onclick="toggleProductionDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                            <i data-lucide="file-text" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
-                        </div>
-                        <span class="font-medium">Production Reports</span>
-                    </div>
-                    <i data-lucide="chevron-right" id="production-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
-                </button>
-                
-                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.*') && !$isSf001ProductionContext ? '' : 'hidden' }}" id="production-dropdown">
-                        {{-- <a href="{{ route('admin.production-reports.sf001') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001') ? 'bg-white/10 text-white' : '' }}">
-                            <i data-lucide="layers" class="w-3 h-3"></i>
-                            <span class="text-sm">SF001</span>
-                        </a> --}}
-                    <a href="{{ route('admin.production-reports.sf002') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002') ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="layers" class="w-3 h-3"></i>
-                        <span class="text-sm">SF002  <small>(Upcoming)</small> </span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003') ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="layers" class="w-3 h-3"></i>
-                        <span class="text-sm">SF003 <small>(Upcoming)</small>  </span>
-                    </a>
-                </div>
-            </div>
-
             <div class="mt-2">
                 <button onclick="toggleSF001Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isSf001ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
@@ -93,6 +65,44 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Stock</span>
                     </div>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <button onclick="toggleSF002Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf002*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf002*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf002*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">SF002</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="sf002-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf002*') ? '' : 'hidden' }}" id="sf002-dropdown">
+                    <a href="{{ route('admin.production-reports.sf002') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Process <small>(Upcoming)</small></span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-2">
+                <button onclick="toggleSF003Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf003*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf003*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf003*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">SF003</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="sf003-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf003*') ? '' : 'hidden' }}" id="sf003-dropdown">
+                    <a href="{{ route('admin.production-reports.sf003') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Process <small>(Upcoming)</small></span>
+                    </a>
                 </div>
             </div>
 
