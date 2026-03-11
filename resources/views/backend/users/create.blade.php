@@ -88,7 +88,9 @@
                     >
                         <option value="">Select Role</option>
                         <option value="Admin" {{ old('role') === 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="User" {{ old('role') === 'User' ? 'selected' : '' }}>User</option>
+                        <option value="SF001" {{ old('role') === 'SF001' ? 'selected' : '' }}>SF001</option>
+                        <option value="SF002" {{ old('role') === 'SF002' ? 'selected' : '' }}>SF002</option>
+                        <option value="SF003" {{ old('role') === 'SF003' ? 'selected' : '' }}>SF003</option>
                     </select>
                     @error('role')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
@@ -169,6 +171,40 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Notify via Email Toggle (temporarily disabled) --}}
+                {{--
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="mail" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <label for="notify_via_email" class="block text-sm font-semibold text-slate-700">
+                                    Send Credentials via Email
+                                </label>
+                                <p class="text-xs text-slate-500">
+                                    Notify the user with their login credentials
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    id="notify_via_email" 
+                                    name="notify_via_email" 
+                                    value="1"
+                                    {{ old('notify_via_email') ? 'checked' : '' }}
+                                    class="sr-only peer"
+                                >
+                                <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                --}}
 
                 <!-- Action Buttons -->
                 <div class="flex items-center gap-3 pt-4 border-t border-slate-200">

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserCredentialsMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -62,14 +64,33 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => 'required|string|in:Admin,User',
+            'role' => 'required|string|in:Admin,SF001,SF002,SF003',
             'status' => 'required|boolean',
+            'notify_via_email' => 'nullable|boolean',
         ]);
 
+        // Store plain password before hashing (for email notification)
+        $plainPassword = $validated['password'];
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_deleted'] = false;
 
-        User::create($validated);
+        $user = User::create($validated);
+
+        // Send email notification if toggle is checked.
+        // Temporarily disabled: credential emails are not being sent as of now.
+        if ($request->has('notify_via_email') && $request->notify_via_email) {
+            // try {
+            //     Mail::to($user->email)->send(new UserCredentialsMail($user, $plainPassword));
+            //     return redirect()->route('admin.users.index')
+            //         ->with('success', 'User created successfully and credentials sent via email.');
+            // } catch (\Exception $e) {
+            //     return redirect()->route('admin.users.index')
+            //         ->with('success', 'User created successfully, but failed to send email: ' . $e->getMessage());
+            // }
+
+            return redirect()->route('admin.users.index')
+                ->with('success', 'User created successfully. Credential email sending is temporarily disabled.');
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'User created successfully.');
@@ -99,7 +120,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|string|in:Admin,User',
+            'role' => 'required|string|in:Admin,SF001,SF002,SF003',
             'status' => 'required|boolean',
         ]);
 

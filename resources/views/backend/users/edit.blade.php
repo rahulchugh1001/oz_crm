@@ -89,7 +89,9 @@
                     >
                         <option value="">Select Role</option>
                         <option value="Admin" {{ old('role', $user->role) === 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="User" {{ old('role', $user->role) === 'User' ? 'selected' : '' }}>User</option>
+                        <option value="SF001" {{ old('role', $user->role) === 'SF001' ? 'selected' : '' }}>SF001</option>
+                        <option value="SF002" {{ old('role', $user->role) === 'SF002' ? 'selected' : '' }}>SF002</option>
+                        <option value="SF003" {{ old('role', $user->role) === 'SF003' ? 'selected' : '' }}>SF003</option>
                     </select>
                     @error('role')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
