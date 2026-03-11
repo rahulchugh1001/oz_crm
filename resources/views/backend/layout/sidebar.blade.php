@@ -1,4 +1,10 @@
 @php
+    $userRole = auth()->user()->role;
+    $isAdmin = $userRole === 'Admin';
+    $canViewSf001 = $isAdmin || $userRole === 'SF001';
+    $canViewSf002 = $isAdmin || $userRole === 'SF002';
+    $canViewSf003 = $isAdmin || $userRole === 'SF003';
+
     $isSf001ProductionContext = request()->routeIs('admin.production-reports.sf001*')
         || request()->routeIs('admin.production-reports.index')
         || request()->routeIs('admin.production-reports.create')
@@ -18,7 +24,6 @@
     
     <nav class="flex-1 p-4 overflow-y-auto">
         <div class="space-y-1">
-            @if(auth()->user()->role === 'Admin')
             <a href="{{ route('admin.dashboard') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                 <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                     <i data-lucide="home" class="w-4 h-4 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-gray-400' }}"></i>
@@ -26,6 +31,7 @@
                 <span class="font-medium">Dashboard</span>
             </a>
 
+            @if($isAdmin)
             <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.items.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                 <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.items.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                     <i data-lucide="box" class="w-4 h-4 {{ request()->routeIs('admin.items.*') ? 'text-white' : 'text-gray-400' }}"></i>
@@ -41,6 +47,7 @@
             </a>
             @endif
 
+            @if($canViewSf001)
             <div class="mt-2">
                 <button onclick="toggleSF001Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isSf001ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
@@ -67,7 +74,9 @@
                     </a>
                 </div>
             </div>
+            @endif
 
+            @if($canViewSf002)
             <div class="mt-2">
                 <button onclick="toggleSF002Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf002*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
@@ -86,7 +95,9 @@
                     </a>
                 </div>
             </div>
+            @endif
 
+            @if($canViewSf003)
             <div class="mt-2">
                 <button onclick="toggleSF003Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf003*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
@@ -105,8 +116,9 @@
                     </a>
                 </div>
             </div>
+            @endif
 
-            @if(auth()->user()->role === 'Admin')
+            @if($isAdmin)
             <a href="{{ route('admin.users.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.users.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                 <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.users.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                     <i data-lucide="users" class="w-4 h-4 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-gray-400' }}"></i>

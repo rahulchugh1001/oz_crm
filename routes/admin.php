@@ -21,11 +21,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.active.user'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Admin Only Routes
     Route::middleware(['check.admin.role'])->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
         // Items Routes
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');

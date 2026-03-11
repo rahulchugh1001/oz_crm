@@ -228,11 +228,13 @@
                                 </span>
                             </label>
                             
-                            @if (Route::has('password.request'))
-                                <a href="{{ route('password.request') }}" class="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-                                    Forgot password?
-                                </a>
-                            @endif
+                            <span
+                                class="text-sm font-medium text-slate-400 cursor-not-allowed select-none"
+                                title="Not Allowed"
+                                aria-disabled="true"
+                            >
+                                Forgot password?
+                            </span>
                         </div>
                         
                         <!-- Submit Button -->
