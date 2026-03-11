@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\MachineController;
 use App\Http\Controllers\Admin\ProductionReportController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SF001Controller;
+use App\Http\Controllers\Admin\SF002Controller;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,7 +61,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
     Route::get('/production-reports/sf001/stock', [SF001Controller::class, 'stock'])->name('production-reports.sf001.stock');
+    Route::post('/production-reports/sf001/stock/transfer', [SF001Controller::class, 'storeTransfer'])->name('production-reports.sf001.stock.transfer');
     Route::get('/production-reports/sf001/stock/{itemId}/history', [SF001Controller::class, 'stockHistory'])->name('production-reports.sf001.stock.history');
+    Route::prefix('production-reports/sf002')->name('production-reports.sf002.')->group(function () {
+        Route::get('/stock', [SF002Controller::class, 'index'])->name('stock');
+        Route::get('/process', [SF002Controller::class, 'process'])->name('process');
+        Route::post('/stock/{transferId}/status', [SF002Controller::class, 'updateStatus'])->name('stock.status');
+        Route::get('/production-report/{transferId}', [SF002Controller::class, 'productionReport'])->name('production-report');
+        Route::post('/production-report/{transferId}', [SF002Controller::class, 'storeProductionReport'])->name('production-report.store');
+    });
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');
     Route::get('/production-reports/create', [ProductionReportController::class, 'create'])->name('production-reports.create');

@@ -135,10 +135,149 @@
         </div>
         @endif
     </div>
+
+    <!-- Stock Manage History Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden mt-6">
+        <div class="p-6 border-b border-slate-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold text-slate-900">Stock Manage History</h3>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-500">Total Records:</span>
+                    <span class="text-sm font-semibold text-slate-900">{{ $stockManageHistory->count() }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Assign To</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($stockManageHistory as $index => $transfer)
+                    @php
+                        $sf001Remark = trim((string) ($transfer->remark ?? ''));
+                        $sf002Remark = trim((string) ($transfer->sf002_remark ?? ''));
+                        $sf001ShortRemark = mb_strimwidth($sf001Remark, 0, 60, '...');
+                        $sf002ShortRemark = mb_strimwidth($sf002Remark, 0, 60, '...');
+                    @endphp
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-sm text-slate-700">{{ $index + 1 }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-700">
+                            {{ \Carbon\Carbon::parse($transfer->date . ' ' . $transfer->time)->format('M d, Y h:i A') }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->assign_to_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700">
+                                <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
+                                <span class="text-sm font-semibold">{{ number_format($transfer->quantity, 2) }}</span>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if($transfer->is_accept == 1)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">Accepted</span>
+                            @elseif($transfer->is_accept == 2)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700">Rejected</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">Pending</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-700 align-top">
+                            @if($sf001Remark === '')
+                                -
+                            @elseif($sf001Remark === $sf001ShortRemark)
+                                {{ $sf001Remark }}
+                            @else
+                                <div class="max-w-[220px]">
+                                    <span class="js-remark-short">{{ $sf001ShortRemark }}</span>
+                                    <span class="js-remark-full hidden">{{ $sf001Remark }}</span>
+                                    <button type="button" class="js-remark-toggle ml-1 text-[11px] font-medium text-blue-600 hover:text-blue-700">Read more</button>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-700 align-top">
+                            @if($sf002Remark === '')
+                                -
+                            @elseif($sf002Remark === $sf002ShortRemark)
+                                {{ $sf002Remark }}
+                            @else
+                                <div class="max-w-[220px]">
+                                    <span class="js-remark-short">{{ $sf002ShortRemark }}</span>
+                                    <span class="js-remark-full hidden">{{ $sf002Remark }}</span>
+                                    <button type="button" class="js-remark-toggle ml-1 text-[11px] font-medium text-blue-600 hover:text-blue-700">Read more</button>
+                                </div>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+                                    <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">No stock manage history found</p>
+                                    <p class="text-sm text-slate-500 mt-1">This item has no stock transfer records yet</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($stockManageHistory->count() > 0)
+        <div class="p-6 border-t border-slate-200 bg-slate-50">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-slate-600">
+                    <i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i>
+                    Showing all stock transfer records for this item
+                </div>
+                <div class="text-sm">
+                    <span class="text-slate-600">Total Transferred Quantity:</span>
+                    <span class="ml-2 font-semibold text-slate-900">{{ number_format($stockManageHistory->sum('quantity'), 2) }}</span>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const remarkToggleButtons = document.querySelectorAll('.js-remark-toggle');
+
+        remarkToggleButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const wrapper = button.parentElement;
+                const shortText = wrapper.querySelector('.js-remark-short');
+                const fullText = wrapper.querySelector('.js-remark-full');
+                const isExpanded = !fullText.classList.contains('hidden');
+
+                if (isExpanded) {
+                    fullText.classList.add('hidden');
+                    shortText.classList.remove('hidden');
+                    button.textContent = 'Read more';
+                } else {
+                    shortText.classList.add('hidden');
+                    fullText.classList.remove('hidden');
+                    button.textContent = 'Read less';
+                }
+            });
+        });
+
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }

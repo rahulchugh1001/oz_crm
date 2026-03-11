@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\ProductionReport;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -23,6 +27,14 @@ class SF001Controller extends Controller
      */
     public function stock(): View
     {
+        $transferStatsSubQuery = DB::table('sf001_stock_transfers')
+            ->where('is_deleted', false)
+            ->select(
+                'item_id',
+                DB::raw('COALESCE(SUM(quantity), 0) as transferred_quantity')
+            )
+            ->groupBy('item_id');
+
         // Get only items that exist in production reports with aggregated quantities
         $itemStocks = Item::query()
             ->select(
@@ -31,12 +43,18 @@ class SF001Controller extends Controller
                 'items.code',
                 'items.size',
                 'items.weight',
-                DB::raw('COALESCE(SUM(production_reports.actual_set_shift), 0) as total_stock'),
+                DB::raw('COALESCE(SUM(production_reports.actual_set_shift), 0) as total_produced_stock'),
+                DB::raw('COALESCE(MAX(sf001_transfers.transferred_quantity), 0) as transferred_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as pending_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as total_stock'),
                 DB::raw('MAX(production_reports.created_at) as last_stock_update')
             )
             ->join('production_reports', function ($join) {
                 $join->on('items.id', '=', 'production_reports.slide_size_id')
                     ->where('production_reports.is_deleted', '=', false);
+            })
+            ->leftJoinSub($transferStatsSubQuery, 'sf001_transfers', function ($join) {
+                $join->on('items.id', '=', 'sf001_transfers.item_id');
             })
             ->where('items.is_deleted', false)
             ->where('items.status', true)
@@ -44,7 +62,78 @@ class SF001Controller extends Controller
             ->orderBy('items.name')
             ->get();
 
-        return view('backend.production-reports.sf001.stock', compact('itemStocks'));
+        $sf002Users = User::query()
+            ->select('id', 'name', 'email')
+            ->where('role', 'SF002')
+            ->where('status', true)
+            ->where('is_deleted', false)
+            ->orderBy('name')
+            ->get();
+
+        return view('backend.production-reports.sf001.stock', compact('itemStocks', 'sf002Users'));
+    }
+
+    /**
+     * Store SF001 stock transfer to SF002 user.
+     */
+    public function storeTransfer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'item_id' => 'required|integer|exists:items,id',
+            'assign_to' => 'required|integer|exists:users,id',
+            'quantity' => 'required|numeric|gt:0',
+            'date' => 'required|date',
+            'time' => 'required|date_format:H:i:s',
+            'remark' => 'nullable|string|max:500',
+        ]);
+
+        $targetUser = User::query()
+            ->where('id', $validated['assign_to'])
+            ->where('role', 'SF002')
+            ->where('status', true)
+            ->where('is_deleted', false)
+            ->first();
+
+        if (!$targetUser) {
+            return back()->withErrors([
+                'assign_to' => 'Selected user must be an active SF002 user.',
+            ])->withInput();
+        }
+
+        $totalProducedStock = ProductionReport::query()
+            ->where('slide_size_id', $validated['item_id'])
+            ->where('is_deleted', false)
+            ->sum('actual_set_shift');
+
+        $totalTransferredStock = DB::table('sf001_stock_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('is_deleted', false)
+            ->whereIn('is_accept', [0, 1])
+            ->sum('quantity');
+
+        $availableStock = max((float) $totalProducedStock - (float) $totalTransferredStock, 0);
+
+        if ((float) $validated['quantity'] > $availableStock) {
+            return back()->withErrors([
+                'quantity' => 'Transfer quantity cannot be greater than available quantity (' . number_format($availableStock, 2) . ').',
+            ])->withInput();
+        }
+
+        DB::table('sf001_stock_transfers')->insert([
+            'item_id' => $validated['item_id'],
+            'transfer_by' => Auth::id(),
+            'assign_to' => $validated['assign_to'],
+            'quantity' => $validated['quantity'],
+            'date' => $validated['date'],
+            'time' => $validated['time'],
+            'is_accept' => 0,
+            'remark' => $validated['remark'] ?? null,
+            'is_deleted' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', 'Stock transferred successfully.');
     }
 
     /**
@@ -70,6 +159,28 @@ class SF001Controller extends Controller
             ->orderBy('production_reports.created_at', 'desc')
             ->get();
 
-        return view('backend.production-reports.sf001.stock-history', compact('item', 'history'));
+        $stockManageHistory = DB::table('sf001_stock_transfers as transfers')
+            ->select(
+                'transfers.id',
+                'transfers.quantity',
+                'transfers.date',
+                'transfers.time',
+                'transfers.is_accept',
+                'transfers.remark',
+                'transfers.sf002_remark',
+                'transfers.created_at',
+                'transfer_by_user.name as transfer_by_name',
+                'assign_to_user.name as assign_to_name'
+            )
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->where('transfers.item_id', $itemId)
+            ->where('transfers.is_deleted', false)
+            ->orderByDesc('transfers.date')
+            ->orderByDesc('transfers.time')
+            ->orderByDesc('transfers.created_at')
+            ->get();
+
+        return view('backend.production-reports.sf001.stock-history', compact('item', 'history', 'stockManageHistory'));
     }
 }

@@ -89,9 +89,13 @@
                 </button>
 
                 <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf002*') ? '' : 'hidden' }}" id="sf002-dropdown">
-                    <a href="{{ route('admin.production-reports.sf002') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002') ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf002.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002.stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">Process <small>(Upcoming)</small></span>
+                        <span class="text-sm">Stock </span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf002.process') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf002.process') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Production</span>
                     </a>
                 </div>
             </div>
