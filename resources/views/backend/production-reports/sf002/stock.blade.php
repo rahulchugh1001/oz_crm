@@ -1,13 +1,13 @@
 @extends('backend.layout.app')
 
-@section('title', 'SF002 Stock - Assigned Transfers')
+@section('title', 'CED & Zinc (SF2) Stock - Assigned Transfers')
 
-@section('page-title', 'SF002 Stock Management')
+@section('page-title', 'CED & Zinc (SF2) Stock Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">SF002</span>
+    <span class="text-slate-600">CED & Zinc (SF2)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Stock</span>
 @endsection
@@ -31,7 +31,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">Assigned Stock Transfers</h2>
-                    <p class="text-sm text-slate-500">Stock transfers assigned from SF001 to this user</p>
+                    <p class="text-sm text-slate-500">Stock transfers assigned from SF001 to this CED & Zinc (SF2) user</p>
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-500">Total Records:</span>
@@ -53,7 +53,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
                         @if($canUpdateStatus)
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
                         @endif
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: `You are about to ${statusLabel} the transfer for ${itemName}.`,
                 icon: 'warning',
                 input: 'textarea',
-                inputLabel: 'SF002 Remark',
+                inputLabel: 'CED & Zinc (SF2) Remark',
                 inputPlaceholder: 'Add remark here...',
                 inputValue: currentRemark,
                 inputAttributes: {
