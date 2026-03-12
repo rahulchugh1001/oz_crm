@@ -77,9 +77,47 @@ class SF002Controller extends Controller
      */
     public function process(): View
     {
-        $acceptedTransfers = $this->assignedTransfersQuery()
-            ->where('transfers.is_accept', 1)
-            ->get();
+        if (Auth::user()?->role === 'Admin') {
+            $acceptedTransfers = $this->assignedTransfersQuery()
+                ->addSelect('transfers.assign_to', 'accepted_by_user.name as accepted_by_name')
+                ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
+                ->where('transfers.is_accept', 1)
+                ->get();
+        } else {
+            $role = $this->currentAssignableRole();
+
+            $acceptedTransfers = DB::table('sf001_stock_transfers as transfers')
+                ->select(
+                    'transfers.id',
+                    'transfers.item_id',
+                    'transfers.quantity',
+                    'transfers.date',
+                    'transfers.time',
+                    'transfers.is_accept',
+                    'transfers.remark',
+                    'transfers.sf002_remark',
+                    'transfers.assign_to',
+                    'items.code as item_code',
+                    'items.name as item_name',
+                    'items.size as item_size',
+                    'transfer_by_user.name as transfer_by_name',
+                    'accepted_by_user.name as accepted_by_name'
+                )
+                ->join('items', 'transfers.item_id', '=', 'items.id')
+                ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+                ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
+                ->where('transfers.is_deleted', false)
+                ->where('transfers.is_accept', 1)
+                ->when($role, function ($query, $roleValue) {
+                    $query->where('transfers.assign_role', $roleValue);
+                }, function ($query) {
+                    $query->whereRaw('1 = 0');
+                })
+                ->orderByDesc('transfers.date')
+                ->orderByDesc('transfers.time')
+                ->orderByDesc('transfers.created_at')
+                ->get();
+        }
 
         return view('backend.production-reports.sf002.process', compact('acceptedTransfers'));
     }

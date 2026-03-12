@@ -7,6 +7,7 @@ use App\Mail\UserCredentialsMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules\Password;
@@ -184,5 +185,52 @@ class UserController extends Controller
                 'message' => 'An error occurred while updating the status.'
             ], 500);
         }
+    }
+
+    /**
+     * Display user-wise login/logout activity report.
+     */
+    public function loginActivity(Request $request): View
+    {
+        $selectedUserId = $request->query('user_id');
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        $query = DB::table('user_login_activities as activities')
+            ->select(
+                'activities.id',
+                'activities.user_id',
+                'activities.login_at',
+                'activities.logout_at',
+                'activities.ip_address',
+                'activities.user_agent',
+                'users.name as user_name',
+                'users.email as user_email',
+                'users.role as user_role'
+            )
+            ->leftJoin('users', 'activities.user_id', '=', 'users.id')
+            ->orderByDesc('activities.login_at');
+
+        if (!empty($selectedUserId)) {
+            $query->where('activities.user_id', $selectedUserId);
+        }
+
+        if (!empty($dateFrom)) {
+            $query->whereDate('activities.login_at', '>=', $dateFrom);
+        }
+
+        if (!empty($dateTo)) {
+            $query->whereDate('activities.login_at', '<=', $dateTo);
+        }
+
+        $activities = $query->paginate(20)->withQueryString();
+
+        $users = User::query()
+            ->select('id', 'name', 'email', 'role')
+            ->where('is_deleted', false)
+            ->orderBy('name')
+            ->get();
+
+        return view('backend.users.login-activity', compact('activities', 'users', 'selectedUserId', 'dateFrom', 'dateTo'));
     }
 }

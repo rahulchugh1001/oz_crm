@@ -41,10 +41,16 @@
                         <p class="text-sm text-slate-500">Manage system users and their access</p>
                     </div>
                 </div>
-                <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span>Add New User</span>
-                </a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('admin.users.login-activity') }}" class="inline-flex items-center gap-2 px-4 py-2 text-slate-700 border border-slate-300 font-semibold rounded-lg hover:bg-slate-50 transition-all">
+                        <i data-lucide="history" class="w-4 h-4"></i>
+                        <span>Login Activity</span>
+                    </a>
+                    <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Add New User</span>
+                    </a>
+                </div>
             </div>
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-4">

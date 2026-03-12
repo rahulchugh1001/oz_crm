@@ -39,6 +39,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted Quantity</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
@@ -64,6 +65,15 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
+                        <td class="px-4 py-3 text-slate-700">
+                            @if($transfer->assign_to === auth()->id())
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">You</span>
+                            @elseif($transfer->accepted_by_name)
+                                {{ $transfer->accepted_by_name }}
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-slate-700 align-top">
                             @if($sf001Remark === '')
                                 -
