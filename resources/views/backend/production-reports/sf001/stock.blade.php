@@ -1,11 +1,11 @@
 @extends('backend.layout.app')
 
-@section('title', 'SF001 Process - Item Stock')
+@section('title', 'Roll Forming (SF1) Process - Item Stock')
 
-@section('page-title', 'SF001 Process - Stock Management')
+@section('page-title', 'Roll Forming (SF1) Process - Stock Management')
 
 @section('breadcrumb')
-    <span class="text-slate-600">SF001</span>
+    <span class="text-slate-600">Roll Forming (SF1)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Stock</span>
 @endsection
@@ -21,7 +21,7 @@
                         <i data-lucide="package" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">SF001 Process - Item Wise Stock</h2>
+                        <h2 class="text-lg font-bold text-slate-900">Roll Forming (SF1) Process - Item Wise Stock</h2>
                         <p class="text-sm text-slate-500">View aggregated stock quantities by item from production reports</p>
                     </div>
                 </div>

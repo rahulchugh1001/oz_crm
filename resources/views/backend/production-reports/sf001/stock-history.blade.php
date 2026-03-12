@@ -1,11 +1,11 @@
 @extends('backend.layout.app')
 
-@section('title', 'SF001 Stock - Production History')
+@section('title', 'Roll Forming (SF1) Stock - Production History')
 
-@section('page-title', 'SF001 Process - Production History')
+@section('page-title', 'Roll Forming (SF1) Process - Production History')
 
 @section('breadcrumb')
-    <span class="text-slate-600">SF001</span>
+    <span class="text-slate-600">Roll Forming (SF1)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <a href="{{ route('admin.production-reports.sf001.stock') }}" class="text-slate-600 hover:text-slate-900">Stock</a>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
@@ -158,7 +158,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Assign To</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
                     </tr>
                 </thead>

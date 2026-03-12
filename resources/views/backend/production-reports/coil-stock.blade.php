@@ -1,11 +1,11 @@
 @extends('backend.layout.app')
 
-@section('title', 'SF001 Coil Stock')
+@section('title', 'Roll Forming (SF1) Coil Stock')
 
-@section('page-title', 'SF001 Coil Stock')
+@section('page-title', 'Roll Forming (SF1) Coil Stock')
 
 @section('breadcrumb')
-    <span class="text-slate-600">SF001</span>
+    <span class="text-slate-600">Roll Forming (SF1)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Coil Stock</span>
 @endsection
@@ -16,7 +16,7 @@
         <div class="p-6 border-b border-slate-200 flex items-center justify-between gap-4">
             <div>
                 <h2 class="text-4 font-bold text-slate-900">Available Coils</h2>
-                <p class="text-slate-500 mt-1">Raw material inventory for SF1 production line</p>
+                <p class="text-slate-500 mt-1">Raw material inventory for Roll Forming (SF1) production line</p>
             </div>
             <button type="button" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-semibold transition-all">
                 <i data-lucide="plus" class="w-5 h-5"></i>

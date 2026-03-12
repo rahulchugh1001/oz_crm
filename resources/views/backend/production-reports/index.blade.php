@@ -1,13 +1,13 @@
 @extends('backend.layout.app')
 
-@section('title', 'SF001 Process - Production Reports List')
+@section('title', 'Roll Forming (SF1) Process - Production Reports List')
 
-@section('page-title', 'SF001 Process Management')
+@section('page-title', 'Roll Forming (SF1) Process Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">SF001 Process</span>
+    <span class="text-slate-600">Roll Forming (SF1) Process</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">List</span>
 @endsection
@@ -39,8 +39,8 @@
                         <i data-lucide="file-text" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">SF001 Process - Production Reports</h2>
-                        <p class="text-sm text-slate-500">Manage SF001 production reports and data</p>
+                        <h2 class="text-lg font-bold text-slate-900">Roll Forming (SF1) Process - Production Reports</h2>
+                        <p class="text-sm text-slate-500">Manage Roll Forming (SF1) production reports and data</p>
                     </div>
                 </div>
                 <a href="{{ route('admin.production-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105">
