@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\ProductionReport;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -62,43 +61,22 @@ class SF001Controller extends Controller
             ->orderBy('items.name')
             ->get();
 
-        $sf002Users = User::query()
-            ->select('id', 'name', 'email')
-            ->where('role', 'SF002')
-            ->where('status', true)
-            ->where('is_deleted', false)
-            ->orderBy('name')
-            ->get();
-
-        return view('backend.production-reports.sf001.stock', compact('itemStocks', 'sf002Users'));
+        return view('backend.production-reports.sf001.stock', compact('itemStocks'));
     }
 
     /**
-     * Store SF001 stock transfer to SF002 user.
+     * Store SF001 stock transfer to target role.
      */
     public function storeTransfer(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'item_id' => 'required|integer|exists:items,id',
-            'assign_to' => 'required|integer|exists:users,id',
+            'assign_role' => 'required|string|in:SF002,SF003',
             'quantity' => 'required|numeric|gt:0',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i:s',
             'remark' => 'nullable|string|max:500',
         ]);
-
-        $targetUser = User::query()
-            ->where('id', $validated['assign_to'])
-            ->where('role', 'SF002')
-            ->where('status', true)
-            ->where('is_deleted', false)
-            ->first();
-
-        if (!$targetUser) {
-            return back()->withErrors([
-                'assign_to' => 'Selected user must be an active SF002 user.',
-            ])->withInput();
-        }
 
         $totalProducedStock = ProductionReport::query()
             ->where('slide_size_id', $validated['item_id'])
@@ -122,7 +100,8 @@ class SF001Controller extends Controller
         DB::table('sf001_stock_transfers')->insert([
             'item_id' => $validated['item_id'],
             'transfer_by' => Auth::id(),
-            'assign_to' => $validated['assign_to'],
+            'assign_role' => $validated['assign_role'],
+            'assign_to' => null,
             'quantity' => $validated['quantity'],
             'date' => $validated['date'],
             'time' => $validated['time'],
@@ -166,6 +145,7 @@ class SF001Controller extends Controller
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',
+                'transfers.assign_role',
                 'transfers.remark',
                 'transfers.sf002_remark',
                 'transfers.created_at',

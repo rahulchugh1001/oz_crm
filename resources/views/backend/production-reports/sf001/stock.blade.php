@@ -215,16 +215,13 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="transfer_assign_to" class="block text-sm font-semibold text-slate-700 mb-2">User (SF002) <span class="text-rose-500">*</span></label>
-                        <select id="transfer_assign_to" name="assign_to" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('assign_to') border-rose-500 @enderror">
-                            <option value="">Select SF002 User</option>
-                            @foreach($sf002Users as $sf002User)
-                                <option value="{{ $sf002User->id }}" {{ (string) old('assign_to') === (string) $sf002User->id ? 'selected' : '' }}>
-                                    {{ $sf002User->name }} ({{ $sf002User->email }})
-                                </option>
-                            @endforeach
+                        <label for="transfer_assign_role" class="block text-sm font-semibold text-slate-700 mb-2">Assign Role <span class="text-rose-500">*</span></label>
+                        <select id="transfer_assign_role" name="assign_role" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('assign_role') border-rose-500 @enderror">
+                            <option value="">Select Role</option>
+                            <option value="SF002" {{ old('assign_role') === 'SF002' ? 'selected' : '' }}>CED & Zinc (SF2)</option>
+                            <option value="SF003" {{ old('assign_role') === 'SF003' ? 'selected' : '' }}>Assembly (SF3)</option>
                         </select>
-                        @error('assign_to')
+                        @error('assign_role')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -396,7 +393,7 @@
             lucide.createIcons();
         }
 
-        @if($errors->has('assign_to') || $errors->has('quantity') || $errors->has('item_id') || $errors->has('date') || $errors->has('time'))
+        @if($errors->has('assign_role') || $errors->has('quantity') || $errors->has('item_id') || $errors->has('date') || $errors->has('time'))
         document.getElementById('transferModal').classList.remove('hidden');
 
         const oldAvailable = parseFloat(document.getElementById('transfer_available_quantity_hidden').value || '0');

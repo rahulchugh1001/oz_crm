@@ -52,7 +52,7 @@
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
                         @if($canUpdateStatus)
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>

@@ -11,6 +11,13 @@ use Illuminate\View\View;
 
 class SF002Controller extends Controller
 {
+    protected function currentAssignableRole(): ?string
+    {
+        $role = Auth::user()?->role;
+
+        return in_array($role, ['SF002', 'SF003'], true) ? $role : null;
+    }
+
     /**
      * Build base query for SF002 assigned transfers.
      */
@@ -39,7 +46,17 @@ class SF002Controller extends Controller
             ->orderByDesc('transfers.created_at');
 
         if (Auth::user()?->role !== 'Admin') {
-            $query->where('transfers.assign_to', Auth::id());
+            $role = $this->currentAssignableRole();
+
+            if (!$role) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('transfers.assign_role', $role)
+                    ->where(function ($scoped) {
+                        $scoped->whereNull('transfers.assign_to')
+                            ->orWhere('transfers.assign_to', Auth::id());
+                    });
+            }
         }
 
         return $query;
@@ -89,7 +106,15 @@ class SF002Controller extends Controller
             ->where('transfers.is_deleted', false);
 
         if (Auth::user()?->role !== 'Admin') {
-            $query->where('transfers.assign_to', Auth::id());
+            $role = $this->currentAssignableRole();
+
+            if (!$role) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('transfers.assign_role', $role)
+                    ->where('transfers.assign_to', Auth::id())
+                    ->where('transfers.is_accept', 1);
+            }
         }
 
         $transfer = $query->first();
@@ -112,7 +137,14 @@ class SF002Controller extends Controller
             ->where('is_deleted', false);
 
         if (Auth::user()?->role !== 'Admin') {
-            $query->where('assign_to', Auth::id());
+            $role = $this->currentAssignableRole();
+
+            if (!$role) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('assign_role', $role)
+                    ->where('assign_to', Auth::id());
+            }
         }
 
         if (!$query->exists()) {
@@ -196,7 +228,17 @@ class SF002Controller extends Controller
             ->where('is_deleted', false);
 
         if (Auth::user()?->role !== 'Admin') {
-            $query->where('assign_to', Auth::id());
+            $role = $this->currentAssignableRole();
+
+            if (!$role) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('assign_role', $role)
+                    ->where(function ($scoped) {
+                        $scoped->whereNull('assign_to')
+                            ->orWhere('assign_to', Auth::id());
+                    });
+            }
         }
 
         $transfer = $query->first();
@@ -213,6 +255,7 @@ class SF002Controller extends Controller
             ->where('id', $transferId)
             ->update([
                 'is_accept' => $validated['status'],
+                'assign_to' => Auth::user()?->role === 'Admin' ? $transfer->assign_to : Auth::id(),
                 'sf002_remark' => $validated['sf002_remark'] ?? null,
                 'updated_at' => now(),
             ]);

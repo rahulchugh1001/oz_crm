@@ -155,7 +155,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">#</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Assign To</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
@@ -176,7 +176,17 @@
                             {{ \Carbon\Carbon::parse($transfer->date . ' ' . $transfer->time)->format('M d, Y h:i A') }}
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->assign_to_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-700">
+                            @if($transfer->assign_to_name)
+                                {{ $transfer->assign_to_name }}
+                            @elseif($transfer->assign_role === 'SF002')
+                                CED & Zinc (SF2) - Unclaimed
+                            @elseif($transfer->assign_role === 'SF003')
+                                Assembly (SF3) - Unclaimed
+                            @else
+                                N/A
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-center">
                             <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700">
                                 <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
