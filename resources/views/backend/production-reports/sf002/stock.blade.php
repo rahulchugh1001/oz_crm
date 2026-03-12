@@ -75,7 +75,7 @@
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->item_size }}</td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">
-                                {{ number_format($transfer->quantity, 2) }}
+                                {{ number_format($transfer->quantity, 0) }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>

@@ -95,19 +95,19 @@
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700">
                                 <i data-lucide="package" class="w-3.5 h-3.5"></i>
-                                <span class="font-semibold">{{ number_format($item->total_produced_stock, 2) }}</span>
+                                <span class="font-semibold">{{ number_format($item->total_produced_stock, 0) }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">
                                 <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
-                                <span class="font-semibold">{{ number_format($item->pending_quantity, 2) }}</span>
+                                <span class="font-semibold">{{ number_format($item->pending_quantity, 0) }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700">
                                 <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
-                                <span class="font-semibold">{{ number_format($item->transferred_quantity, 2) }}</span>
+                                <span class="font-semibold">{{ number_format($item->transferred_quantity, 0) }}</span>
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -125,7 +125,7 @@
                                     data-item-code="{{ $item->code }}"
                                     data-item-name="{{ $item->name }}"
                                     data-item-size="{{ $item->size }}"
-                                    data-available-stock="{{ number_format((float) $item->total_stock, 2, '.', '') }}"
+                                    data-available-stock="{{ round((float) $item->total_stock) }}"
                                     class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
                                 >
                                     <i data-lucide="arrow-right-left" class="w-3 h-3"></i>
@@ -167,15 +167,15 @@
                 <div class="flex items-center gap-4">
                     <div class="text-sm">
                         <span class="text-slate-600">Total Quantity:</span>
-                        <span class="ml-2 font-semibold text-slate-900">{{ number_format($itemStocks->sum('total_produced_stock'), 2) }}</span>
+                        <span class="ml-2 font-semibold text-slate-900">{{ number_format($itemStocks->sum('total_produced_stock'), 0) }}</span>
                     </div>
                     <div class="text-sm">
                         <span class="text-slate-600">Pending Quantity:</span>
-                        <span class="ml-2 font-semibold text-amber-700">{{ number_format($itemStocks->sum('pending_quantity'), 2) }}</span>
+                        <span class="ml-2 font-semibold text-amber-700">{{ number_format($itemStocks->sum('pending_quantity'), 0) }}</span>
                     </div>
                     <div class="text-sm">
                         <span class="text-slate-600">Transferred Quantity:</span>
-                        <span class="ml-2 font-semibold text-blue-700">{{ number_format($itemStocks->sum('transferred_quantity'), 2) }}</span>
+                        <span class="ml-2 font-semibold text-blue-700">{{ number_format($itemStocks->sum('transferred_quantity'), 0) }}</span>
                     </div>
                 </div>
             </div>
@@ -233,7 +233,7 @@
 
                     <div>
                         <label for="transfer_quantity" class="block text-sm font-semibold text-slate-700 mb-2">Quantity to Transfer <span class="text-rose-500">*</span></label>
-                        <input type="number" id="transfer_quantity" name="quantity" required min="0.01" step="0.01" value="{{ old('quantity') }}" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('quantity') border-rose-500 @enderror" placeholder="Enter quantity">
+                        <input type="number" id="transfer_quantity" name="quantity" required min="1" step="1" value="{{ old('quantity') }}" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('quantity') border-rose-500 @enderror" placeholder="Enter quantity">
                         <p id="transfer_quantity_help" class="mt-1 text-xs text-slate-500"></p>
                         @error('quantity')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
@@ -336,15 +336,15 @@
         document.getElementById('transfer_item_code_hidden').value = itemCode;
         document.getElementById('transfer_item_name_hidden').value = itemName;
         document.getElementById('transfer_item_size_hidden').value = itemSize;
-        document.getElementById('transfer_available_quantity_hidden').value = availableStock.toFixed(2);
+        document.getElementById('transfer_available_quantity_hidden').value = Math.round(availableStock);
         document.getElementById('transfer_item_code').value = itemCode;
         document.getElementById('transfer_item_name').value = itemName;
         document.getElementById('transfer_item_size').value = itemSize;
-        document.getElementById('transfer_available_quantity').value = availableStock.toFixed(2);
+        document.getElementById('transfer_available_quantity').value = Math.round(availableStock);
 
         const quantityInput = document.getElementById('transfer_quantity');
-        quantityInput.max = availableStock.toFixed(2);
-        document.getElementById('transfer_quantity_help').innerText = `Max allowed: ${availableStock.toFixed(2)}`;
+        quantityInput.max = Math.round(availableStock);
+        document.getElementById('transfer_quantity_help').innerText = `Max allowed: ${Math.round(availableStock)}`;
 
         setTransferDateTimeNow();
         document.getElementById('transferModal').classList.remove('hidden');
@@ -365,7 +365,7 @@
 
         if (quantity > transferState.available) {
             event.preventDefault();
-            alert(`Transfer quantity cannot be greater than available quantity (${transferState.available.toFixed(2)}).`);
+            alert(`Transfer quantity cannot be greater than available quantity (${Math.round(transferState.available)}).`);
             return;
         }
 
@@ -402,11 +402,11 @@
         document.getElementById('transfer_item_code').value = document.getElementById('transfer_item_code_hidden').value;
         document.getElementById('transfer_item_name').value = document.getElementById('transfer_item_name_hidden').value;
         document.getElementById('transfer_item_size').value = document.getElementById('transfer_item_size_hidden').value;
-        document.getElementById('transfer_available_quantity').value = oldAvailable.toFixed(2);
+        document.getElementById('transfer_available_quantity').value = Math.round(oldAvailable);
 
         const quantityInput = document.getElementById('transfer_quantity');
-        quantityInput.max = oldAvailable.toFixed(2);
-        document.getElementById('transfer_quantity_help').innerText = `Max allowed: ${oldAvailable.toFixed(2)}`;
+        quantityInput.max = Math.round(oldAvailable);
+        document.getElementById('transfer_quantity_help').innerText = `Max allowed: ${Math.round(oldAvailable)}`;
 
         const oldDate = document.getElementById('transfer_date').value;
         const oldTime = document.getElementById('transfer_time').value;

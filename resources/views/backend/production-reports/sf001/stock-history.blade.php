@@ -95,7 +95,7 @@
                         <td class="px-6 py-4 text-center">
                             <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700">
                                 <i data-lucide="package-check" class="w-4 h-4"></i>
-                                <span class="text-sm font-semibold">{{ number_format($record->actual_set_shift, 2) }}</span>
+                                <span class="text-sm font-semibold">{{ number_format($record->actual_set_shift, 0) }}</span>
                             </div>
                         </td>
                     </tr>
@@ -128,7 +128,7 @@
                 <div class="flex items-center gap-4">
                     <div class="text-sm">
                         <span class="text-slate-600">Total Production Quantity:</span>
-                        <span class="ml-2 font-semibold text-slate-900">{{ number_format($history->sum('actual_set_shift'), 2) }}</span>
+                        <span class="ml-2 font-semibold text-slate-900">{{ number_format($history->sum('actual_set_shift'), 0) }}</span>
                     </div>
                 </div>
             </div>
@@ -190,7 +190,7 @@
                         <td class="px-6 py-4 text-center">
                             <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700">
                                 <i data-lucide="arrow-right-left" class="w-4 h-4"></i>
-                                <span class="text-sm font-semibold">{{ number_format($transfer->quantity, 2) }}</span>
+                                <span class="text-sm font-semibold">{{ number_format($transfer->quantity, 0) }}</span>
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
@@ -257,7 +257,7 @@
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-600">Total Transferred Quantity:</span>
-                    <span class="ml-2 font-semibold text-slate-900">{{ number_format($stockManageHistory->sum('quantity'), 2) }}</span>
+                    <span class="ml-2 font-semibold text-slate-900">{{ number_format($stockManageHistory->sum('quantity'), 0) }}</span>
                 </div>
             </div>
         </div>

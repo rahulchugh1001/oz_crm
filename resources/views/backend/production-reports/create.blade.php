@@ -248,7 +248,7 @@
         let hourInputs = '';
         hourFields.forEach(field => {
             hourInputs += `<td class="border border-slate-300 px-2 py-2">
-                <input type="number" name="${field}[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
+                <input type="number" name="${field}[]" step="1" min="0" value="" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
             </td>`;
         });
 
@@ -271,14 +271,14 @@
                 </select>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="total_set_shift[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
+                <input type="number" name="total_set_shift[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour calc-input" style="pointer-events: none;" disabled>
+                <input type="number" name="set_per_hour[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour calc-input" style="pointer-events: none;" disabled>
             </td>
             ${hourInputs}
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
+                <input type="number" name="actual_set_shift[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="workman_count[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
@@ -390,7 +390,7 @@
 
         const setPerHourInput = row.querySelector('.set-per-hour');
         if (setPerHourInput) {
-            setPerHourInput.value = setPerHour.toFixed(2);
+            setPerHourInput.value = Math.round(setPerHour);
         }
     }
 
@@ -406,7 +406,7 @@
 
         const actualSetInput = row.querySelector('.actual-set');
         if (actualSetInput) {
-            actualSetInput.value = total.toFixed(2);
+            actualSetInput.value = Math.round(total);
         }
     }
 
@@ -529,6 +529,24 @@
         }
     }
 
+    function enforceWholeNumber(input) {
+        if (!input || input.type !== 'number') return;
+
+        if (input.value === '') return;
+
+        const numericValue = parseFloat(input.value);
+        if (Number.isNaN(numericValue)) return;
+
+        const roundedValue = Math.round(numericValue);
+        if (numericValue !== roundedValue) {
+            input.value = String(roundedValue);
+            if (typeof input.onchange === 'function') {
+                input.onchange();
+            }
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
     function scrollTableHorizontal(direction) {
         const tableScrollContainer = document.getElementById('tableScrollContainer');
         if (!tableScrollContainer) return;
@@ -614,6 +632,7 @@
             productionForm.addEventListener('blur', function (event) {
                 if (event.target && event.target.matches('input[type="number"]')) {
                     enforceNonNegative(event.target);
+                    enforceWholeNumber(event.target);
                 }
             }, true);
         }
@@ -689,7 +708,7 @@
                 const setPerHourInput = row.querySelector('.set-per-hour');
                 if (setPerHourInput) {
                     const calculatedValue = totalValue / 12;
-                    setPerHourInput.value = calculatedValue.toFixed(2);
+                    setPerHourInput.value = Math.round(calculatedValue);
                     setPerHourInput.disabled = false;  // Ensure it's not disabled for submission
                 }
             }
@@ -702,7 +721,7 @@
             });
             const actualSetInput = row.querySelector('.actual-set');
             if (actualSetInput) {
-                actualSetInput.value = totalHours.toFixed(2);
+                actualSetInput.value = Math.round(totalHours);
                 actualSetInput.disabled = false;  // Ensure it's not disabled for submission
             }
         });
