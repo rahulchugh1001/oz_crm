@@ -123,7 +123,7 @@
                                 @if($user->role === 'Admin') bg-purple-100 text-purple-700
                                 @else bg-slate-100 text-slate-700
                                 @endif">
-                                {{ $user->role ?? 'User' }}
+                                {{ $user->role === 'SF001' ? 'SF1' : ($user->role === 'SF002' ? 'SF2' : ($user->role === 'SF003' ? 'SF3' : ($user->role ?? 'User'))) }}
                             </span>
                         </td>
                         <td class="px-6 py-4">

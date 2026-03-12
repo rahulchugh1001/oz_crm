@@ -59,7 +59,7 @@
                                 @else bg-slate-100 text-slate-700
                                 @endif">
                                 <i data-lucide="shield" class="w-4 h-4 mr-2"></i>
-                                {{ $user->role ?? 'User' }}
+                                {{ $user->role === 'SF001' ? 'SF1' : ($user->role === 'SF002' ? 'SF2' : ($user->role === 'SF003' ? 'SF3' : ($user->role ?? 'User'))) }}
                             </span>
                             
                             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium {{ $user->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
@@ -103,7 +103,7 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Role</label>
-                        <p class="text-slate-900">{{ $user->role ?? 'User' }}</p>
+                        <p class="text-slate-900">{{ $user->role === 'SF001' ? 'SF1' : ($user->role === 'SF002' ? 'SF2' : ($user->role === 'SF003' ? 'SF3' : ($user->role ?? 'User'))) }}</p>
                     </div>
 
                     <div>
