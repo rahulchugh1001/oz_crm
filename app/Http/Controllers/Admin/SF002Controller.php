@@ -101,6 +101,7 @@ class SF002Controller extends Controller
                     'transfers.date',
                     'transfers.time',
                     'transfers.is_accept',
+                    'transfers.assign_sf2',
                     'transfers.remark',
                     'transfers.sf002_remark',
                     'transfers.assign_to',

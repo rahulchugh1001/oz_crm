@@ -1,13 +1,18 @@
 @extends('backend.layout.app')
 
-@section('title', 'CED & Zinc (SF2) Process - Accepted Transfers')
+@php
+    $sf2Type = strtolower((string) request()->query('type', 'ced'));
+    $sf2TypeLabel = $sf2Type === 'zinc' ? 'ZINC' : 'CED';
+@endphp
 
-@section('page-title', 'CED & Zinc (SF2) Process Management')
+@section('title', $sf2TypeLabel . ' SF2 Process - Accepted Transfers')
+
+@section('page-title', $sf2TypeLabel . ' SF2 Process Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">CED & Zinc (SF2)</span>
+    <span class="text-slate-600">{{ $sf2TypeLabel }} SF2</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Process</span>
 @endsection
@@ -18,8 +23,8 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Accepted Transfers</h2>
-                    <p class="text-sm text-slate-500">Accepted quantities assigned to this CED & Zinc (SF2) user</p>
+                    <h2 class="text-lg font-bold text-slate-900">{{ $sf2TypeLabel }} SF2 Process - Accepted Transfers</h2>
+                    <p class="text-sm text-slate-500">Accepted quantities assigned to this {{ $sf2TypeLabel }} SF2 process</p>
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-500">Total Records:</span>
@@ -37,11 +42,12 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assign SF2</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted Quantity</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF001 Remark</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">{{ $sf2TypeLabel }} SF2 Remark</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
@@ -59,6 +65,15 @@
                         <td class="px-4 py-3 font-medium text-slate-900">{{ $transfer->item_code }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->item_name }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->item_size }}</td>
+                        <td class="px-4 py-3 text-center">
+                            @if($transfer->assign_sf2 === 'CED')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">CED</span>
+                            @elseif($transfer->assign_sf2 === 'ZINC')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">ZINC</span>
+                            @else
+                                <span class="text-slate-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-semibold">
                                 {{ number_format($transfer->quantity, 0) }}
@@ -108,7 +123,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="px-4 py-10 text-center">
+                        <td colspan="11" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
