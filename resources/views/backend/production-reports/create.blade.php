@@ -248,7 +248,7 @@
         let hourInputs = '';
         hourFields.forEach(field => {
             hourInputs += `<td class="border border-slate-300 px-2 py-2">
-                <input type="number" name="${field}[]" step="0.01" min="0" value="0" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
+                <input type="number" name="${field}[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
             </td>`;
         });
 
@@ -271,20 +271,20 @@
                 </select>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="total_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
+                <input type="number" name="total_set_shift[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour calc-input" style="pointer-events: none;" disabled>
+                <input type="number" name="set_per_hour[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour calc-input" style="pointer-events: none;" disabled>
             </td>
             ${hourInputs}
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
+                <input type="number" name="actual_set_shift[]" step="0.01" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="workman_count[]" step="1" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
+                <input type="number" name="workman_count[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="staff_count[]" step="1" min="0" value="0" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
+                <input type="number" name="staff_count[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" disabled>
             </td>
             <input type="hidden" name="machine_id[]" value="${machine.id}">
             <input type="hidden" name="report_date[]" value="${reportDate}">
