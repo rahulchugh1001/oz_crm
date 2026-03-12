@@ -14,9 +14,17 @@
     $isSf002ProductionContext = request()->routeIs('admin.production-reports.sf002*')
         || request()->is('admin/production-reports/sf002/*');
 
-    $isSf002ProductionMenuActive = request()->routeIs('admin.production-reports.sf002.process')
+    $sf002ProcessType = strtolower((string) request()->query('type', 'ced'));
+    $isSf002CedProductionMenuActive = (
+        request()->routeIs('admin.production-reports.sf002.process')
         || request()->routeIs('admin.production-reports.sf002.production-report*')
-        || request()->is('admin/production-reports/sf002/production-report/*');
+        || request()->is('admin/production-reports/sf002/production-report/*')
+    ) && $sf002ProcessType === 'ced';
+    $isSf002ZincProductionMenuActive = (
+        request()->routeIs('admin.production-reports.sf002.process')
+        || request()->routeIs('admin.production-reports.sf002.production-report*')
+        || request()->is('admin/production-reports/sf002/production-report/*')
+    ) && $sf002ProcessType === 'zinc';
 @endphp
 
 <!-- Sidebar -->
@@ -100,9 +108,13 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Stock </span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf002.process') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf002ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf002.process', ['type' => 'ced']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf002CedProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">Production</span>
+                        <span class="text-sm">CED Production</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf002.process', ['type' => 'zinc']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf002ZincProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">ZINC Production</span>
                     </a>
                 </div>
             </div>
