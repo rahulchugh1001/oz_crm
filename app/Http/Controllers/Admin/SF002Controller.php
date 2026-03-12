@@ -31,6 +31,7 @@ class SF002Controller extends Controller
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',
+                'transfers.assign_sf2',
                 'transfers.remark',
                 'transfers.sf002_remark',
                 'items.code as item_code',
@@ -75,13 +76,19 @@ class SF002Controller extends Controller
     /**
      * Display accepted transfers assigned to the logged-in SF002 user.
      */
-    public function process(): View
+    public function process(Request $request): View
     {
+        $sf2Type = strtoupper((string) $request->query('type', 'CED'));
+        if (!in_array($sf2Type, ['CED', 'ZINC'], true)) {
+            $sf2Type = 'CED';
+        }
+
         if (Auth::user()?->role === 'Admin') {
             $acceptedTransfers = $this->assignedTransfersQuery()
                 ->addSelect('transfers.assign_to', 'accepted_by_user.name as accepted_by_name')
                 ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
                 ->where('transfers.is_accept', 1)
+                ->where('transfers.assign_sf2', $sf2Type)
                 ->get();
         } else {
             $role = $this->currentAssignableRole();
@@ -108,6 +115,7 @@ class SF002Controller extends Controller
                 ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
                 ->where('transfers.is_deleted', false)
                 ->where('transfers.is_accept', 1)
+                ->where('transfers.assign_sf2', $sf2Type)
                 ->when($role, function ($query, $roleValue) {
                     $query->where('transfers.assign_role', $roleValue);
                 }, function ($query) {

@@ -155,6 +155,7 @@
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">#</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">SF2 Process</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
@@ -176,11 +177,20 @@
                             {{ \Carbon\Carbon::parse($transfer->date . ' ' . $transfer->time)->format('M d, Y h:i A') }}
                         </td>
                         <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 text-center">
+                            @if($transfer->assign_sf2 === 'CED')
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">CED</span>
+                            @elseif($transfer->assign_sf2 === 'ZINC')
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700">ZINC</span>
+                            @else
+                                <span class="text-sm text-slate-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 text-sm text-slate-700">
                             @if($transfer->assign_to_name)
                                 {{ $transfer->assign_to_name }}
                             @elseif($transfer->assign_role === 'SF002')
-                                CED & Zinc (SF2) - Unclaimed
+                                Unclaimed
                             @elseif($transfer->assign_role === 'SF003')
                                 Assembly (SF3) - Unclaimed
                             @else
@@ -231,7 +241,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="9" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>

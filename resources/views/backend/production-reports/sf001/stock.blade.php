@@ -215,13 +215,13 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label for="transfer_assign_role" class="block text-sm font-semibold text-slate-700 mb-2">Assign Role <span class="text-rose-500">*</span></label>
-                        <select id="transfer_assign_role" name="assign_role" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('assign_role') border-rose-500 @enderror">
-                            <option value="">Select Role</option>
-                            <option value="SF002" {{ old('assign_role') === 'SF002' ? 'selected' : '' }}>CED & Zinc (SF2)</option>
-                            <option value="SF003" {{ old('assign_role') === 'SF003' ? 'selected' : '' }}>Assembly (SF3)</option>
+                        <label for="transfer_assign_sf2" class="block text-sm font-semibold text-slate-700 mb-2">SF2 Process <span class="text-rose-500">*</span></label>
+                        <select id="transfer_assign_sf2" name="assign_sf2" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('assign_sf2') border-rose-500 @enderror">
+                            <option value="">Select Process</option>
+                            <option value="CED" {{ old('assign_sf2') === 'CED' ? 'selected' : '' }}>CED</option>
+                            <option value="ZINC" {{ old('assign_sf2') === 'ZINC' ? 'selected' : '' }}>ZINC</option>
                         </select>
-                        @error('assign_role')
+                        @error('assign_sf2')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -271,7 +271,7 @@
 
                 <!-- Modal Footer -->
                 <div class="mt-6 flex items-center gap-3">
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" id="transfer_submit_button" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                         Save Transfer
                     </button>
                     <button type="button" onclick="closeTransferModal()" class="flex-1 px-4 py-2.5 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">
@@ -371,6 +371,13 @@
 
         // Use the current submit-time date and time.
         setTransferDateTimeNow();
+
+        const submitButton = document.getElementById('transfer_submit_button');
+        if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-60', 'cursor-not-allowed');
+            submitButton.textContent = 'Saving...';
+        }
     });
     
     // Close modal on outside click
@@ -393,7 +400,7 @@
             lucide.createIcons();
         }
 
-        @if($errors->has('assign_role') || $errors->has('quantity') || $errors->has('item_id') || $errors->has('date') || $errors->has('time'))
+        @if($errors->has('assign_sf2') || $errors->has('quantity') || $errors->has('item_id') || $errors->has('date') || $errors->has('time'))
         document.getElementById('transferModal').classList.remove('hidden');
 
         const oldAvailable = parseFloat(document.getElementById('transfer_available_quantity_hidden').value || '0');

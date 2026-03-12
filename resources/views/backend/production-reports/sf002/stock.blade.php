@@ -49,6 +49,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assign SF2</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
@@ -73,6 +74,15 @@
                         <td class="px-4 py-3 font-medium text-slate-900">{{ $transfer->item_code }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->item_name }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->item_size }}</td>
+                        <td class="px-4 py-3 text-center">
+                            @if($transfer->assign_sf2 === 'CED')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">CED</span>
+                            @elseif($transfer->assign_sf2 === 'ZINC')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">ZINC</span>
+                            @else
+                                <span class="text-slate-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">
                                 {{ number_format($transfer->quantity, 0) }}
@@ -148,7 +158,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $canUpdateStatus ? 11 : 10 }}" class="px-4 py-10 text-center">
+                        <td colspan="{{ $canUpdateStatus ? 12 : 11 }}" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>

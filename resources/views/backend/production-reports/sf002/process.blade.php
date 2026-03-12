@@ -101,7 +101,7 @@
                             @endif
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <a href="{{ route('admin.production-reports.sf002.production-report', $transfer->id) }}" class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors" title="Manage">
+                            <a href="{{ route('admin.production-reports.sf002.production-report', ['transferId' => $transfer->id, 'type' => request()->query('type', 'ced')]) }}" class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors" title="Manage">
                                 <i data-lucide="settings" class="w-4 h-4 text-slate-600"></i>
                             </a>
                         </td>

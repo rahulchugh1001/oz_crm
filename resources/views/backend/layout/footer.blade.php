@@ -6,9 +6,130 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        const sidebarDropdownConfig = [
+            { id: 'sf001-dropdown', chevronId: 'sf001-chevron' },
+            { id: 'sf002-dropdown', chevronId: 'sf002-chevron' },
+            { id: 'sf003-dropdown', chevronId: 'sf003-chevron' },
+            { id: 'profile-dropdown', chevronId: 'profile-chevron' },
+            { id: 'masters-dropdown', chevronId: 'masters-chevron' },
+        ];
+
+        function getSidebarDropdownById(dropdownId) {
+            return sidebarDropdownConfig.find(function(entry) {
+                return entry.id === dropdownId;
+            });
+        }
+
+        function setChevronState(chevronId, isOpen) {
+            const chevron = document.getElementById(chevronId);
+            if (!chevron) {
+                return;
+            }
+
+            chevron.setAttribute('data-lucide', isOpen ? 'chevron-down' : 'chevron-right');
+        }
+
+        function openDropdownAnimated(dropdown) {
+            if (!dropdown) {
+                return;
+            }
+
+            dropdown.classList.remove('hidden');
+            dropdown.style.overflow = 'hidden';
+            dropdown.style.transition = 'max-height 220ms ease, opacity 220ms ease';
+            dropdown.style.opacity = '0';
+            dropdown.style.maxHeight = '0px';
+
+            requestAnimationFrame(function() {
+                dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+                dropdown.style.opacity = '1';
+            });
+
+            setTimeout(function() {
+                if (!dropdown.classList.contains('hidden')) {
+                    dropdown.style.maxHeight = 'none';
+                    dropdown.style.overflow = 'visible';
+                }
+            }, 240);
+        }
+
+        function closeDropdownAnimated(dropdown) {
+            if (!dropdown || dropdown.classList.contains('hidden')) {
+                return;
+            }
+
+            dropdown.style.overflow = 'hidden';
+            dropdown.style.transition = 'max-height 220ms ease, opacity 220ms ease';
+            dropdown.style.maxHeight = dropdown.scrollHeight + 'px';
+            dropdown.style.opacity = '1';
+
+            requestAnimationFrame(function() {
+                dropdown.style.maxHeight = '0px';
+                dropdown.style.opacity = '0';
+            });
+
+            setTimeout(function() {
+                dropdown.classList.add('hidden');
+            }, 240);
+        }
+
+        function toggleSidebarDropdown(dropdownId) {
+            const targetDropdown = document.getElementById(dropdownId);
+            const targetConfig = getSidebarDropdownById(dropdownId);
+
+            if (!targetDropdown || !targetConfig) {
+                return;
+            }
+
+            const shouldOpenTarget = targetDropdown.classList.contains('hidden');
+
+            sidebarDropdownConfig.forEach(function(entry) {
+                const currentDropdown = document.getElementById(entry.id);
+                if (!currentDropdown) {
+                    return;
+                }
+
+                if (entry.id === dropdownId) {
+                    if (shouldOpenTarget) {
+                        openDropdownAnimated(currentDropdown);
+                        setChevronState(entry.chevronId, true);
+                    } else {
+                        closeDropdownAnimated(currentDropdown);
+                        setChevronState(entry.chevronId, false);
+                    }
+                } else {
+                    closeDropdownAnimated(currentDropdown);
+                    setChevronState(entry.chevronId, false);
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        function initializeSidebarDropdownState() {
+            sidebarDropdownConfig.forEach(function(entry) {
+                const dropdown = document.getElementById(entry.id);
+                if (!dropdown) {
+                    return;
+                }
+
+                if (dropdown.classList.contains('hidden')) {
+                    dropdown.style.maxHeight = '0px';
+                    dropdown.style.opacity = '0';
+                    setChevronState(entry.chevronId, false);
+                } else {
+                    dropdown.style.maxHeight = 'none';
+                    dropdown.style.opacity = '1';
+                    setChevronState(entry.chevronId, true);
+                }
+            });
+        }
+
         // Initialize Lucide icons
         document.addEventListener('DOMContentLoaded', function() {
             lucide.createIcons();
+
+            initializeSidebarDropdownState();
 
             const headerDate = document.getElementById('header-current-date');
             if (headerDate) {
@@ -38,86 +159,32 @@
                 if (shiftTime) shiftTime.textContent = '20:00 - 08:00';
             }
             
-            // Auto-expand profile dropdown if on a profile page
-            const profileDropdown = document.getElementById('profile-dropdown');
-            const profileChevron = document.getElementById('profile-chevron');
-            if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
-                if (profileChevron) {
-                    profileChevron.setAttribute('data-lucide', 'chevron-down');
-                }
-            }
-            
             lucide.createIcons();
         });
 
         // Toggle Masters Dropdown
         function toggleMastersDropdown() {
-            const dropdown = document.getElementById('masters-dropdown');
-            const chevron = document.getElementById('masters-chevron');
-            dropdown.classList.toggle('hidden');
-            
-            if (dropdown.classList.contains('hidden')) {
-                chevron.setAttribute('data-lucide', 'chevron-right');
-            } else {
-                chevron.setAttribute('data-lucide', 'chevron-down');
-            }
-            lucide.createIcons();
+            toggleSidebarDropdown('masters-dropdown');
         }
 
         // Toggle SF001 Dropdown
         function toggleSF001Dropdown() {
-            const dropdown = document.getElementById('sf001-dropdown');
-            const chevron = document.getElementById('sf001-chevron');
-            dropdown.classList.toggle('hidden');
-            
-            if (dropdown.classList.contains('hidden')) {
-                chevron.setAttribute('data-lucide', 'chevron-right');
-            } else {
-                chevron.setAttribute('data-lucide', 'chevron-down');
-            }
-            lucide.createIcons();
+            toggleSidebarDropdown('sf001-dropdown');
         }
 
         // Toggle SF002 Dropdown
         function toggleSF002Dropdown() {
-            const dropdown = document.getElementById('sf002-dropdown');
-            const chevron = document.getElementById('sf002-chevron');
-            dropdown.classList.toggle('hidden');
-
-            if (dropdown.classList.contains('hidden')) {
-                chevron.setAttribute('data-lucide', 'chevron-right');
-            } else {
-                chevron.setAttribute('data-lucide', 'chevron-down');
-            }
-            lucide.createIcons();
+            toggleSidebarDropdown('sf002-dropdown');
         }
 
         // Toggle SF003 Dropdown
         function toggleSF003Dropdown() {
-            const dropdown = document.getElementById('sf003-dropdown');
-            const chevron = document.getElementById('sf003-chevron');
-            dropdown.classList.toggle('hidden');
-
-            if (dropdown.classList.contains('hidden')) {
-                chevron.setAttribute('data-lucide', 'chevron-right');
-            } else {
-                chevron.setAttribute('data-lucide', 'chevron-down');
-            }
-            lucide.createIcons();
+            toggleSidebarDropdown('sf003-dropdown');
         }
 
         // Toggle Profile Dropdown
         function toggleProfileDropdown() {
-            const dropdown = document.getElementById('profile-dropdown');
-            const chevron = document.getElementById('profile-chevron');
-            dropdown.classList.toggle('hidden');
-            
-            if (dropdown.classList.contains('hidden')) {
-                chevron.setAttribute('data-lucide', 'chevron-right');
-            } else {
-                chevron.setAttribute('data-lucide', 'chevron-down');
-            }
-            lucide.createIcons();
+            toggleSidebarDropdown('profile-dropdown');
         }
     </script>
 

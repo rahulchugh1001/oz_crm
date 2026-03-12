@@ -71,7 +71,7 @@ class SF001Controller extends Controller
     {
         $validated = $request->validate([
             'item_id' => 'required|integer|exists:items,id',
-            'assign_role' => 'required|string|in:SF002,SF003',
+            'assign_sf2' => 'required|string|in:CED,ZINC',
             'quantity' => 'required|numeric|gt:0',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i:s',
@@ -100,7 +100,8 @@ class SF001Controller extends Controller
         DB::table('sf001_stock_transfers')->insert([
             'item_id' => $validated['item_id'],
             'transfer_by' => Auth::id(),
-            'assign_role' => $validated['assign_role'],
+            'assign_role' => 'SF002',
+            'assign_sf2' => $validated['assign_sf2'],
             'assign_to' => null,
             'quantity' => $validated['quantity'],
             'date' => $validated['date'],
@@ -146,6 +147,7 @@ class SF001Controller extends Controller
                 'transfers.time',
                 'transfers.is_accept',
                 'transfers.assign_role',
+                'transfers.assign_sf2',
                 'transfers.remark',
                 'transfers.sf002_remark',
                 'transfers.created_at',

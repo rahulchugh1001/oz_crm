@@ -27,7 +27,7 @@
                         (<span class="font-medium text-slate-700">{{ $transfer->item_size }}</span>)
                     </p>
                 </div>
-                <a href="{{ route('admin.production-reports.sf002.process') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                <a href="{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced')]) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     Back
                 </a>
@@ -115,7 +115,7 @@
                 </div>
 
                 <div class="mt-6 flex items-center justify-end gap-3">
-                    <a href="{{ route('admin.production-reports.sf002.process') }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                    <a href="{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced')]) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                         Cancel
                     </a>
                     <button type="submit" disabled aria-disabled="true" title="Work Under Process" class="px-4 py-2 rounded-lg bg-slate-400 text-white cursor-not-allowed opacity-80 font-medium" >
