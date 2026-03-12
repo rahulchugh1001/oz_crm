@@ -28,6 +28,8 @@ class SF002Controller extends Controller
                 'transfers.id',
                 'transfers.item_id',
                 'transfers.quantity',
+                'transfers.reject_quantity',
+                'transfers.created_at',
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',
@@ -86,6 +88,7 @@ class SF002Controller extends Controller
         if (Auth::user()?->role === 'Admin') {
             $acceptedTransfers = $this->assignedTransfersQuery()
                 ->addSelect('transfers.assign_to', 'accepted_by_user.name as accepted_by_name')
+                ->addSelect(DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as accepted_quantity'))
                 ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
                 ->where('transfers.is_accept', 1)
                 ->where('transfers.assign_sf2', $sf2Type)
@@ -102,6 +105,8 @@ class SF002Controller extends Controller
                     'transfers.time',
                     'transfers.is_accept',
                     'transfers.assign_sf2',
+                    'transfers.reject_quantity',
+                    DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as accepted_quantity'),
                     'transfers.remark',
                     'transfers.sf002_remark',
                     'transfers.assign_to',
@@ -140,7 +145,7 @@ class SF002Controller extends Controller
             ->select(
                 'transfers.id',
                 'transfers.item_id',
-                'transfers.quantity',
+                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as quantity'),
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',
@@ -268,6 +273,8 @@ class SF002Controller extends Controller
         $validated = $request->validate([
             'status' => 'required|integer|in:1,2',
             'sf002_remark' => 'nullable|string|max:500',
+            'accept_all_quantity' => 'nullable|boolean',
+            'reject_quantity' => 'nullable|numeric|min:0',
         ]);
 
         $query = DB::table('sf001_stock_transfers')
@@ -298,14 +305,29 @@ class SF002Controller extends Controller
             return back()->with('error', 'Status already updated. You cannot change the status or remark again.');
         }
 
+        $currentQuantity = (float) $transfer->quantity;
+        $acceptAllQuantity = (bool) ($validated['accept_all_quantity'] ?? false);
+        $rejectQuantity = $acceptAllQuantity ? 0.0 : (float) ($validated['reject_quantity'] ?? 0);
+
+        if ($rejectQuantity > $currentQuantity) {
+            return back()->with('error', 'Reject quantity cannot be greater than transfer quantity.');
+        }
+
+        if ((int) $validated['status'] === 1 && $rejectQuantity >= $currentQuantity) {
+            return back()->with('error', 'Accepted quantity must be greater than zero.');
+        }
+
+        $updateData = [
+            'is_accept' => $validated['status'],
+            'assign_to' => Auth::user()?->role === 'Admin' ? $transfer->assign_to : Auth::id(),
+            'sf002_remark' => $validated['sf002_remark'] ?? null,
+            'reject_quantity' => $rejectQuantity,
+            'updated_at' => now(),
+        ];
+
         DB::table('sf001_stock_transfers')
             ->where('id', $transferId)
-            ->update([
-                'is_accept' => $validated['status'],
-                'assign_to' => Auth::user()?->role === 'Admin' ? $transfer->assign_to : Auth::id(),
-                'sf002_remark' => $validated['sf002_remark'] ?? null,
-                'updated_at' => now(),
-            ]);
+            ->update($updateData);
 
         return back()->with('success', 'Transfer status updated successfully.');
     }

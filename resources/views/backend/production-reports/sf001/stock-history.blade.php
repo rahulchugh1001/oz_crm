@@ -158,6 +158,7 @@
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">SF2 Process</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Rejected Quantity</th>
                         <th class="px-6 py-4 text-center text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
@@ -204,6 +205,12 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700">
+                                <i data-lucide="ban" class="w-4 h-4"></i>
+                                <span class="text-sm font-semibold">{{ number_format((float) ($transfer->rejected_quantity ?? 0), 0) }}</span>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
                             @if($transfer->is_accept == 1)
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700">Accepted</span>
                             @elseif($transfer->is_accept == 2)
@@ -241,7 +248,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="10" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
@@ -268,6 +275,10 @@
                 <div class="text-sm">
                     <span class="text-slate-600">Total Transferred Quantity:</span>
                     <span class="ml-2 font-semibold text-slate-900">{{ number_format($stockManageHistory->sum('quantity'), 0) }}</span>
+                </div>
+                <div class="text-sm">
+                    <span class="text-slate-600">Total Rejected Quantity:</span>
+                    <span class="ml-2 font-semibold text-rose-700">{{ number_format($stockManageHistory->sum('rejected_quantity'), 0) }}</span>
                 </div>
             </div>
         </div>

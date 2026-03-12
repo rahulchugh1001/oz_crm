@@ -30,7 +30,16 @@ class SF001Controller extends Controller
             ->where('is_deleted', false)
             ->select(
                 'item_id',
-                DB::raw('COALESCE(SUM(quantity), 0) as transferred_quantity')
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN 0
+                    WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                    ELSE quantity
+                END), 0) as transferred_quantity"),
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN quantity
+                    WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                    ELSE 0
+                END), 0) as rejected_quantity")
             )
             ->groupBy('item_id');
 
@@ -44,6 +53,7 @@ class SF001Controller extends Controller
                 'items.weight',
                 DB::raw('COALESCE(SUM(production_reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(sf001_transfers.transferred_quantity), 0) as transferred_quantity'),
+                DB::raw('COALESCE(MAX(sf001_transfers.rejected_quantity), 0) as rejected_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as pending_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as total_stock'),
                 DB::raw('MAX(production_reports.created_at) as last_stock_update')
@@ -86,8 +96,12 @@ class SF001Controller extends Controller
         $totalTransferredStock = DB::table('sf001_stock_transfers')
             ->where('item_id', $validated['item_id'])
             ->where('is_deleted', false)
-            ->whereIn('is_accept', [0, 1])
-            ->sum('quantity');
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN 0
+                WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                ELSE quantity
+            END), 0) as transferred_quantity")
+            ->value('transferred_quantity');
 
         $availableStock = max((float) $totalProducedStock - (float) $totalTransferredStock, 0);
 
@@ -142,7 +156,16 @@ class SF001Controller extends Controller
         $stockManageHistory = DB::table('sf001_stock_transfers as transfers')
             ->select(
                 'transfers.id',
-                'transfers.quantity',
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN 0
+                    WHEN transfers.is_accept = 1 THEN GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0)
+                    ELSE transfers.quantity
+                END as quantity"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN transfers.quantity
+                    WHEN transfers.is_accept = 1 THEN COALESCE(transfers.reject_quantity, 0)
+                    ELSE 0
+                END as rejected_quantity"),
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',

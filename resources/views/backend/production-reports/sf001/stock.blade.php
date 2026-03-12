@@ -66,6 +66,9 @@
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
                             Transferred
                         </th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                            Rejected
+                        </th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
                             Last Stock Update
                         </th>
@@ -110,6 +113,12 @@
                                 <span class="font-semibold">{{ number_format($item->transferred_quantity, 0) }}</span>
                             </div>
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">
+                                <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                                <span class="font-semibold">{{ number_format($item->rejected_quantity, 0) }}</span>
+                            </div>
+                        </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-1.5 text-slate-600">
                                 <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
@@ -140,7 +149,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center">
+                        <td colspan="10" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="package-x" class="w-8 h-8 text-slate-400"></i>
@@ -176,6 +185,10 @@
                     <div class="text-sm">
                         <span class="text-slate-600">Transferred:</span>
                         <span class="ml-2 font-semibold text-blue-700">{{ number_format($itemStocks->sum('transferred_quantity'), 0) }}</span>
+                    </div>
+                    <div class="text-sm">
+                        <span class="text-slate-600">Rejected:</span>
+                        <span class="ml-2 font-semibold text-rose-700">{{ number_format($itemStocks->sum('rejected_quantity'), 0) }}</span>
                     </div>
                 </div>
             </div>

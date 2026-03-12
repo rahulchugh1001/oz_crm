@@ -76,7 +76,7 @@
                         </td>
                         <td class="px-4 py-3 text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-semibold">
-                                {{ number_format($transfer->quantity, 0) }}
+                                {{ number_format((float) ($transfer->accepted_quantity ?? $transfer->quantity), 0) }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>

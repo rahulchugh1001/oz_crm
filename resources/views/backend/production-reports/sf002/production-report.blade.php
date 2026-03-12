@@ -1,15 +1,21 @@
 @extends('backend.layout.app')
 
-@section('title', 'Production Report - Hourly')
+@php
+    $sf2Type = strtolower((string) request()->query('type', 'ced'));
+    $sf2Prefix = $sf2Type === 'zinc' ? 'zinc' : 'ced';
+    $sf2Label = strtoupper($sf2Prefix);
+@endphp
 
-@section('page-title', 'Production Report Entry')
+@section('title', $sf2Label . ' SF2 Production Report - Hourly')
+
+@section('page-title', $sf2Label . ' SF2 Production Report Entry')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">CED & Zinc (SF2)</span>
+    <span class="text-slate-600">{{ $sf2Label }} SF2</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">Production</span>
+    <span class="text-slate-600">{{ $sf2Label }} Production</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Report</span>
 @endsection
@@ -20,7 +26,7 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Production Report - Hourly</h2>
+                    <h2 class="text-lg font-bold text-slate-900">{{ $sf2Label }} Production Report - Hourly</h2>
                     <p class="text-sm text-slate-500 mt-1">
                         Item: <span class="font-medium text-slate-700">{{ $transfer->item_code }}</span> - 
                         <span class="font-medium text-slate-700">{{ $transfer->item_name }}</span> 
@@ -88,28 +94,26 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (['ced' => 'CED', 'zinc' => 'ZINC'] as $prefix => $label)
-                                <tr class="hover:bg-slate-50">
-                                    <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">{{ $label }}</td>
+                            <tr class="hover:bg-slate-50">
+                                <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">{{ $sf2Label }}</td>
+                                <td class="border border-slate-300 px-3 py-2">
+                                    <input type="number" name="{{ $sf2Prefix }}_plan" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
+                                </td>
+                                @for ($slot = 1; $slot <= 11; $slot++)
                                     <td class="border border-slate-300 px-3 py-2">
-                                        <input type="number" name="{{ $prefix }}_plan" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
-                                    </td>
-                                    @for ($slot = 1; $slot <= 11; $slot++)
-                                        <td class="border border-slate-300 px-3 py-2">
-                                            <input type="number" name="{{ $prefix }}_slot{{ $slot }}_set" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
-                                        </td>
-                                        <td class="border border-slate-300 px-3 py-2">
-                                            <input type="number" name="{{ $prefix }}_slot{{ $slot }}_actual" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
-                                        </td>
-                                    @endfor
-                                    <td class="border border-slate-300 px-3 py-2">
-                                        <input type="text" name="{{ $prefix }}_shift" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="">
+                                        <input type="number" name="{{ $sf2Prefix }}_slot{{ $slot }}_set" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
                                     </td>
                                     <td class="border border-slate-300 px-3 py-2">
-                                        <input type="number" name="{{ $prefix }}_manpower" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
+                                        <input type="number" name="{{ $sf2Prefix }}_slot{{ $slot }}_actual" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
                                     </td>
-                                </tr>
-                            @endforeach
+                                @endfor
+                                <td class="border border-slate-300 px-3 py-2">
+                                    <input type="text" name="{{ $sf2Prefix }}_shift" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="">
+                                </td>
+                                <td class="border border-slate-300 px-3 py-2">
+                                    <input type="number" name="{{ $sf2Prefix }}_manpower" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="0.01">
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
