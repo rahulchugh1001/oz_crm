@@ -58,13 +58,13 @@
                             Size
                         </th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
-                            Total Quantity
+                            Total Production
                         </th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
-                            Pending Quantity
+                            In Stock
                         </th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
-                            Transferred Quantity
+                            Transferred
                         </th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
                             Last Stock Update
@@ -166,15 +166,15 @@
                 </div>
                 <div class="flex items-center gap-4">
                     <div class="text-sm">
-                        <span class="text-slate-600">Total Quantity:</span>
+                        <span class="text-slate-600">Total Production:</span>
                         <span class="ml-2 font-semibold text-slate-900">{{ number_format($itemStocks->sum('total_produced_stock'), 0) }}</span>
                     </div>
                     <div class="text-sm">
-                        <span class="text-slate-600">Pending Quantity:</span>
+                        <span class="text-slate-600">In Stock:</span>
                         <span class="ml-2 font-semibold text-amber-700">{{ number_format($itemStocks->sum('pending_quantity'), 0) }}</span>
                     </div>
                     <div class="text-sm">
-                        <span class="text-slate-600">Transferred Quantity:</span>
+                        <span class="text-slate-600">Transferred:</span>
                         <span class="ml-2 font-semibold text-blue-700">{{ number_format($itemStocks->sum('transferred_quantity'), 0) }}</span>
                     </div>
                 </div>
