@@ -61,7 +61,7 @@
                         <div class="w-8 h-8 rounded-lg {{ $isSf001ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                             <i data-lucide="layers" class="w-4 h-4 {{ $isSf001ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
-                        <span class="font-medium">SF001</span>
+                        <span class="font-medium">Roll Forming (SF1)</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf001-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
@@ -90,7 +90,7 @@
                         <div class="w-8 h-8 rounded-lg {{ $isSf002ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                             <i data-lucide="layers" class="w-4 h-4 {{ $isSf002ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
-                        <span class="font-medium">SF002</span>
+                        <span class="font-medium">CED & Zinc (SF2)</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf002-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
@@ -115,7 +115,7 @@
                         <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf003*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                             <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf003*') ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
-                        <span class="font-medium">SF003</span>
+                        <span class="font-medium">Assembly (SF3)</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf003-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
