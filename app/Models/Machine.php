@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
 
 
@@ -16,9 +17,15 @@ class Machine extends Model
     'name',
     'machine_code',
     'rf_set',
+    'coil_id',
     'status',
     'is_deleted',
 ];
+
+    public function coil(): BelongsTo
+    {
+        return $this->belongsTo(CoilStock::class, 'coil_id');
+    }
 
     /**
      * Get the value of the model's route key (encrypted).

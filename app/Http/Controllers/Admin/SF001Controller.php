@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoilManufacture;
+use App\Models\CoilStock;
 use App\Models\Item;
+use App\Models\Machine;
 use App\Models\ProductionReport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +21,174 @@ class SF001Controller extends Controller
      */
     public function coilStock(): View
     {
-        return view('backend.production-reports.coil-stock');
+        $suppliers = CoilManufacture::query()
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $machines = Machine::query()
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name', 'machine_code', 'coil_id']);
+
+        $coils = CoilStock::query()
+            ->with(['manufacture:id,name'])
+            ->where('is_deleted', 0)
+            ->orderByDesc('id')
+            ->get();
+
+        $loadedMachineNames = Machine::query()
+            ->where('is_deleted', 0)
+            ->whereNotNull('coil_id')
+            ->get(['coil_id', 'name'])
+            ->groupBy('coil_id')
+            ->map(function ($rows) {
+                return $rows->pluck('name')->unique()->implode(', ');
+            });
+
+        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames'));
+    }
+
+    /**
+     * Store a new coil stock record.
+     */
+    public function storeCoilStock(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'manufacture_id' => 'required|integer|exists:coil_manufacture,id',
+            'coil_no' => 'required|string|max:120|unique:coil_stock,coil_no',
+            'coil_size' => 'required|string|max:60',
+            'thickness' => 'required|numeric|min:0',
+            'net_weight_kg' => 'required|numeric|min:0',
+            'process' => 'required|in:available,in_use,completed',
+            'status' => 'required|in:0,1',
+        ]);
+
+        CoilStock::query()->create([
+            'manufacture_id' => (int) $validated['manufacture_id'],
+            'coil_no' => trim((string) $validated['coil_no']),
+            'coil_size' => trim((string) $validated['coil_size']),
+            'thickness' => (float) $validated['thickness'],
+            'net_weight_kg' => (float) $validated['net_weight_kg'],
+            'process' => (string) $validated['process'],
+            'status' => (int) $validated['status'],
+            'is_deleted' => 0,
+        ]);
+
+        return back()->with('success', 'New coil stock added successfully.');
+    }
+
+    /**
+     * Update an existing coil stock record.
+     */
+    public function updateCoilStock(Request $request, int $coilId): RedirectResponse
+    {
+        $coil = CoilStock::query()
+            ->where('id', $coilId)
+            ->where('is_deleted', 0)
+            ->first();
+
+        if (!$coil) {
+            return back()->with('error', 'Coil stock record not found.');
+        }
+
+        $validated = $request->validate([
+            'edit_id' => 'required|integer',
+            'manufacture_id' => 'required|integer|exists:coil_manufacture,id',
+            'coil_no' => 'required|string|max:120|unique:coil_stock,coil_no,' . $coilId,
+            'coil_size' => 'required|string|max:60',
+            'thickness' => 'required|numeric|min:0',
+            'net_weight_kg' => 'required|numeric|min:0',
+            'process' => 'required|in:available,in_use,completed',
+            'status' => 'required|in:0,1',
+        ]);
+
+        $coil->update([
+            'manufacture_id' => (int) $validated['manufacture_id'],
+            'coil_no' => trim((string) $validated['coil_no']),
+            'coil_size' => trim((string) $validated['coil_size']),
+            'thickness' => (float) $validated['thickness'],
+            'net_weight_kg' => (float) $validated['net_weight_kg'],
+            'process' => (string) $validated['process'],
+            'status' => (int) $validated['status'],
+        ]);
+
+        return back()->with('success', 'Coil stock updated successfully.');
+    }
+
+    /**
+     * Soft delete a coil stock record.
+     */
+    public function destroyCoilStock(int $coilId): RedirectResponse
+    {
+        $coil = CoilStock::query()
+            ->where('id', $coilId)
+            ->where('is_deleted', 0)
+            ->first();
+
+        if (!$coil) {
+            return back()->with('error', 'Coil stock record not found.');
+        }
+
+        $isLoadedToMachine = Machine::query()
+            ->where('coil_id', $coil->id)
+            ->where('is_deleted', 0)
+            ->exists();
+
+        if ($coil->process === 'in_use' || $isLoadedToMachine) {
+            return back()->with('error', 'In-use coil cannot be deleted.');
+        }
+
+        $coil->update([
+            'is_deleted' => 1,
+            'updated_at' => now(),
+        ]);
+
+        return back()->with('success', 'Coil stock deleted successfully.');
+    }
+
+    /**
+     * Load selected coil to selected machine.
+     */
+    public function loadCoilToMachine(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'form_type' => 'required|in:load',
+            'coil_id' => 'required|integer|exists:coil_stock,id',
+            'machine_id' => 'required|integer|exists:machines,id',
+        ]);
+
+        $coil = CoilStock::query()
+            ->where('id', (int) $validated['coil_id'])
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->first();
+
+        if (!$coil) {
+            return back()->with('error', 'Selected coil is not available for loading.');
+        }
+
+        $machine = Machine::query()
+            ->where('id', (int) $validated['machine_id'])
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->first();
+
+        if (!$machine) {
+            return back()->with('error', 'Selected machine is not active.');
+        }
+
+        $machine->update([
+            'coil_id' => $coil->id,
+        ]);
+
+        $coil->update([
+            'process' => 'in_use',
+        ]);
+
+        return back()->with('success', 'Coil loaded to machine successfully.');
     }
 
     /**

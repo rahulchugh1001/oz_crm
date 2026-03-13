@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
        $this->call(SfUsersSeeder::class);
        $this->call(MachineSeeder::class);
        $this->call(ItemSeeder::class);
+       $this->call(CoilManufactureSeeder::class);
+       $this->call(CoilStockSeeder::class);
        
     }
 }
