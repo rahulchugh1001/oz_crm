@@ -30,6 +30,25 @@
         || request()->is('admin/production-reports/sf002/production/show/*')
     ) && $sf002ProcessType === 'zinc';
     $isSf002Sf2StockMenuActive = request()->routeIs('admin.production-reports.sf002.sf2-stock*');
+
+    $isSf003ProductionContext = request()->routeIs('admin.production-reports.sf003*')
+        || request()->is('admin/production-reports/sf003/*');
+    $sf003Line = strtolower((string) request()->query('line', 'l1'));
+    $isSf003L1ProductionMenuActive = (
+        request()->routeIs('admin.production-reports.sf003.process')
+        || request()->routeIs('admin.production-reports.sf003.production-report*')
+        || request()->is('admin/production-reports/sf003/production-report/*')
+    ) && $sf003Line === 'l1';
+    $isSf003L2ProductionMenuActive = (
+        request()->routeIs('admin.production-reports.sf003.process')
+        || request()->routeIs('admin.production-reports.sf003.production-report*')
+        || request()->is('admin/production-reports/sf003/production-report/*')
+    ) && $sf003Line === 'l2';
+    $isSf003L3ProductionMenuActive = (
+        request()->routeIs('admin.production-reports.sf003.process')
+        || request()->routeIs('admin.production-reports.sf003.production-report*')
+        || request()->is('admin/production-reports/sf003/production-report/*')
+    ) && $sf003Line === 'l3';
 @endphp
 
 <!-- Sidebar -->
@@ -131,30 +150,30 @@
 
             @if($canViewSf003)
             <div class="mt-2">
-                <button onclick="toggleSF003Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.production-reports.sf003*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <button onclick="toggleSF003Dropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isSf003ProductionContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf003*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                            <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf003*') ? 'text-white' : 'text-gray-400' }}"></i>
+                        <div class="w-8 h-8 rounded-lg {{ $isSf003ProductionContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="layers" class="w-4 h-4 {{ $isSf003ProductionContext ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
                         <span class="font-medium">Assemble SF3</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf003-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
 
-                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf003*') ? '' : 'hidden' }}" id="sf003-dropdown">
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isSf003ProductionContext ? '' : 'hidden' }}" id="sf003-dropdown">
                     <a href="{{ route('admin.production-reports.sf003.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">SF2 Stock</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l1', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line', 'l1') === 'l1' ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l1', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L1ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">L1 Production</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l2', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line') === 'l2' ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l2', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L2ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">L2 Production</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l3', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line') === 'l3' ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l3', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L3ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">L3 Production</span>
                     </a>

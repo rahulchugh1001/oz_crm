@@ -428,7 +428,7 @@ class SF003Controller extends Controller
         $totalSetShift = (float) ($request->input('sf3_total_set_shift') ?? 0);
 
         if ($totalSetShift > $availableQuantity) {
-            $message = 'Total Set/Shift should be less than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
+            $message = 'Total Set/Shift must not be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
             if ($request->expectsJson()) {
                 return response()->json(['message' => $message], 422);
             }
@@ -437,7 +437,7 @@ class SF003Controller extends Controller
         }
 
         if ($actualSetShift > $availableQuantity) {
-            $message = 'Actual / Set / Shift should be less than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
+            $message = 'Actual / Set / Shift must not be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
             if ($request->expectsJson()) {
                 return response()->json(['message' => $message], 422);
             }

@@ -179,11 +179,31 @@ document.addEventListener('DOMContentLoaded', function () {
     ].map(function (name) {
         return form.querySelector('input[name="' + name + '"]');
     }).filter(Boolean);
+    let limitWarningTimeout;
 
     if (!form) return;
 
     function getSelectedQuantity() {
         return Math.max(parseFloat(selectedQuantityInput ? selectedQuantityInput.value : '0') || 0, 0);
+    }
+
+    function showLimitWarning(message) {
+        let warning = document.getElementById('sf3LimitWarning');
+
+        if (!warning) {
+            warning = document.createElement('div');
+            warning.id = 'sf3LimitWarning';
+            warning.className = 'fixed top-5 right-5 z-[60] px-4 py-2 rounded-lg bg-amber-100 border border-amber-300 text-amber-800 text-sm font-medium shadow-lg';
+            document.body.appendChild(warning);
+        }
+
+        warning.textContent = message;
+        warning.classList.remove('hidden');
+
+        clearTimeout(limitWarningTimeout);
+        limitWarningTimeout = setTimeout(function () {
+            warning.classList.add('hidden');
+        }, 2200);
     }
 
     function clampToSelectedQuantity(input) {
@@ -195,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const currentValue = parseFloat(input.value || '0');
         if (!Number.isNaN(currentValue) && currentValue > selectedQuantity) {
             input.value = String(selectedQuantity);
+            showLimitWarning('Value cannot be greater than pending quantity (' + selectedQuantity + ').');
         }
     }
 
@@ -284,10 +305,44 @@ document.addEventListener('DOMContentLoaded', function () {
             clampToSelectedQuantity(totalSetShiftInput);
             updateSetPerHour();
         });
+
+        totalSetShiftInput.addEventListener('blur', function () {
+            normalizeWholeNumber(totalSetShiftInput);
+            clampToSelectedQuantity(totalSetShiftInput);
+            updateSetPerHour();
+        });
     }
+
+    if (actualSetShiftInput) {
+        actualSetShiftInput.addEventListener('input', function () {
+            normalizeWholeNumber(actualSetShiftInput);
+            clampToSelectedQuantity(actualSetShiftInput);
+        });
+
+        actualSetShiftInput.addEventListener('blur', function () {
+            normalizeWholeNumber(actualSetShiftInput);
+            clampToSelectedQuantity(actualSetShiftInput);
+        });
+    }
+
+    form.querySelectorAll('input[type="number"]').forEach(function (input) {
+        if (input === setPerHourInput) return;
+
+        input.addEventListener('blur', function () {
+            normalizeWholeNumber(input);
+            if (input === totalSetShiftInput || input === actualSetShiftInput) {
+                clampToSelectedQuantity(input);
+            }
+        });
+    });
 
     hourlyInputs.forEach(function (input) {
         input.addEventListener('input', function () {
+            normalizeWholeNumber(input);
+            updateActualSetShiftFromHours();
+        });
+
+        input.addEventListener('blur', function () {
             normalizeWholeNumber(input);
             updateActualSetShiftFromHours();
         });
@@ -329,13 +384,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (totalSetShiftValue > selectedQuantity) {
             event.preventDefault();
-            showSubmitError('Total Set/Shift should be less than pending quantity.');
+            showSubmitError('Total Set/Shift cannot be greater than pending quantity.');
+            if (totalSetShiftInput) totalSetShiftInput.focus();
             return;
         }
 
         if (actualSetShiftValue > selectedQuantity) {
             event.preventDefault();
-            showSubmitError('Actual / Set / Shift should be less than pending quantity.');
+            showSubmitError('Actual Set/Shift cannot be greater than pending quantity.');
+            if (actualSetShiftInput) actualSetShiftInput.focus();
             return;
         }
 
