@@ -1,15 +1,15 @@
 @extends('backend.layout.app')
 
-@section('title', 'CED & Zinc (SF2) Stock - Assigned Transfers')
+@section('title', 'CED & Zinc (SF2) SF1 Stock - Assigned Transfers')
 
-@section('page-title', 'CED & Zinc (SF2) Stock Management')
+@section('page-title', 'CED & Zinc (SF2) SF1 Stock Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="text-slate-600">CED & Zinc (SF2)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="font-medium text-slate-900">Stock</span>
+    <span class="font-medium text-slate-900">SF1 Stock</span>
 @endsection
 
 @section('content')
@@ -30,8 +30,8 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Assigned Stock Transfers</h2>
-                    <p class="text-sm text-slate-500">Stock transfers assigned from SF001 to this CED & Zinc (SF2) user</p>
+                    <h2 class="text-lg font-bold text-slate-900">Assigned SF1 Stock Transfers</h2>
+                    <p class="text-sm text-slate-500">SF1 stock transfers assigned to this CED & Zinc (SF2) user</p>
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-500">Total Records:</span>
@@ -45,9 +45,7 @@
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="w-[56px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                        @if($canUpdateStatus)
-                        <th class="w-[96px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
-                        @endif
+                        <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
                         <th class="w-[150px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">When Assigned</th>
                         <th class="w-[120px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
                         <th class="w-[180px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
@@ -69,12 +67,40 @@
                             $sf002Remark = trim((string) ($transfer->sf002_remark ?? ''));
                             $sf001ShortRemark = mb_strimwidth($sf001Remark, 0, 60, '...');
                             $sf002ShortRemark = mb_strimwidth($sf002Remark, 0, 60, '...');
+                            $acceptedQuantity = max((float) $transfer->quantity - (float) ($transfer->reject_quantity ?? 0), 0);
                         @endphp
                         <td class="px-4 py-3 text-slate-700">{{ $index + 1 }}</td>
-                        @if($canUpdateStatus)
                         <td class="px-4 py-3">
-                            @if((int) $transfer->is_accept === 0)
                             <div class="flex items-center justify-center gap-2 flex-nowrap whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                    onclick="openDetailsModal(this)"
+                                    data-id="{{ $transfer->id }}"
+                                    data-item-code="{{ $transfer->item_code }}"
+                                    data-item-name="{{ $transfer->item_name }}"
+                                    data-item-size="{{ $transfer->item_size }}"
+                                    data-assign-sf2="{{ $transfer->assign_sf2 ?? '-' }}"
+                                    data-assign-role="{{ $transfer->assign_role ?? '-' }}"
+                                    data-assigned-to-name="{{ $transfer->assigned_to_name ?? '-' }}"
+                                    data-quantity="{{ (float) $transfer->quantity }}"
+                                    data-reject-quantity="{{ (float) ($transfer->reject_quantity ?? 0) }}"
+                                    data-accepted-quantity="{{ $acceptedQuantity }}"
+                                    data-transfer-by="{{ $transfer->transfer_by_name ?? 'N/A' }}"
+                                    data-assigned-at="{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}"
+                                    data-transfer-date="{{ $transfer->date ? \Carbon\Carbon::parse($transfer->date)->format('d-m-Y') : '-' }}"
+                                    data-transfer-time="{{ $transfer->time ?? '-' }}"
+                                    data-updated-at="{{ $transfer->updated_at ? \Carbon\Carbon::parse($transfer->updated_at)->format('M d, Y h:i A') : '-' }}"
+                                    data-status="{{ (int) $transfer->is_accept }}"
+                                    data-sf001-remark="{{ $transfer->remark ?? '' }}"
+                                    data-sf002-remark="{{ $transfer->sf002_remark ?? '' }}"
+                                    title="View Details"
+                                    aria-label="View Details"
+                                >
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                </button>
+                                @if($canUpdateStatus)
+                                @if((int) $transfer->is_accept === 0)
                                 <button
                                     type="button"
                                     class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-green-50 text-green-700 hover:bg-green-100"
@@ -108,14 +134,14 @@
                                 >
                                     <i data-lucide="x" class="w-3.5 h-3.5"></i>
                                 </button>
+                                @else
+                                <div class="text-center text-[11px] font-medium text-slate-500">
+                                    Done
+                                </div>
+                                @endif
+                                @endif
                             </div>
-                            @else
-                            <div class="text-center text-[11px] font-medium text-slate-500">
-                                Done
-                            </div>
-                            @endif
                         </td>
-                        @endif
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}</td>
                         <td class="px-4 py-3 font-medium text-slate-900">
                             <span class="block truncate" title="{{ $transfer->item_code }}">{{ $transfer->item_code }}</span>
@@ -186,14 +212,14 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $canUpdateStatus ? 13 : 12 }}" class="px-4 py-10 text-center">
+                        <td colspan="13" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-medium text-slate-900">No assigned stock found</p>
-                                    <p class="text-sm text-slate-500 mt-1">There are no stock transfers assigned to you yet.</p>
+                                    <p class="text-sm font-medium text-slate-900">No assigned SF1 stock found</p>
+                                    <p class="text-sm text-slate-500 mt-1">There are no SF1 stock transfers assigned to you yet.</p>
                                 </div>
                             </div>
                         </td>
@@ -201,6 +227,43 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div id="detailsModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4">
+    <div class="mx-auto mt-8 w-full max-w-4xl rounded-2xl bg-white shadow-xl border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">SF1 Stock Transfer Details</h3>
+                <p class="text-sm text-slate-500 mt-1">Complete information of the selected SF1 stock record</p>
+            </div>
+            <button type="button" onclick="closeDetailsModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="px-6 py-5">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer ID</p><p id="detailTransferId" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Item Code</p><p id="detailItemCode" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Item Name</p><p id="detailItemName" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Item Size</p><p id="detailItemSize" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Assign SF2 Type</p><p id="detailAssignSf2" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Assign Role</p><p id="detailAssignRole" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Assigned To</p><p id="detailAssignedTo" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer By</p><p id="detailTransferBy" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Status</p><p id="detailStatus" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Received Quantity</p><p id="detailQuantity" class="text-sm font-semibold text-slate-900 mt-1">0</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Rejected Quantity</p><p id="detailRejectQuantity" class="text-sm font-semibold text-slate-900 mt-1">0</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Accepted Quantity</p><p id="detailAcceptedQuantity" class="text-sm font-semibold text-slate-900 mt-1">0</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Assigned At</p><p id="detailAssignedAt" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer Date</p><p id="detailTransferDate" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer Time</p><p id="detailTransferTime" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Last Updated</p><p id="detailUpdatedAt" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Roll Forming (SF1) Remark</p><p id="detailSf001Remark" class="text-sm text-slate-800 mt-1 break-words">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">CED & Zinc (SF2) Remark</p><p id="detailSf002Remark" class="text-sm text-slate-800 mt-1 break-words">-</p></div>
+            </div>
         </div>
     </div>
 </div>
@@ -273,6 +336,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const successMessage = document.getElementById('swal-success-message');
     const errorMessage = document.getElementById('swal-error-message');
 
+    const detailsModal = document.getElementById('detailsModal');
+    const detailTransferId = document.getElementById('detailTransferId');
+    const detailItemCode = document.getElementById('detailItemCode');
+    const detailItemName = document.getElementById('detailItemName');
+    const detailItemSize = document.getElementById('detailItemSize');
+    const detailAssignSf2 = document.getElementById('detailAssignSf2');
+    const detailAssignRole = document.getElementById('detailAssignRole');
+    const detailAssignedTo = document.getElementById('detailAssignedTo');
+    const detailTransferBy = document.getElementById('detailTransferBy');
+    const detailStatus = document.getElementById('detailStatus');
+    const detailQuantity = document.getElementById('detailQuantity');
+    const detailRejectQuantity = document.getElementById('detailRejectQuantity');
+    const detailAcceptedQuantity = document.getElementById('detailAcceptedQuantity');
+    const detailAssignedAt = document.getElementById('detailAssignedAt');
+    const detailTransferDate = document.getElementById('detailTransferDate');
+    const detailTransferTime = document.getElementById('detailTransferTime');
+    const detailUpdatedAt = document.getElementById('detailUpdatedAt');
+    const detailSf001Remark = document.getElementById('detailSf001Remark');
+    const detailSf002Remark = document.getElementById('detailSf002Remark');
+
     const statusModal = document.getElementById('statusUpdateModal');
     const statusForm = document.getElementById('statusUpdateForm');
     const statusField = document.getElementById('status_field');
@@ -311,6 +394,46 @@ document.addEventListener('DOMContentLoaded', function() {
             acceptAllThumb.classList.add('left-1');
         }
     }
+
+    function getStatusLabel(statusCode) {
+        const normalized = parseInt(statusCode || '0', 10);
+        if (normalized === 1) return 'Accepted';
+        if (normalized === 2) return 'Rejected';
+        return 'Pending';
+    }
+
+    window.openDetailsModal = function(button) {
+        detailTransferId.textContent = button.getAttribute('data-id') || '-';
+        detailItemCode.textContent = button.getAttribute('data-item-code') || '-';
+        detailItemName.textContent = button.getAttribute('data-item-name') || '-';
+        detailItemSize.textContent = button.getAttribute('data-item-size') || '-';
+        detailAssignSf2.textContent = button.getAttribute('data-assign-sf2') || '-';
+        detailAssignRole.textContent = button.getAttribute('data-assign-role') || '-';
+        detailAssignedTo.textContent = button.getAttribute('data-assigned-to-name') || '-';
+        detailTransferBy.textContent = button.getAttribute('data-transfer-by') || '-';
+        detailStatus.textContent = getStatusLabel(button.getAttribute('data-status'));
+        detailQuantity.textContent = Math.round(parseFloat(button.getAttribute('data-quantity') || '0')).toString();
+        detailRejectQuantity.textContent = Math.round(parseFloat(button.getAttribute('data-reject-quantity') || '0')).toString();
+        detailAcceptedQuantity.textContent = Math.round(parseFloat(button.getAttribute('data-accepted-quantity') || '0')).toString();
+        detailAssignedAt.textContent = button.getAttribute('data-assigned-at') || '-';
+        detailTransferDate.textContent = button.getAttribute('data-transfer-date') || '-';
+        detailTransferTime.textContent = button.getAttribute('data-transfer-time') || '-';
+        detailUpdatedAt.textContent = button.getAttribute('data-updated-at') || '-';
+
+        const sf001Remark = (button.getAttribute('data-sf001-remark') || '').trim();
+        const sf002Remark = (button.getAttribute('data-sf002-remark') || '').trim();
+        detailSf001Remark.textContent = sf001Remark || '-';
+        detailSf002Remark.textContent = sf002Remark || '-';
+
+        detailsModal.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    };
+
+    window.closeDetailsModal = function() {
+        detailsModal.classList.add('hidden');
+    };
 
     window.openStatusModal = function(button) {
         const status = button.getAttribute('data-status') || '1';
@@ -422,12 +545,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.addEventListener('click', function(event) {
+        if (event.target === detailsModal) {
+            closeDetailsModal();
+        }
+
         if (event.target === statusModal) {
             closeStatusModal();
         }
     });
 
     document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && !detailsModal.classList.contains('hidden')) {
+            closeDetailsModal();
+        }
+
         if (event.key === 'Escape' && !statusModal.classList.contains('hidden')) {
             closeStatusModal();
         }

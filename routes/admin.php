@@ -70,6 +70,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::post('/stock/{transferId}/status', [SF002Controller::class, 'updateStatus'])->name('stock.status');
         Route::get('/production-report/{transferId}', [SF002Controller::class, 'productionReport'])->name('production-report');
         Route::post('/production-report/{transferId}', [SF002Controller::class, 'storeProductionReport'])->name('production-report.store');
+        Route::get('/production/show/{encryptedId}', [SF002Controller::class, 'showProductionReport'])->name('production.show');
+        Route::delete('/production/{id}', [SF002Controller::class, 'destroyProductionReport'])->name('production.destroy');
+        Route::get('/sf2-stock', [SF002Controller::class, 'sf2Stock'])->name('sf2-stock');
+        Route::post('/sf2-stock/transfer', [SF002Controller::class, 'storeSf2Transfer'])->name('sf2-stock.transfer');
+        Route::get('/sf2-stock/{itemId}/history', [SF002Controller::class, 'sf2StockHistory'])->name('sf2-stock.history');
     });
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');
