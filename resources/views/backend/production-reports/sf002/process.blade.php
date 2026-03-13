@@ -218,6 +218,12 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse(($sf2ProductionReports ?? collect()) as $report)
+                    @php
+                        $actualSetShift = number_format((float) ($report->actual_set_shift ?? 0), 0);
+                        $totalSetShift = number_format((float) ($report->total_set_shift ?? 0), 0);
+                        $manpowerWorkman = number_format((float) ($report->manpower_workman ?? 0), 0);
+                        $staffCount = number_format((float) ($report->staff_count ?? 0), 0);
+                    @endphp
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">#{{ $report->id }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-900">
@@ -225,9 +231,9 @@
                         </td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ $report->report_date ? \Carbon\Carbon::parse($report->report_date)->format('d M Y') : '-' }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ ucfirst($report->shift ?? '-') }}</td>
-                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">{{ $report->actual_set_shift ?? 0 }}/{{ $report->total_set_shift ?? 0 }}</td>
-                        <td class="px-3 py-2.5 text-xs text-slate-700">{{ $report->manpower_workman ?? 0 }}</td>
-                        <td class="px-3 py-2.5 text-xs text-slate-700">{{ $report->staff_count ?? 0 }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">{{ $actualSetShift }}/{{ $totalSetShift }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-700">{{ $manpowerWorkman }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-700">{{ $staffCount }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ $report->created_by_name ?? 'N/A' }}</td>
                         <td class="px-3 py-2.5 text-right">
                             <div class="flex items-center justify-end gap-2">
