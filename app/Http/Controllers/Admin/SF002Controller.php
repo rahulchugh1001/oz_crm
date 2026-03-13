@@ -550,7 +550,8 @@ class SF002Controller extends Controller
                     WHEN is_accept = 2 THEN quantity
                     WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
                     ELSE 0
-                END), 0) as rejected_quantity")
+                END), 0) as rejected_quantity"),
+                DB::raw("GROUP_CONCAT(DISTINCT sf3_process ORDER BY sf3_process) as sf3_process_lines")
             )
             ->groupBy('item_id');
 
@@ -564,7 +565,8 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(MAX(ced_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(ced_transfers.rejected_quantity), 0) as rejected_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0), 0) as pending_quantity'),
-                DB::raw('MAX(reports.created_at) as last_stock_update')
+                DB::raw('MAX(reports.created_at) as last_stock_update'),
+                DB::raw('MAX(ced_transfers.sf3_process_lines) as sf3_process_lines')
             )
             ->join('items', 'reports.item_id', '=', 'items.id')
             ->leftJoinSub($cedTransferStats, 'ced_transfers', function ($join) {
@@ -590,7 +592,8 @@ class SF002Controller extends Controller
                     WHEN is_accept = 2 THEN quantity
                     WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
                     ELSE 0
-                END), 0) as rejected_quantity")
+                END), 0) as rejected_quantity"),
+                DB::raw("GROUP_CONCAT(DISTINCT sf3_process ORDER BY sf3_process) as sf3_process_lines")
             )
             ->groupBy('item_id');
 
@@ -604,7 +607,8 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(MAX(zinc_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(zinc_transfers.rejected_quantity), 0) as rejected_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0), 0) as pending_quantity'),
-                DB::raw('MAX(reports.created_at) as last_stock_update')
+                DB::raw('MAX(reports.created_at) as last_stock_update'),
+                DB::raw('MAX(zinc_transfers.sf3_process_lines) as sf3_process_lines')
             )
             ->join('items', 'reports.item_id', '=', 'items.id')
             ->leftJoinSub($zincTransferStats, 'zinc_transfers', function ($join) {

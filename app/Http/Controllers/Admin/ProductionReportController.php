@@ -98,9 +98,9 @@ class ProductionReportController extends Controller
     /**
      * Display production reports for SF003.
      */
-    public function sf003(Request $request): View
+    public function sf003(Request $request): RedirectResponse
     {
-        return view('backend.production-reports.sf003.list');
+        return redirect()->route('admin.production-reports.sf003.stock');
     }
 
     /**

@@ -6,6 +6,7 @@
     $activeTab = strtolower((string) request()->query('tab', 'production'));
     $activeTab = in_array($activeTab, ['stock', 'production'], true) ? $activeTab : 'production';
     $firstAcceptedTransfer = $acceptedTransfers->first();
+    $stockCount = $acceptedTransfers->count();
 @endphp
 
 @section('title', $sf2TypeLabel . ' SF2 Process - Accepted Transfers')
@@ -51,7 +52,7 @@
                     @if($activeTab === 'stock')
                     <div class="text-sm">
                         <span class="text-slate-500">Total Records:</span>
-                        <span class="ml-1 font-semibold text-slate-900">{{ $acceptedTransfers->count() }}</span>
+                        <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
                     </div>
                     @else
                     @if($firstAcceptedTransfer)
@@ -70,7 +71,10 @@
 
                 <div class="flex flex-wrap items-center gap-2 pt-1">
                     <a href="{{ route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'production' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Production</a>
-                    <a href="{{ route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'stock']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'stock' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">Stock</a>
+                    <a href="{{ route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'stock']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'stock' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                        <span>Stock</span>
+                        <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold {{ $activeTab === 'stock' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $stockCount }}</span>
+                    </a>
                 </div>
             </div>
         </div>

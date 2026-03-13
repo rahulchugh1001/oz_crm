@@ -136,15 +136,27 @@
                         <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.production-reports.sf003*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
                             <i data-lucide="layers" class="w-4 h-4 {{ request()->routeIs('admin.production-reports.sf003*') ? 'text-white' : 'text-gray-400' }}"></i>
                         </div>
-                        <span class="font-medium">Assembly (SF3)</span>
+                        <span class="font-medium">Assemble SF3</span>
                     </div>
                     <i data-lucide="chevron-right" id="sf003-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
                 </button>
 
                 <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ request()->routeIs('admin.production-reports.sf003*') ? '' : 'hidden' }}" id="sf003-dropdown">
-                    <a href="{{ route('admin.production-reports.sf003') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003') ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf003.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">Process <small>(Upcoming)</small></span>
+                        <span class="text-sm">SF2 Stock</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l1', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line', 'l1') === 'l1' ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">L1 Production</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l2', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line') === 'l2' ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">L2 Production</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l3', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.process') && request()->query('line') === 'l3' ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">L3 Production</span>
                     </a>
                 </div>
             </div>

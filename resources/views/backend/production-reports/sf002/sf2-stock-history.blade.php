@@ -167,11 +167,11 @@
                             <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
                             <td class="px-6 py-4 text-center">
                                 @if($transfer->sf3_process === 'line_1')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 1</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Assemble Line 1</span>
                                 @elseif($transfer->sf3_process === 'line_2')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 2</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700">Assemble Line 2</span>
                                 @elseif($transfer->sf3_process === 'line_3')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 3</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Assemble Line 3</span>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif
@@ -367,11 +367,11 @@
                             <td class="px-6 py-4 text-sm text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
                             <td class="px-6 py-4 text-center">
                                 @if($transfer->sf3_process === 'line_1')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 1</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Assemble Line 1</span>
                                 @elseif($transfer->sf3_process === 'line_2')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 2</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700">Assemble Line 2</span>
                                 @elseif($transfer->sf3_process === 'line_3')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-sky-50 text-sky-700">Line 3</span>
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Assemble Line 3</span>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif

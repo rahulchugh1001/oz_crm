@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProductionReportController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SF001Controller;
 use App\Http\Controllers\Admin\SF002Controller;
+use App\Http\Controllers\Admin\SF003Controller;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/sf2-stock', [SF002Controller::class, 'sf2Stock'])->name('sf2-stock');
         Route::post('/sf2-stock/transfer', [SF002Controller::class, 'storeSf2Transfer'])->name('sf2-stock.transfer');
         Route::get('/sf2-stock/{itemId}/history', [SF002Controller::class, 'sf2StockHistory'])->name('sf2-stock.history');
+    });
+    Route::prefix('production-reports/sf003')->name('production-reports.sf003.')->group(function () {
+        Route::get('/stock', [SF003Controller::class, 'index'])->name('stock');
+        Route::get('/process', [SF003Controller::class, 'process'])->name('process');
+        Route::get('/production-report/{transferId}', [SF003Controller::class, 'productionReport'])->name('production-report');
+        Route::post('/production-report/{transferId}', [SF003Controller::class, 'storeProductionReport'])->name('production-report.store');
+        Route::post('/stock/{transferId}/status', [SF003Controller::class, 'updateStatus'])->name('stock.status');
     });
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');

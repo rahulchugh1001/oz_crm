@@ -128,9 +128,9 @@
                         <label for="transfer_sf3_process" class="block text-sm font-semibold text-slate-700 mb-2">SF3 Process <span class="text-rose-500">*</span></label>
                         <select id="transfer_sf3_process" name="sf3_process" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sf3_process') border-rose-500 @enderror">
                             <option value="">Select SF3 Process</option>
-                            <option value="line_1" {{ old('sf3_process') === 'line_1' ? 'selected' : '' }}>Line 1</option>
-                            <option value="line_2" {{ old('sf3_process') === 'line_2' ? 'selected' : '' }}>Line 2</option>
-                            <option value="line_3" {{ old('sf3_process') === 'line_3' ? 'selected' : '' }}>Line 3</option>
+                            <option value="line_1" {{ old('sf3_process') === 'line_1' ? 'selected' : '' }}>Assemble Line 1</option>
+                            <option value="line_2" {{ old('sf3_process') === 'line_2' ? 'selected' : '' }}>Assemble Line 2</option>
+                            <option value="line_3" {{ old('sf3_process') === 'line_3' ? 'selected' : '' }}>Assemble Line 3</option>
                         </select>
                         @error('sf3_process')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>

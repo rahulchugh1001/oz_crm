@@ -25,6 +25,7 @@
                     <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
                     <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected</th>
                     <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Last Stock Update</th>
+                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assembly Lines</th>
                     <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -74,6 +75,23 @@
                             <span>{{ $item->last_stock_update ? \Carbon\Carbon::parse($item->last_stock_update)->format('M d, Y h:i A') : 'N/A' }}</span>
                         </div>
                     </td>
+                    <td class="px-4 py-3 text-center">
+                        @if(!empty($item->sf3_process_lines))
+                            <div class="flex flex-wrap justify-center gap-1">
+                                @foreach(explode(',', $item->sf3_process_lines) as $line)
+                                    @if(trim($line) === 'line_1')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-sky-50 text-sky-700">Assemble Line 1</span>
+                                    @elseif(trim($line) === 'line_2')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-50 text-violet-700">Assemble Line 2</span>
+                                    @elseif(trim($line) === 'line_3')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700">Assemble Line 3</span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="text-slate-400 text-xs">—</span>
+                        @endif
+                    </td>
                     <td class="px-4 py-3">
                         <div class="flex items-center justify-center gap-2">
                             <button
@@ -100,7 +118,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" class="px-6 py-12 text-center">
+                    <td colspan="11" class="px-6 py-12 text-center">
                         <div class="flex flex-col items-center gap-3">
                             <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                 <i data-lucide="package-x" class="w-8 h-8 text-slate-400"></i>
