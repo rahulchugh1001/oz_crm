@@ -17,6 +17,9 @@ class CoilMachineTrackLog extends Model
         'machine_id',
         'coil_id',
         'action_type',
+        'load_weight',
+        'unload_weight',
+        'total_weight',
         'old_data',
         'new_data',
         'message',
@@ -26,6 +29,9 @@ class CoilMachineTrackLog extends Model
     ];
 
     protected $casts = [
+        'load_weight' => 'decimal:3',
+        'unload_weight' => 'decimal:3',
+        'total_weight' => 'decimal:3',
         'old_data' => 'array',
         'new_data' => 'array',
         'status' => 'boolean',

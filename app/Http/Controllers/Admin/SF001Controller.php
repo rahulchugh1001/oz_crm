@@ -186,7 +186,7 @@ class SF001Controller extends Controller
             'form_type' => 'required|in:load,unload',
             'coil_id' => 'nullable|integer|exists:coil_stock,id',
             'machine_id' => 'required|integer|exists:machines,id',
-            'load_weight' => 'nullable|numeric|gt:0',
+            'load_weight' => 'required_if:form_type,load|numeric|gt:0',
             'unload_weight' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string|max:255',
         ]);
@@ -224,23 +224,25 @@ class SF001Controller extends Controller
                 return back()->with('error', 'Selected machine already has a loaded coil. Please unload first.');
             }
 
-            $loadWeight = isset($validated['load_weight'])
-                ? (float) $validated['load_weight']
-                : (float) $coil->net_weight_kg;
+            $loadWeight = (float) $validated['load_weight'];
+            $coilNetWeightTotal = (float) $coil->net_weight_kg;
 
             if ($loadWeight > (float) $coil->net_weight_kg) {
                 return back()->withErrors([
-                    'load_weight' => 'Load weight cannot be greater than coil net weight (' . number_format((float) $coil->net_weight_kg, 3) . ').',
+                    'load_weight' => 'Load weight cannot be greater than coil net weight (' . number_format((float) $coil->net_weight_kg, 0) . ').',
                 ])->withInput();
             }
 
-            DB::transaction(function () use ($machine, $coil, $loadWeight, $validated) {
+            $remainingNetWeight = max($coilNetWeightTotal - $loadWeight, 0);
+
+            DB::transaction(function () use ($machine, $coil, $loadWeight, $validated, $coilNetWeightTotal, $remainingNetWeight) {
                 $machine->update([
                     'coil_id' => $coil->id,
                 ]);
 
                 $coil->update([
-                    'process' => 'in_use',
+                    'net_weight_kg' => $remainingNetWeight,
+                    'process' => $remainingNetWeight > 0 ? 'in_use' : 'completed',
                 ]);
 
                 $track = CoilMachineTrack::query()->create([
@@ -267,6 +269,8 @@ class SF001Controller extends Controller
                         'coil_id' => $coil->id,
                         'coil_no' => $coil->coil_no,
                         'load_weight' => $loadWeight,
+                        'remaining_net_weight' => $remainingNetWeight,
+                        'total_weight' => $coilNetWeightTotal,
                     ],
                     'Coil loaded to machine.'
                 );
@@ -310,14 +314,18 @@ class SF001Controller extends Controller
             ])->withInput();
         }
 
-        DB::transaction(function () use ($machine, $coil, $baseLoadWeight, $pendingWeight, $latestLoadTrack, $validated) {
+        $coilNetWeightBeforeUnload = (float) $coil->net_weight_kg;
+        $updatedNetWeight = $coilNetWeightBeforeUnload + $pendingWeight;
+        $coilNetWeightTotal = $coilNetWeightBeforeUnload + $baseLoadWeight;
+
+        DB::transaction(function () use ($machine, $coil, $baseLoadWeight, $pendingWeight, $latestLoadTrack, $validated, $coilNetWeightTotal, $updatedNetWeight) {
             $machine->update([
                 'coil_id' => null,
             ]);
 
             $coil->update([
-                'net_weight_kg' => $pendingWeight,
-                'process' => $pendingWeight > 0 ? 'available' : 'completed',
+                'net_weight_kg' => $updatedNetWeight,
+                'process' => $updatedNetWeight > 0 ? 'available' : 'completed',
             ]);
 
             $track = CoilMachineTrack::query()->create([
@@ -349,7 +357,9 @@ class SF001Controller extends Controller
                     'coil_no' => $coil->coil_no,
                     'load_weight' => $baseLoadWeight,
                     'unload_weight' => $pendingWeight,
-                    'coil_process' => $pendingWeight > 0 ? 'available' : 'completed',
+                    'remaining_net_weight' => $updatedNetWeight,
+                    'total_weight' => $coilNetWeightTotal,
+                    'coil_process' => $updatedNetWeight > 0 ? 'available' : 'completed',
                 ],
                 'Coil unloaded from machine.'
             );
@@ -365,11 +375,21 @@ class SF001Controller extends Controller
         ?array $newData,
         ?string $message = null
     ): void {
+        $loadedWeight = isset($newData['load_weight']) ? (float) $newData['load_weight'] : (float) $track->load_weight;
+        $pendingWeight = isset($newData['unload_weight']) ? (float) $newData['unload_weight'] : 0;
+        $totalWeight = isset($newData['total_weight']) ? (float) $newData['total_weight'] : $loadedWeight;
+        $unloadedWeight = $actionType === 'unload'
+            ? max($loadedWeight - $pendingWeight, 0)
+            : 0;
+
         CoilMachineTrackLog::query()->create([
             'coil_machine_track_id' => $track->id,
             'machine_id' => $track->machine_id,
             'coil_id' => $track->coil_id,
             'action_type' => $actionType,
+            'load_weight' => $loadedWeight,
+            'unload_weight' => $unloadedWeight,
+            'total_weight' => $totalWeight,
             'old_data' => $oldData,
             'new_data' => $newData,
             'message' => $message,

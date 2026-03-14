@@ -56,8 +56,8 @@
                         <td class="px-6 py-5 text-slate-900 font-semibold">{{ $coil->coil_no }}</td>
                         <td class="px-6 py-5 text-slate-700">{{ $coil->coil_size }}</td>
                         <td class="px-6 py-5 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->thickness, 3) }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 3) }}</td>
+                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->thickness, 0) }}</td>
+                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
                         <td class="px-6 py-5 text-slate-700">
                             @if(!empty($loadedMachineNames[$coil->id]))
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-semibold">
@@ -98,8 +98,8 @@
                                     data-coil-no="{{ $coil->coil_no }}"
                                     data-coil-size="{{ $coil->coil_size }}"
                                     data-supplier-name="{{ $coil->manufacture->name ?? '-' }}"
-                                    data-thickness="{{ number_format((float) $coil->thickness, 3) }}"
-                                    data-net-weight="{{ number_format((float) $coil->net_weight_kg, 3) }}"
+                                    data-thickness="{{ number_format((float) $coil->thickness, 0) }}"
+                                    data-net-weight="{{ number_format((float) $coil->net_weight_kg, 0) }}"
                                     data-machine-name="{{ $loadedMachineNames[$coil->id] ?? 'Not Loaded' }}"
                                     data-machine-loaded="{{ !empty($loadedMachineNames[$coil->id]) ? '1' : '0' }}"
                                     data-process="{{ $coil->process }}"
@@ -130,9 +130,11 @@
                                     type="button"
                                     onclick="openLoadToMachineModal(this)"
                                     title="Load to Machine"
-                                    class="inline-flex items-center justify-center p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                    class="inline-flex items-center justify-center p-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 {{ (float) $coil->net_weight_kg <= 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
                                     data-coil-id="{{ $coil->id }}"
                                     data-coil-no="{{ $coil->coil_no }}"
+                                    data-net-weight="{{ (float) $coil->net_weight_kg }}"
+                                    {{ (float) $coil->net_weight_kg <= 0 ? 'disabled' : '' }}
                                 >
                                     <i data-lucide="truck" class="w-4 h-4"></i>
                                 </button>
@@ -227,7 +229,8 @@
 
             <div>
                 <label for="load_weight" class="block text-sm font-semibold text-slate-700 mb-2">Load Weight (KG)</label>
-                <input type="number" id="load_weight" name="load_weight" value="{{ old('load_weight') }}" min="0" step="0.001" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('load_weight') border-rose-500 @enderror" placeholder="Leave empty to use full coil net weight">
+                <input type="number" id="load_weight" name="load_weight" value="{{ old('load_weight') }}" required min="1" step="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('load_weight') border-rose-500 @enderror" placeholder="Enter load weight">
+                <p id="load_weight_hint" class="mt-1 text-xs text-slate-500">Max you can load 0 KG net weight.</p>
                 @error('load_weight')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
             </div>
 
@@ -274,7 +277,7 @@
 
             <div>
                 <label for="unload_weight" class="block text-sm font-semibold text-slate-700 mb-2">Pending Weight After Unload (KG) <span class="text-rose-500">*</span></label>
-                <input type="number" id="unload_weight" name="unload_weight" value="{{ old('unload_weight') }}" required min="0" step="0.001" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('unload_weight') border-rose-500 @enderror" placeholder="0">
+                <input type="number" id="unload_weight" name="unload_weight" value="{{ old('unload_weight') }}" required min="0" step="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('unload_weight') border-rose-500 @enderror" placeholder="0">
                 @error('unload_weight')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
             </div>
 
@@ -471,8 +474,8 @@
                         </td>
                         <td class="px-6 py-4 text-slate-700">{{ $track->machine?->name ?? '-' }}{{ $track->machine?->machine_code ? ' (' . $track->machine?->machine_code . ')' : '' }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ $track->coil?->coil_no ?? '-' }}</td>
-                        <td class="px-6 py-4 text-slate-700">{{ number_format((float) $track->load_weight, 3) }}</td>
-                        <td class="px-6 py-4 text-slate-700">{{ $track->unload_weight !== null ? number_format((float) $track->unload_weight, 3) : '-' }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ number_format((float) $track->load_weight, 0) }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->unload_weight !== null ? number_format((float) $track->unload_weight, 0) : '-' }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ $track->creator?->name ?? '-' }}</td>
                         <td class="px-6 py-4 text-slate-700">{{ $track->remark ?? '-' }}</td>
                     </tr>
@@ -527,6 +530,36 @@
     function openLoadToMachineModal(button) {
         document.getElementById('load_coil_id').value = button.getAttribute('data-coil-id') || '';
         document.getElementById('load_coil_no').value = button.getAttribute('data-coil-no') || '';
+        const netWeight = parseFloat(button.getAttribute('data-net-weight') || '0');
+        const loadWeightInput = document.getElementById('load_weight');
+        const loadToMachineButton = document.getElementById('loadToMachineButton');
+        const loadWeightHint = document.getElementById('load_weight_hint');
+
+        if (loadWeightHint) {
+            loadWeightHint.textContent = 'Max you can load ' + String(Math.floor(netWeight)) + ' KG net weight.';
+        }
+
+        if (loadWeightInput) {
+            loadWeightInput.max = String(Math.floor(netWeight));
+            loadWeightInput.value = netWeight > 0 ? String(Math.floor(netWeight)) : '';
+            loadWeightInput.disabled = netWeight <= 0;
+            if (netWeight <= 0) {
+                loadWeightInput.classList.add('bg-slate-100', 'cursor-not-allowed');
+            } else {
+                loadWeightInput.classList.remove('bg-slate-100', 'cursor-not-allowed');
+            }
+        }
+
+        if (loadToMachineButton) {
+            loadToMachineButton.disabled = netWeight <= 0;
+            if (netWeight <= 0) {
+                loadToMachineButton.classList.add('opacity-60', 'cursor-not-allowed');
+                loadToMachineButton.textContent = 'Load Disabled';
+            } else {
+                loadToMachineButton.classList.remove('opacity-60', 'cursor-not-allowed');
+                loadToMachineButton.textContent = 'Load';
+            }
+        }
         document.getElementById('loadToMachineModal').classList.remove('hidden');
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
@@ -613,7 +646,13 @@
         @if(old('form_type') === 'edit')
             document.getElementById('editCoilModal').classList.remove('hidden');
         @elseif(old('form_type') === 'load')
-            document.getElementById('loadToMachineModal').classList.remove('hidden');
+            const oldCoilId = @json(old('coil_id'));
+            const loadButton = document.querySelector('[data-coil-id="' + String(oldCoilId || '') + '"][data-net-weight]');
+            if (loadButton) {
+                openLoadToMachineModal(loadButton);
+            } else {
+                document.getElementById('loadToMachineModal').classList.remove('hidden');
+            }
         @elseif(old('form_type') === 'unload')
             const oldCoilId = @json(old('coil_id'));
             const oldMachineId = @json(old('machine_id'));
@@ -660,6 +699,20 @@
 
         if (loadToMachineForm && loadToMachineButton) {
             loadToMachineForm.addEventListener('submit', function () {
+                if (loadToMachineButton.disabled) {
+                    return;
+                }
+
+                const loadWeightInput = document.getElementById('load_weight');
+                const maxWeight = loadWeightInput ? Number(loadWeightInput.max || '0') : 0;
+                const enteredWeight = loadWeightInput ? Number(loadWeightInput.value || '0') : 0;
+
+                if (loadWeightInput && (enteredWeight <= 0 || (maxWeight > 0 && enteredWeight > maxWeight))) {
+                    alert('Load weight must be between 1 and ' + maxWeight + ' KG.');
+                    loadWeightInput.focus();
+                    return;
+                }
+
                 loadToMachineButton.disabled = true;
                 loadToMachineButton.classList.add('opacity-60', 'cursor-not-allowed');
                 loadToMachineButton.textContent = 'Loading...';
