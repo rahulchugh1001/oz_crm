@@ -244,6 +244,21 @@
                         </button>
                     @endforeach
                 </div>
+                <div id="manage_load_rule_notice" class="hidden mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-800">
+                    <div class="flex items-start gap-2">
+                        <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                            <i data-lucide="alert-triangle" class="h-3.5 w-3.5"></i>
+                        </span>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide">Coil already loaded</p>
+                            <p class="mt-0.5 text-xs">
+                                This coil is currently loaded on
+                                <span id="manage_loaded_machine_list" class="font-semibold">machine(s)</span>.
+                                Unload first to enable Load again.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -539,6 +554,20 @@
         const isAlreadyLoaded = Array.isArray(currentManageContext.loadedMachines)
             ? currentManageContext.loadedMachines.length > 0
             : false;
+        const ruleNotice = document.getElementById('manage_load_rule_notice');
+        const loadedMachineList = document.getElementById('manage_loaded_machine_list');
+
+        if (ruleNotice) {
+            ruleNotice.classList.toggle('hidden', !isAlreadyLoaded);
+        }
+
+        if (loadedMachineList && isAlreadyLoaded) {
+            const machineNames = currentManageContext.loadedMachines
+                .map(function (machine) { return machine.name || ''; })
+                .filter(function (name) { return name.length > 0; });
+
+            loadedMachineList.textContent = machineNames.length > 0 ? machineNames.join(', ') : 'selected machine(s)';
+        }
 
         document.querySelectorAll('.manage-action-tab').forEach(function (button) {
             const buttonAction = button.getAttribute('data-action') || '';
