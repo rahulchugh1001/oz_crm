@@ -240,24 +240,13 @@
                             class="manage-action-tab flex-1 rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
                             data-action="{{ $actionTab['value'] }}"
                         >
-                            {{ $actionTab['label'] }}
+                            <span>{{ $actionTab['label'] }}</span>
                         </button>
                     @endforeach
                 </div>
-                <div id="manage_load_rule_notice" class="hidden mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-800">
-                    <div class="flex items-start gap-2">
-                        <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                            <i data-lucide="alert-triangle" class="h-3.5 w-3.5"></i>
-                        </span>
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-wide">Coil already loaded</p>
-                            <p class="mt-0.5 text-xs">
-                                This coil is currently loaded on
-                                <span id="manage_loaded_machine_list" class="font-semibold">machine(s)</span>.
-                                Unload first to enable Load again.
-                            </p>
-                        </div>
-                    </div>
+                <div id="manage_loaded_status_chip" class="hidden mt-2 inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    <i data-lucide="loader-circle" class="h-3.5 w-3.5 manage-load-indicator-icon"></i>
+                    Coil Loaded - unload first
                 </div>
             </div>
 
@@ -276,6 +265,21 @@
             </div>
 
             <div id="manage_load_section">
+                <div id="manage_load_rule_notice" class="hidden mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-amber-800">
+                    <div class="flex items-start gap-2">
+                        <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                            <i data-lucide="alert-triangle" class="h-3.5 w-3.5"></i>
+                        </span>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide">Coil already loaded</p>
+                            <p class="mt-0.5 text-xs">
+                                This coil is currently loaded on
+                                <span id="manage_loaded_machine_list" class="font-semibold">machine(s)</span>.
+                                Please unload first.
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <label for="manage_load_weight" class="block text-sm font-semibold text-slate-700 mb-2">Load Weight (KG)</label>
                 <input type="number" id="manage_load_weight" name="load_weight" value="{{ old('load_weight') }}" min="1" step="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('load_weight') border-rose-500 @enderror" placeholder="Enter load weight">
                 <p id="manage_load_weight_hint" class="mt-1 text-xs text-slate-500">Max you can load 0 KG net weight.</p>
@@ -285,6 +289,7 @@
             <div id="manage_unload_section">
                 <label for="manage_unload_weight" class="block text-sm font-semibold text-slate-700 mb-2">Pending Weight After Unload (KG)</label>
                 <input type="number" id="manage_unload_weight" name="unload_weight" value="{{ old('unload_weight') }}" min="0" step="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('unload_weight') border-rose-500 @enderror" placeholder="0">
+                <p id="manage_unload_weight_hint" class="mt-1 text-xs text-slate-500">Select machine to see max pending weight.</p>
                 @error('unload_weight')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
             </div>
 
@@ -463,6 +468,10 @@
         transform-origin: center;
     }
 
+    .manage-load-indicator-icon {
+        animation: loadSpinner 1s linear infinite;
+    }
+
     .loaded-truck-bg {
         animation: truckBgFlash 1.1s ease-in-out infinite;
     }
@@ -499,10 +508,20 @@
         }
     }
 
+    @keyframes loadSpinner {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .in-use-spin,
         .loaded-truck,
-        .loaded-truck-bg {
+        .loaded-truck-bg,
+        .manage-load-indicator-icon {
             animation: none;
         }
     }
@@ -555,10 +574,15 @@
             ? currentManageContext.loadedMachines.length > 0
             : false;
         const ruleNotice = document.getElementById('manage_load_rule_notice');
+        const loadedStatusChip = document.getElementById('manage_loaded_status_chip');
         const loadedMachineList = document.getElementById('manage_loaded_machine_list');
 
+        if (loadedStatusChip) {
+            loadedStatusChip.classList.toggle('hidden', !isAlreadyLoaded);
+        }
+
         if (ruleNotice) {
-            ruleNotice.classList.toggle('hidden', !isAlreadyLoaded);
+            ruleNotice.classList.toggle('hidden', !(isAlreadyLoaded && action === 'load'));
         }
 
         if (loadedMachineList && isAlreadyLoaded) {
@@ -572,21 +596,17 @@
         document.querySelectorAll('.manage-action-tab').forEach(function (button) {
             const buttonAction = button.getAttribute('data-action') || '';
             const isActive = buttonAction === action;
-            const disableLoad = isAlreadyLoaded && buttonAction === 'load';
-
-            button.disabled = disableLoad;
+            const hideLoadTab = isAlreadyLoaded && buttonAction === 'load';
 
             button.classList.toggle('bg-white', isActive);
             button.classList.toggle('text-indigo-700', isActive);
             button.classList.toggle('shadow-sm', isActive);
             button.classList.toggle('text-slate-600', !isActive);
             button.classList.toggle('hover:text-slate-900', !isActive);
-            button.classList.toggle('opacity-50', disableLoad);
-            button.classList.toggle('cursor-not-allowed', disableLoad);
-            button.classList.toggle('hover:text-slate-900', !isActive && !disableLoad);
+            button.classList.toggle('hidden', hideLoadTab);
 
-            if (disableLoad) {
-                button.setAttribute('title', 'This coil is already loaded. Unload first.');
+            if (hideLoadTab) {
+                button.setAttribute('title', 'Load hidden because this coil is already loaded.');
             } else {
                 button.removeAttribute('title');
             }
@@ -597,6 +617,11 @@
         const allowedActions = Array.isArray(manageActionTabs)
             ? manageActionTabs.map(function (tab) { return tab.value; })
             : [];
+        const isAlreadyLoaded = Array.isArray(loadedMachines) ? loadedMachines.length > 0 : false;
+
+        if (isAlreadyLoaded && action === 'load') {
+            action = 'unload';
+        }
 
         if (allowedActions.length > 0 && !allowedActions.includes(action)) {
             action = allowedActions[0];
@@ -610,6 +635,46 @@
         const loadWeightInput = document.getElementById('manage_load_weight');
         const unloadWeightInput = document.getElementById('manage_unload_weight');
         const loadWeightHint = document.getElementById('manage_load_weight_hint');
+        const unloadWeightHint = document.getElementById('manage_unload_weight_hint');
+
+        function updateUnloadConstraints() {
+            const selectedMachineId = Number(machineSelect.value || 0);
+            const selectedMachine = loadedMachines.find(function (machine) {
+                return Number(machine.id) === selectedMachineId;
+            });
+
+            const maxPendingWeight = selectedMachine && selectedMachine.active_load_weight !== null && selectedMachine.active_load_weight !== undefined
+                ? Number(selectedMachine.active_load_weight)
+                : 0;
+
+            unloadWeightInput.max = String(maxPendingWeight);
+
+            if (unloadWeightHint) {
+                if (selectedMachineId === 0) {
+                    unloadWeightHint.textContent = 'Select machine to see max pending weight.';
+                } else {
+                    unloadWeightHint.textContent = 'Max pending weight for selected machine is ' + maxPendingWeight + ' KG.';
+                }
+            }
+
+            if (Number(unloadWeightInput.value || 0) > maxPendingWeight) {
+                unloadWeightInput.value = String(maxPendingWeight);
+            }
+        }
+
+        function enforceUnloadInputRange() {
+            const enteredValue = Number(unloadWeightInput.value || '0');
+            const maxPendingWeight = Number(unloadWeightInput.max || '0');
+
+            if (enteredValue < 0) {
+                unloadWeightInput.value = '0';
+                return;
+            }
+
+            if (maxPendingWeight > 0 && enteredValue > maxPendingWeight) {
+                unloadWeightInput.value = String(maxPendingWeight);
+            }
+        }
 
         formTypeInput.value = action;
         setManageActionTabState(action);
@@ -621,6 +686,8 @@
             loadWeightInput.required = true;
             unloadWeightInput.required = false;
             unloadWeightInput.value = '';
+            unloadWeightInput.disabled = true;
+            machineSelect.onchange = null;
 
             allActiveMachines.forEach(function (machine) {
                 const option = document.createElement('option');
@@ -633,9 +700,16 @@
             loadWeightInput.max = String(maxWeight);
             loadWeightInput.value = maxWeight > 0 ? String(maxWeight) : '';
             loadWeightInput.disabled = maxWeight <= 0;
+            if (maxWeight > 0) {
+                loadWeightInput.disabled = false;
+            }
 
             if (loadWeightHint) {
                 loadWeightHint.textContent = 'Max you can load ' + String(maxWeight) + ' KG net weight.';
+            }
+
+            if (unloadWeightHint) {
+                unloadWeightHint.textContent = 'Select machine to see max pending weight.';
             }
 
             submitButton.disabled = maxWeight <= 0;
@@ -646,7 +720,9 @@
             loadSection.classList.add('hidden');
             unloadSection.classList.remove('hidden');
             loadWeightInput.required = false;
+            loadWeightInput.disabled = true;
             unloadWeightInput.required = true;
+            unloadWeightInput.disabled = false;
 
             loadedMachines.forEach(function (machine) {
                 const option = document.createElement('option');
@@ -659,10 +735,19 @@
                 machineSelect.value = String(loadedMachines[0].id);
             }
 
+            updateUnloadConstraints();
+            machineSelect.onchange = updateUnloadConstraints;
+            unloadWeightInput.oninput = enforceUnloadInputRange;
+            unloadWeightInput.onblur = enforceUnloadInputRange;
+
             submitButton.disabled = loadedMachines.length === 0;
             submitButton.textContent = loadedMachines.length === 0 ? 'Unload Disabled' : 'Unload';
             submitButton.classList.toggle('opacity-60', loadedMachines.length === 0);
             submitButton.classList.toggle('cursor-not-allowed', loadedMachines.length === 0);
+
+            if (loadedMachines.length === 0) {
+                unloadWeightInput.disabled = true;
+            }
         }
     }
 

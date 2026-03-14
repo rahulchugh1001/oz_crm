@@ -54,6 +54,26 @@ class SF001Controller extends Controller
             ->where('is_deleted', 0)
             ->whereNotNull('coil_id')
             ->get(['id', 'coil_id', 'name', 'machine_code'])
+            ->map(function ($machine) {
+                $activeLoadTrack = CoilMachineTrack::query()
+                    ->where('machine_id', $machine->id)
+                    ->where('coil_id', $machine->coil_id)
+                    ->where('type', CoilMachineTrack::ACTION_LOAD)
+                    ->where('is_deleted', 0)
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('coil_machine_track as unload_tracks')
+                            ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
+                            ->where('unload_tracks.type', CoilMachineTrack::ACTION_UNLOAD)
+                            ->where('unload_tracks.is_deleted', 0);
+                    })
+                    ->orderByDesc('id')
+                    ->first(['id', 'load_weight']);
+
+                $machine->active_load_weight = $activeLoadTrack ? (float) $activeLoadTrack->load_weight : null;
+
+                return $machine;
+            })
             ->groupBy('coil_id')
             ->map(function ($rows) {
                 return $rows->map(function ($row) {
@@ -61,6 +81,7 @@ class SF001Controller extends Controller
                         'id' => $row->id,
                         'name' => $row->name,
                         'machine_code' => $row->machine_code,
+                        'active_load_weight' => $row->active_load_weight,
                     ];
                 })->values()->all();
             });
@@ -378,10 +399,23 @@ class SF001Controller extends Controller
             ->where('coil_id', $coil->id)
             ->where('type', $loadAction)
             ->where('is_deleted', 0)
+            ->whereNotExists(function ($query) use ($unloadAction) {
+                $query->select(DB::raw(1))
+                    ->from('coil_machine_track as unload_tracks')
+                    ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
+                    ->where('unload_tracks.type', $unloadAction)
+                    ->where('unload_tracks.is_deleted', 0);
+            })
             ->orderByDesc('id')
             ->first();
 
-        $baseLoadWeight = $latestLoadTrack ? (float) $latestLoadTrack->load_weight : (float) $coil->net_weight_kg;
+        if (!$latestLoadTrack) {
+            return back()->withErrors([
+                'unload_weight' => 'Unable to unload: active load entry was not found for this machine/coil.',
+            ])->withInput();
+        }
+
+        $baseLoadWeight = (float) $latestLoadTrack->load_weight;
         $pendingWeight = isset($validated['unload_weight']) ? (float) $validated['unload_weight'] : 0;
 
         if ($pendingWeight > $baseLoadWeight) {
