@@ -50,6 +50,9 @@
                     <div class="bg-slate-50 rounded-lg p-4">
                         <label class="block text-xs font-medium text-slate-500 mb-1">Machine</label>
                         <p class="text-base font-semibold text-slate-900">{{ $productionReport->machine->name }}</p>
+                        @if($productionReport->coil)
+                            <p class="text-xs text-slate-500 mt-1">Coil: {{ $productionReport->coil->coil_no }}</p>
+                        @endif
                     </div>
                     <div class="bg-slate-50 rounded-lg p-4">
                         <label class="block text-xs font-medium text-slate-500 mb-1">Slide Size</label>

@@ -284,9 +284,13 @@
                     </div>
                 </label>
                 <input type="hidden" name="selected_machines[]" value="${machine.id}" class="selected-machine-input" disabled>
+                <input type="hidden" name="coil_id[]" value="${machine.coil && machine.coil.id ? machine.coil.id : ''}" class="row-input" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
-                ${machine.name}
+                <div class="leading-tight">
+                    <div>${machine.name}</div>
+                    ${machine.coil && machine.coil.coil_no ? `<small class="text-slate-500 font-normal">${machine.coil.coil_no}</small>` : ''}
+                </div>
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input" disabled required>

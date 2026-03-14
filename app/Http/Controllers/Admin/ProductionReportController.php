@@ -108,7 +108,10 @@ class ProductionReportController extends Controller
      */
     public function create(): View
     {
-        $machines = Machine::where('is_deleted', false)->where('status', true)->get();
+        $machines = Machine::with(['coil:id,coil_no'])
+            ->where('is_deleted', false)
+            ->where('status', true)
+            ->get();
         $slideSizes = Item::where('is_deleted', false)->where('status', true)->get();
 
         return view('backend.production-reports.create', compact('machines', 'slideSizes'));
@@ -150,6 +153,8 @@ class ProductionReportController extends Controller
             'selected_machines' => 'nullable|array',
             'machine_id' => 'required|array',
             'machine_id.*' => 'required|exists:machines,id',
+            'coil_id' => 'nullable|array',
+            'coil_id.*' => 'nullable|exists:coil_stock,id',
             'slide_size_id' => 'required|array',
             'slide_size_id.*' => 'required|exists:items,id',
             'report_date' => 'required|array',
@@ -217,6 +222,7 @@ class ProductionReportController extends Controller
         foreach ($selectedMachines as $i => $machineId) {
             $data = [
                 'machine_id' => $machineId,
+                'coil_id' => $validated['coil_id'][$i] ?? null,
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,
@@ -263,6 +269,8 @@ class ProductionReportController extends Controller
      */
     public function show(ProductionReport $productionReport): View
     {
+        $productionReport->loadMissing(['machine', 'slideSize', 'coil']);
+
         return view('backend.production-reports.show', compact('productionReport'));
     }
 
@@ -288,6 +296,8 @@ class ProductionReportController extends Controller
             'selected_machines' => 'nullable|array',
             'machine_id' => 'required|array',
             'machine_id.*' => 'required|exists:machines,id',
+            'coil_id' => 'nullable|array',
+            'coil_id.*' => 'nullable|exists:coil_stock,id',
             'slide_size_id' => 'required|array',
             'slide_size_id.*' => 'required|exists:items,id',
             'report_date' => 'required|array',
@@ -349,6 +359,7 @@ class ProductionReportController extends Controller
         foreach ($selectedMachines as $i => $machineId) {
             $data = [
                 'machine_id' => $machineId,
+                'coil_id' => $validated['coil_id'][$i] ?? null,
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,

@@ -19,6 +19,7 @@ class CoilStock extends Model
         'thickness',
         'net_weight_kg',
         'process',
+        'process_type',
         'status',
         'is_deleted',
     ];

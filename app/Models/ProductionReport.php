@@ -12,6 +12,7 @@ class ProductionReport extends Model
 
     protected $fillable = [
         'machine_id',
+        'coil_id',
         'created_by',
         'slide_size_id',
         'report_date',
@@ -45,6 +46,11 @@ class ProductionReport extends Model
     public function machine()
     {
         return $this->belongsTo(Machine::class, 'machine_id');
+    }
+
+    public function coil()
+    {
+        return $this->belongsTo(CoilStock::class, 'coil_id');
     }
 
     /**

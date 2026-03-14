@@ -90,7 +90,7 @@ class SF001Controller extends Controller
             'coil_size' => 'required|string|max:60',
             'thickness' => 'required|numeric|min:0',
             'net_weight_kg' => 'required|numeric|min:0',
-            'process' => 'required|in:available,in_use,completed',
+            'process' => 'required|in:available,in_use,completed,out_of_stock',
             'status' => 'required|in:0,1',
         ]);
 
@@ -100,7 +100,8 @@ class SF001Controller extends Controller
             'coil_size' => trim((string) $validated['coil_size']),
             'thickness' => (float) $validated['thickness'],
             'net_weight_kg' => (float) $validated['net_weight_kg'],
-            'process' => (string) $validated['process'],
+            'process' => (float) $validated['net_weight_kg'] <= 0 ? 'out_of_stock' : (string) $validated['process'],
+            'process_type' => null,
             'status' => (int) $validated['status'],
             'is_deleted' => 0,
         ]);
@@ -129,7 +130,7 @@ class SF001Controller extends Controller
             'coil_size' => 'required|string|max:60',
             'thickness' => 'required|numeric|min:0',
             'net_weight_kg' => 'required|numeric|min:0',
-            'process' => 'required|in:available,in_use,completed',
+            'process' => 'required|in:available,in_use,completed,out_of_stock',
             'status' => 'required|in:0,1',
         ]);
 
@@ -139,7 +140,7 @@ class SF001Controller extends Controller
             'coil_size' => trim((string) $validated['coil_size']),
             'thickness' => (float) $validated['thickness'],
             'net_weight_kg' => (float) $validated['net_weight_kg'],
-            'process' => (string) $validated['process'],
+            'process' => (float) $validated['net_weight_kg'] <= 0 ? 'out_of_stock' : (string) $validated['process'],
             'status' => (int) $validated['status'],
         ]);
 
@@ -242,7 +243,8 @@ class SF001Controller extends Controller
 
                 $coil->update([
                     'net_weight_kg' => $remainingNetWeight,
-                    'process' => $remainingNetWeight > 0 ? 'in_use' : 'completed',
+                    'process' => $remainingNetWeight > 0 ? 'in_use' : 'out_of_stock',
+                    'process_type' => 'load',
                 ]);
 
                 $track = CoilMachineTrack::query()->create([
@@ -325,7 +327,8 @@ class SF001Controller extends Controller
 
             $coil->update([
                 'net_weight_kg' => $updatedNetWeight,
-                'process' => $updatedNetWeight > 0 ? 'available' : 'completed',
+                'process' => $updatedNetWeight > 0 ? 'available' : 'out_of_stock',
+                'process_type' => 'unload',
             ]);
 
             $track = CoilMachineTrack::query()->create([
@@ -359,7 +362,7 @@ class SF001Controller extends Controller
                     'unload_weight' => $pendingWeight,
                     'remaining_net_weight' => $updatedNetWeight,
                     'total_weight' => $coilNetWeightTotal,
-                    'coil_process' => $updatedNetWeight > 0 ? 'available' : 'completed',
+                    'coil_process' => $updatedNetWeight > 0 ? 'available' : 'out_of_stock',
                 ],
                 'Coil unloaded from machine.'
             );

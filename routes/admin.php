@@ -64,7 +64,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
     Route::post('/production-reports/sf001/coil-stock', [SF001Controller::class, 'storeCoilStock'])->name('production-reports.sf001.coil-stock.store');
     Route::post('/production-reports/sf001/coil-stock/load-machine', [SF001Controller::class, 'loadCoilToMachine'])->name('production-reports.sf001.coil-stock.load-machine');
-    Route::post('/production-reports/sf001/coil-stock/unload-machine', [SF001Controller::class, 'loadCoilToMachine'])->name('production-reports.sf001.coil-stock.unload-machine');
     Route::put('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'updateCoilStock'])->name('production-reports.sf001.coil-stock.update');
     Route::delete('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'destroyCoilStock'])->name('production-reports.sf001.coil-stock.destroy');
     Route::get('/production-reports/sf001/stock', [SF001Controller::class, 'stock'])->name('production-reports.sf001.stock');
