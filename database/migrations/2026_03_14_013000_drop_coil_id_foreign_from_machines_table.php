@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('machines', function (Blueprint $table) {
-            $table->dropForeign(['coil_id']);
-        });
+        // Schema::table('machines', function (Blueprint $table) {
+        //     $table->dropForeign(['coil_id']);
+        // });
     }
 
     /**

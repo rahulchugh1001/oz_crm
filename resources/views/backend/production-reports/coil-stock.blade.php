@@ -137,6 +137,19 @@
                                     <i data-lucide="truck" class="w-4 h-4"></i>
                                 </button>
 
+                                <button
+                                    type="button"
+                                    onclick="openUnloadFromMachineModal(this)"
+                                    title="Unload from Machine"
+                                    class="inline-flex items-center justify-center p-2 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 {{ empty($loadedMachinesByCoil[$coil->id]) ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                    data-coil-id="{{ $coil->id }}"
+                                    data-coil-no="{{ $coil->coil_no }}"
+                                    data-loaded-machines='@json($loadedMachinesByCoil[$coil->id] ?? [])'
+                                    {{ empty($loadedMachinesByCoil[$coil->id]) ? 'disabled' : '' }}
+                                >
+                                    <i data-lucide="package-minus" class="w-4 h-4"></i>
+                                </button>
+
                                 <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this coil stock?');">
                                     @csrf
                                     @method('DELETE')
@@ -212,9 +225,67 @@
                 @error('coil_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
             </div>
 
+            <div>
+                <label for="load_weight" class="block text-sm font-semibold text-slate-700 mb-2">Load Weight (KG)</label>
+                <input type="number" id="load_weight" name="load_weight" value="{{ old('load_weight') }}" min="0" step="0.001" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('load_weight') border-rose-500 @enderror" placeholder="Leave empty to use full coil net weight">
+                @error('load_weight')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="load_remark" class="block text-sm font-semibold text-slate-700 mb-2">Remark</label>
+                <input type="text" id="load_remark" name="remark" value="{{ old('remark') }}" maxlength="255" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Optional note for load action">
+            </div>
+
             <div class="flex items-center justify-end gap-3 pt-2">
                 <button type="button" onclick="closeLoadToMachineModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
                 <button type="submit" id="loadToMachineButton" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">Load</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="unloadFromMachineModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4">
+    <div class="mx-auto mt-10 w-full max-w-xl rounded-2xl bg-white shadow-xl border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900">Unload Coil from Machine</h3>
+            <button type="button" onclick="closeUnloadFromMachineModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="unloadFromMachineForm" action="{{ route('admin.production-reports.sf001.coil-stock.unload-machine') }}" method="POST" class="px-6 py-5 space-y-4">
+            @csrf
+            <input type="hidden" name="form_type" value="unload">
+            <input type="hidden" id="unload_coil_id" name="coil_id" value="{{ old('coil_id') }}">
+
+            <div>
+                <label for="unload_machine_id" class="block text-sm font-semibold text-slate-700 mb-2">Machine <span class="text-rose-500">*</span></label>
+                <select id="unload_machine_id" name="machine_id" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('machine_id') border-rose-500 @enderror">
+                    <option value="">Select Loaded Machine</option>
+                </select>
+                @error('machine_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="unload_coil_no" class="block text-sm font-semibold text-slate-700 mb-2">Selected Coil Number</label>
+                <input type="text" id="unload_coil_no" value="{{ old('coil_no') }}" readonly class="w-full px-3 py-2.5 border border-slate-300 bg-slate-100 rounded-lg text-slate-700 cursor-not-allowed">
+                @error('coil_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="unload_weight" class="block text-sm font-semibold text-slate-700 mb-2">Pending Weight After Unload (KG) <span class="text-rose-500">*</span></label>
+                <input type="number" id="unload_weight" name="unload_weight" value="{{ old('unload_weight') }}" required min="0" step="0.001" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 @error('unload_weight') border-rose-500 @enderror" placeholder="0">
+                @error('unload_weight')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label for="unload_remark" class="block text-sm font-semibold text-slate-700 mb-2">Remark</label>
+                <input type="text" id="unload_remark" name="remark" value="{{ old('remark') }}" maxlength="255" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" placeholder="Optional note for unload action">
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeUnloadFromMachineModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="submit" id="unloadFromMachineButton" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-medium">Unload</button>
             </div>
         </form>
     </div>
@@ -366,6 +437,55 @@
         </form>
     </div>
 </div>
+
+<div class="p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+        <div class="p-6 border-b border-slate-200">
+            <h2 class="text-4 font-bold text-slate-900">Coil Load/Unload History</h2>
+            <p class="text-slate-500 mt-1">Latest 50 events from coil-machine tracking</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-left">
+                <thead class="bg-slate-100 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">DATE & TIME</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">TYPE</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">MACHINE</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">COIL NO</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">LOAD WEIGHT (KG)</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">UNLOAD/PENDING (KG)</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">BY</th>
+                        <th class="px-6 py-4 text-slate-700 font-semibold">REMARK</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($coilTrackLogs as $track)
+                    <tr class="border-b border-slate-200">
+                        <td class="px-6 py-4 text-slate-700">{{ $track->event_at ? $track->event_at->format('d-m-Y h:i A') : ($track->created_at ? $track->created_at->format('d-m-Y h:i A') : '-') }}</td>
+                        <td class="px-6 py-4">
+                            @if($track->type === 'load')
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">LOAD</span>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">UNLOAD</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->machine?->name ?? '-' }}{{ $track->machine?->machine_code ? ' (' . $track->machine?->machine_code . ')' : '' }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->coil?->coil_no ?? '-' }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ number_format((float) $track->load_weight, 3) }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->unload_weight !== null ? number_format((float) $track->unload_weight, 3) : '-' }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->creator?->name ?? '-' }}</td>
+                        <td class="px-6 py-4 text-slate-700">{{ $track->remark ?? '-' }}</td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="px-6 py-10 text-center text-slate-500">No load/unload history found.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -417,6 +537,41 @@
         document.getElementById('loadToMachineModal').classList.add('hidden');
     }
 
+    function openUnloadFromMachineModal(button) {
+        document.getElementById('unload_coil_id').value = button.getAttribute('data-coil-id') || '';
+        document.getElementById('unload_coil_no').value = button.getAttribute('data-coil-no') || '';
+
+        let loadedMachines = [];
+        try {
+            loadedMachines = JSON.parse(button.getAttribute('data-loaded-machines') || '[]');
+        } catch (e) {
+            loadedMachines = [];
+        }
+
+        const unloadMachineSelect = document.getElementById('unload_machine_id');
+        unloadMachineSelect.innerHTML = '<option value="">Select Loaded Machine</option>';
+
+        loadedMachines.forEach(function (machine) {
+            const option = document.createElement('option');
+            option.value = machine.id;
+            option.textContent = machine.name + (machine.machine_code ? ' (' + machine.machine_code + ')' : '');
+            unloadMachineSelect.appendChild(option);
+        });
+
+        if (loadedMachines.length === 1) {
+            unloadMachineSelect.value = String(loadedMachines[0].id);
+        }
+
+        document.getElementById('unloadFromMachineModal').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function closeUnloadFromMachineModal() {
+        document.getElementById('unloadFromMachineModal').classList.add('hidden');
+    }
+
     function openAddCoilModal() {
         document.getElementById('addCoilModal').classList.remove('hidden');
         if (typeof lucide !== 'undefined') {
@@ -459,6 +614,18 @@
             document.getElementById('editCoilModal').classList.remove('hidden');
         @elseif(old('form_type') === 'load')
             document.getElementById('loadToMachineModal').classList.remove('hidden');
+        @elseif(old('form_type') === 'unload')
+            const oldCoilId = @json(old('coil_id'));
+            const oldMachineId = @json(old('machine_id'));
+            const unloadButton = document.querySelector('[data-coil-id="' + String(oldCoilId || '') + '"][data-loaded-machines]');
+            if (unloadButton) {
+                openUnloadFromMachineModal(unloadButton);
+                if (oldMachineId) {
+                    document.getElementById('unload_machine_id').value = String(oldMachineId);
+                }
+            } else {
+                document.getElementById('unloadFromMachineModal').classList.remove('hidden');
+            }
         @else
             openAddCoilModal();
         @endif
@@ -472,6 +639,8 @@
         const updateCoilButton = document.getElementById('updateCoilButton');
         const loadToMachineForm = document.getElementById('loadToMachineForm');
         const loadToMachineButton = document.getElementById('loadToMachineButton');
+        const unloadFromMachineForm = document.getElementById('unloadFromMachineForm');
+        const unloadFromMachineButton = document.getElementById('unloadFromMachineButton');
 
         if (addCoilForm && saveCoilButton) {
             addCoilForm.addEventListener('submit', function () {
@@ -494,6 +663,14 @@
                 loadToMachineButton.disabled = true;
                 loadToMachineButton.classList.add('opacity-60', 'cursor-not-allowed');
                 loadToMachineButton.textContent = 'Loading...';
+            });
+        }
+
+        if (unloadFromMachineForm && unloadFromMachineButton) {
+            unloadFromMachineForm.addEventListener('submit', function () {
+                unloadFromMachineButton.disabled = true;
+                unloadFromMachineButton.classList.add('opacity-60', 'cursor-not-allowed');
+                unloadFromMachineButton.textContent = 'Unloading...';
             });
         }
 

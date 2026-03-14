@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoilMachineTrack;
+use App\Models\CoilMachineTrackLog;
 use App\Models\CoilManufacture;
 use App\Models\CoilStock;
 use App\Models\Item;
@@ -48,7 +50,33 @@ class SF001Controller extends Controller
                 return $rows->pluck('name')->unique()->implode(', ');
             });
 
-        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames'));
+        $loadedMachinesByCoil = Machine::query()
+            ->where('is_deleted', 0)
+            ->whereNotNull('coil_id')
+            ->get(['id', 'coil_id', 'name', 'machine_code'])
+            ->groupBy('coil_id')
+            ->map(function ($rows) {
+                return $rows->map(function ($row) {
+                    return [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'machine_code' => $row->machine_code,
+                    ];
+                })->values()->all();
+            });
+
+        $coilTrackLogs = CoilMachineTrack::query()
+            ->with([
+                'machine:id,name,machine_code',
+                'coil:id,coil_no',
+                'creator:id,name',
+            ])
+            ->where('is_deleted', 0)
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames', 'loadedMachinesByCoil', 'coilTrackLogs'));
     }
 
     /**
@@ -155,19 +183,20 @@ class SF001Controller extends Controller
     public function loadCoilToMachine(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'form_type' => 'required|in:load',
-            'coil_id' => 'required|integer|exists:coil_stock,id',
+            'form_type' => 'required|in:load,unload',
+            'coil_id' => 'nullable|integer|exists:coil_stock,id',
             'machine_id' => 'required|integer|exists:machines,id',
+            'load_weight' => 'nullable|numeric|gt:0',
+            'unload_weight' => 'nullable|numeric|min:0',
+            'remark' => 'nullable|string|max:255',
         ]);
 
-        $coil = CoilStock::query()
-            ->where('id', (int) $validated['coil_id'])
-            ->where('is_deleted', 0)
-            ->where('status', 1)
-            ->first();
+        $formType = (string) $validated['form_type'];
 
-        if (!$coil) {
-            return back()->with('error', 'Selected coil is not available for loading.');
+        if ($formType === 'load' && empty($validated['coil_id'])) {
+            return back()->withErrors([
+                'coil_id' => 'Coil is required for loading.',
+            ])->withInput();
         }
 
         $machine = Machine::query()
@@ -180,15 +209,174 @@ class SF001Controller extends Controller
             return back()->with('error', 'Selected machine is not active.');
         }
 
-        $machine->update([
-            'coil_id' => $coil->id,
-        ]);
+        if ($formType === 'load') {
+            $coil = CoilStock::query()
+                ->where('id', (int) $validated['coil_id'])
+                ->where('is_deleted', 0)
+                ->where('status', 1)
+                ->first();
 
-        $coil->update([
-            'process' => 'in_use',
-        ]);
+            if (!$coil) {
+                return back()->with('error', 'Selected coil is not available for loading.');
+            }
 
-        return back()->with('success', 'Coil loaded to machine successfully.');
+            if (!empty($machine->coil_id)) {
+                return back()->with('error', 'Selected machine already has a loaded coil. Please unload first.');
+            }
+
+            $loadWeight = isset($validated['load_weight'])
+                ? (float) $validated['load_weight']
+                : (float) $coil->net_weight_kg;
+
+            if ($loadWeight > (float) $coil->net_weight_kg) {
+                return back()->withErrors([
+                    'load_weight' => 'Load weight cannot be greater than coil net weight (' . number_format((float) $coil->net_weight_kg, 3) . ').',
+                ])->withInput();
+            }
+
+            DB::transaction(function () use ($machine, $coil, $loadWeight, $validated) {
+                $machine->update([
+                    'coil_id' => $coil->id,
+                ]);
+
+                $coil->update([
+                    'process' => 'in_use',
+                ]);
+
+                $track = CoilMachineTrack::query()->create([
+                    'machine_id' => $machine->id,
+                    'coil_id' => $coil->id,
+                    'load_weight' => $loadWeight,
+                    'unload_weight' => null,
+                    'type' => 'load',
+                    'reference_track_id' => null,
+                    'event_at' => now(),
+                    'remark' => $validated['remark'] ?? null,
+                    'created_by' => Auth::id(),
+                    'status' => 1,
+                    'is_deleted' => 0,
+                ]);
+
+                $this->storeCoilTrackLog(
+                    'load',
+                    $track,
+                    null,
+                    [
+                        'machine_id' => $machine->id,
+                        'machine_name' => $machine->name,
+                        'coil_id' => $coil->id,
+                        'coil_no' => $coil->coil_no,
+                        'load_weight' => $loadWeight,
+                    ],
+                    'Coil loaded to machine.'
+                );
+            });
+
+            return back()->with('success', 'Coil loaded to machine successfully.');
+        }
+
+        if (empty($machine->coil_id)) {
+            return back()->with('error', 'Selected machine has no loaded coil to unload.');
+        }
+
+        $coil = CoilStock::query()
+            ->where('id', (int) $machine->coil_id)
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->first();
+
+        if (!$coil) {
+            return back()->with('error', 'Loaded coil was not found or is inactive.');
+        }
+
+        if (!empty($validated['coil_id']) && (int) $validated['coil_id'] !== (int) $coil->id) {
+            return back()->with('error', 'Selected coil does not match the currently loaded coil on this machine.');
+        }
+
+        $latestLoadTrack = CoilMachineTrack::query()
+            ->where('machine_id', $machine->id)
+            ->where('coil_id', $coil->id)
+            ->where('type', 'load')
+            ->where('is_deleted', 0)
+            ->orderByDesc('id')
+            ->first();
+
+        $baseLoadWeight = $latestLoadTrack ? (float) $latestLoadTrack->load_weight : (float) $coil->net_weight_kg;
+        $pendingWeight = isset($validated['unload_weight']) ? (float) $validated['unload_weight'] : 0;
+
+        if ($pendingWeight > $baseLoadWeight) {
+            return back()->withErrors([
+                'unload_weight' => 'Pending weight cannot be greater than loaded weight (' . number_format($baseLoadWeight, 3) . ').',
+            ])->withInput();
+        }
+
+        DB::transaction(function () use ($machine, $coil, $baseLoadWeight, $pendingWeight, $latestLoadTrack, $validated) {
+            $machine->update([
+                'coil_id' => null,
+            ]);
+
+            $coil->update([
+                'net_weight_kg' => $pendingWeight,
+                'process' => $pendingWeight > 0 ? 'available' : 'completed',
+            ]);
+
+            $track = CoilMachineTrack::query()->create([
+                'machine_id' => $machine->id,
+                'coil_id' => $coil->id,
+                'load_weight' => $baseLoadWeight,
+                'unload_weight' => $pendingWeight,
+                'type' => 'unload',
+                'reference_track_id' => $latestLoadTrack?->id,
+                'event_at' => now(),
+                'remark' => $validated['remark'] ?? null,
+                'created_by' => Auth::id(),
+                'status' => 1,
+                'is_deleted' => 0,
+            ]);
+
+            $this->storeCoilTrackLog(
+                'unload',
+                $track,
+                [
+                    'machine_id' => $machine->id,
+                    'coil_id' => $coil->id,
+                    'machine_coil_id' => $coil->id,
+                ],
+                [
+                    'machine_id' => $machine->id,
+                    'machine_name' => $machine->name,
+                    'coil_id' => $coil->id,
+                    'coil_no' => $coil->coil_no,
+                    'load_weight' => $baseLoadWeight,
+                    'unload_weight' => $pendingWeight,
+                    'coil_process' => $pendingWeight > 0 ? 'available' : 'completed',
+                ],
+                'Coil unloaded from machine.'
+            );
+        });
+
+        return back()->with('success', 'Coil unloaded from machine successfully.');
+    }
+
+    private function storeCoilTrackLog(
+        string $actionType,
+        CoilMachineTrack $track,
+        ?array $oldData,
+        ?array $newData,
+        ?string $message = null
+    ): void {
+        CoilMachineTrackLog::query()->create([
+            'coil_machine_track_id' => $track->id,
+            'machine_id' => $track->machine_id,
+            'coil_id' => $track->coil_id,
+            'action_type' => $actionType,
+            'old_data' => $oldData,
+            'new_data' => $newData,
+            'message' => $message,
+            'created_by' => Auth::id(),
+            'status' => 1,
+            'is_deleted' => 0,
+        ]);
     }
 
     /**
