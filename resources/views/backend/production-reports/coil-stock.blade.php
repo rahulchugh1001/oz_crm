@@ -19,6 +19,22 @@
             'machine_code' => $machine->machine_code,
         ];
     })->values();
+
+    $manageActionTabs = collect($trackActionTabs ?? [])
+        ->map(function ($label, $value) {
+            return [
+                'value' => (string) $value,
+                'label' => (string) $label,
+            ];
+        })
+        ->values();
+
+    if ($manageActionTabs->isEmpty()) {
+        $manageActionTabs = collect([
+            ['value' => 'load', 'label' => 'Load'],
+            ['value' => 'unload', 'label' => 'Unload'],
+        ]);
+    }
 @endphp
 <div class="p-6">
     @if(session('success'))
@@ -119,7 +135,7 @@
                             </div>
                         </td>
                         <td class="px-6 py-5 text-slate-500">
-                            <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
                                 <a
                                     href="{{ route('admin.production-reports.sf001.coil-stock.view', $coil->id) }}"
                                     title="View"
@@ -150,7 +166,7 @@
                                     type="button"
                                     onclick="openManageCoilModal(this)"
                                     title="Manage Load/Unload"
-                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-2 text-indigo-700 hover:bg-indigo-200"
+                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-2 text-indigo-700 hover:bg-indigo-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck-bg' : '' }}"
                                     data-coil-id="{{ $coil->id }}"
                                     data-coil-no="{{ $coil->coil_no }}"
                                     data-net-weight="{{ (float) $coil->net_weight_kg }}"
@@ -216,11 +232,18 @@
             <input type="hidden" id="manage_coil_id" name="coil_id" value="{{ old('coil_id') }}">
 
             <div>
-                <label for="manage_action" class="block text-sm font-semibold text-slate-700 mb-2">Action <span class="text-rose-500">*</span></label>
-                <select id="manage_action" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <option value="load" {{ old('form_type') === 'load' ? 'selected' : '' }}>Load</option>
-                    <option value="unload" {{ old('form_type') === 'unload' ? 'selected' : '' }}>Unload</option>
-                </select>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Action <span class="text-rose-500">*</span></label>
+                <div id="manage_action_tabs" class="inline-flex w-full rounded-lg bg-slate-100 p-1">
+                    @foreach($manageActionTabs as $actionTab)
+                        <button
+                            type="button"
+                            class="manage-action-tab flex-1 rounded-md px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900"
+                            data-action="{{ $actionTab['value'] }}"
+                        >
+                            {{ $actionTab['label'] }}
+                        </button>
+                    @endforeach
+                </div>
             </div>
 
             <div>
@@ -425,6 +448,10 @@
         transform-origin: center;
     }
 
+    .loaded-truck-bg {
+        animation: truckBgFlash 1.1s ease-in-out infinite;
+    }
+
     @keyframes coilSpin {
         from {
             transform: rotate(0deg);
@@ -446,15 +473,32 @@
         }
     }
 
+    @keyframes truckBgFlash {
+        0%, 100% {
+            background-color: rgb(224 231 255);
+            box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+        }
+        50% {
+            background-color: rgb(199 210 254);
+            box-shadow: 0 0 0 5px rgba(79, 70, 229, 0.18);
+        }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .in-use-spin,
-        .loaded-truck {
+        .loaded-truck,
+        .loaded-truck-bg {
             animation: none;
         }
     }
 </style>
 <script>
     const allActiveMachines = @json($machinesForJs);
+    const manageActionTabs = @json($manageActionTabs);
+    let currentManageContext = {
+        loadedMachines: [],
+        netWeight: 0,
+    };
 
     function normalizeProcess(process) {
         if (process === 'in_use') return 'In Use';
@@ -491,7 +535,44 @@
         document.getElementById('viewCoilModal').classList.add('hidden');
     }
 
+    function setManageActionTabState(action) {
+        const isAlreadyLoaded = Array.isArray(currentManageContext.loadedMachines)
+            ? currentManageContext.loadedMachines.length > 0
+            : false;
+
+        document.querySelectorAll('.manage-action-tab').forEach(function (button) {
+            const buttonAction = button.getAttribute('data-action') || '';
+            const isActive = buttonAction === action;
+            const disableLoad = isAlreadyLoaded && buttonAction === 'load';
+
+            button.disabled = disableLoad;
+
+            button.classList.toggle('bg-white', isActive);
+            button.classList.toggle('text-indigo-700', isActive);
+            button.classList.toggle('shadow-sm', isActive);
+            button.classList.toggle('text-slate-600', !isActive);
+            button.classList.toggle('hover:text-slate-900', !isActive);
+            button.classList.toggle('opacity-50', disableLoad);
+            button.classList.toggle('cursor-not-allowed', disableLoad);
+            button.classList.toggle('hover:text-slate-900', !isActive && !disableLoad);
+
+            if (disableLoad) {
+                button.setAttribute('title', 'This coil is already loaded. Unload first.');
+            } else {
+                button.removeAttribute('title');
+            }
+        });
+    }
+
     function setManageAction(action, loadedMachines, netWeight) {
+        const allowedActions = Array.isArray(manageActionTabs)
+            ? manageActionTabs.map(function (tab) { return tab.value; })
+            : [];
+
+        if (allowedActions.length > 0 && !allowedActions.includes(action)) {
+            action = allowedActions[0];
+        }
+
         const formTypeInput = document.getElementById('manage_form_type');
         const machineSelect = document.getElementById('manage_machine_id');
         const loadSection = document.getElementById('manage_load_section');
@@ -502,6 +583,7 @@
         const loadWeightHint = document.getElementById('manage_load_weight_hint');
 
         formTypeInput.value = action;
+        setManageActionTabState(action);
         machineSelect.innerHTML = '<option value="">Select Machine</option>';
 
         if (action === 'load') {
@@ -570,15 +652,19 @@
         document.getElementById('manage_coil_id').value = coilId;
         document.getElementById('manage_coil_no').value = coilNo;
 
-        const actionSelect = document.getElementById('manage_action');
-        const defaultAction = forcedAction || (loadedMachines.length > 0 ? 'unload' : 'load');
-        actionSelect.value = defaultAction;
+        currentManageContext = {
+            loadedMachines: loadedMachines,
+            netWeight: netWeight,
+        };
+
+        const allowedActions = Array.isArray(manageActionTabs)
+            ? manageActionTabs.map(function (tab) { return tab.value; })
+            : ['load', 'unload'];
+        const fallbackAction = allowedActions.includes('load') ? 'load' : (allowedActions[0] || 'load');
+        const preferredAction = loadedMachines.length > 0 && allowedActions.includes('unload') ? 'unload' : fallbackAction;
+        const defaultAction = forcedAction && allowedActions.includes(forcedAction) ? forcedAction : preferredAction;
 
         setManageAction(defaultAction, loadedMachines, netWeight);
-
-        actionSelect.onchange = function () {
-            setManageAction(actionSelect.value, loadedMachines, netWeight);
-        };
 
         document.getElementById('manageCoilModal').classList.remove('hidden');
         if (typeof lucide !== 'undefined') {
@@ -656,6 +742,13 @@
         const updateCoilButton = document.getElementById('updateCoilButton');
         const manageCoilForm = document.getElementById('manageCoilForm');
         const manageCoilSubmitButton = document.getElementById('manageCoilSubmitButton');
+
+        document.querySelectorAll('.manage-action-tab').forEach(function (button) {
+            button.addEventListener('click', function () {
+                const action = button.getAttribute('data-action') || 'load';
+                setManageAction(action, currentManageContext.loadedMachines, currentManageContext.netWeight);
+            });
+        });
 
         if (addCoilForm && saveCoilButton) {
             addCoilForm.addEventListener('submit', function () {

@@ -76,7 +76,9 @@ class SF001Controller extends Controller
             ->limit(50)
             ->get();
 
-        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames', 'loadedMachinesByCoil', 'coilTrackLogs'));
+        $trackActionTabs = CoilMachineTrack::manageActionTabs();
+
+        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames', 'loadedMachinesByCoil', 'coilTrackLogs', 'trackActionTabs'));
     }
 
     /**
@@ -242,18 +244,22 @@ class SF001Controller extends Controller
      */
     public function loadCoilToMachine(Request $request): RedirectResponse
     {
+        $loadAction = CoilMachineTrack::ACTION_LOAD;
+        $unloadAction = CoilMachineTrack::ACTION_UNLOAD;
+        $validFormTypes = implode(',', array_keys(CoilMachineTrack::manageActionTabs()));
+
         $validated = $request->validate([
-            'form_type' => 'required|in:load,unload',
+            'form_type' => 'required|in:' . $validFormTypes,
             'coil_id' => 'nullable|integer|exists:coil_stock,id',
             'machine_id' => 'required|integer|exists:machines,id',
-            'load_weight' => 'required_if:form_type,load|numeric|gt:0',
+            'load_weight' => 'required_if:form_type,' . $loadAction . '|numeric|gt:0',
             'unload_weight' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string|max:255',
         ]);
 
         $formType = (string) $validated['form_type'];
 
-        if ($formType === 'load' && empty($validated['coil_id'])) {
+        if ($formType === $loadAction && empty($validated['coil_id'])) {
             return back()->withErrors([
                 'coil_id' => 'Coil is required for loading.',
             ])->withInput();
@@ -269,7 +275,7 @@ class SF001Controller extends Controller
             return back()->with('error', 'Selected machine is not active.');
         }
 
-        if ($formType === 'load') {
+        if ($formType === $loadAction) {
             $coil = CoilStock::query()
                 ->where('id', (int) $validated['coil_id'])
                 ->where('is_deleted', 0)
@@ -284,6 +290,15 @@ class SF001Controller extends Controller
                 return back()->with('error', 'Selected machine already has a loaded coil. Please unload first.');
             }
 
+            $isCoilAlreadyLoaded = Machine::query()
+                ->where('is_deleted', 0)
+                ->where('coil_id', $coil->id)
+                ->exists();
+
+            if ($isCoilAlreadyLoaded) {
+                return back()->with('error', 'Selected coil is already loaded on a machine. Please unload first.');
+            }
+
             $loadWeight = (float) $validated['load_weight'];
             $coilNetWeightTotal = (float) $coil->net_weight_kg;
 
@@ -295,7 +310,7 @@ class SF001Controller extends Controller
 
             $remainingNetWeight = max($coilNetWeightTotal - $loadWeight, 0);
 
-            DB::transaction(function () use ($machine, $coil, $loadWeight, $validated, $coilNetWeightTotal, $remainingNetWeight) {
+            DB::transaction(function () use ($machine, $coil, $loadWeight, $validated, $coilNetWeightTotal, $remainingNetWeight, $loadAction) {
                 $machine->update([
                     'coil_id' => $coil->id,
                 ]);
@@ -303,7 +318,7 @@ class SF001Controller extends Controller
                 $coil->update([
                     'net_weight_kg' => $remainingNetWeight,
                     'process' => $remainingNetWeight > 0 ? 'in_use' : 'out_of_stock',
-                    'process_type' => 'load',
+                    'process_type' => $loadAction,
                 ]);
 
                 $track = CoilMachineTrack::query()->create([
@@ -311,7 +326,7 @@ class SF001Controller extends Controller
                     'coil_id' => $coil->id,
                     'load_weight' => $loadWeight,
                     'unload_weight' => null,
-                    'type' => 'load',
+                    'type' => $loadAction,
                     'reference_track_id' => null,
                     'event_at' => now(),
                     'remark' => $validated['remark'] ?? null,
@@ -321,7 +336,7 @@ class SF001Controller extends Controller
                 ]);
 
                 $this->storeCoilTrackLog(
-                    'load',
+                    $loadAction,
                     $track,
                     null,
                     [
@@ -361,7 +376,7 @@ class SF001Controller extends Controller
         $latestLoadTrack = CoilMachineTrack::query()
             ->where('machine_id', $machine->id)
             ->where('coil_id', $coil->id)
-            ->where('type', 'load')
+            ->where('type', $loadAction)
             ->where('is_deleted', 0)
             ->orderByDesc('id')
             ->first();
@@ -379,7 +394,7 @@ class SF001Controller extends Controller
         $updatedNetWeight = $coilNetWeightBeforeUnload + $pendingWeight;
         $coilNetWeightTotal = $coilNetWeightBeforeUnload + $baseLoadWeight;
 
-        DB::transaction(function () use ($machine, $coil, $baseLoadWeight, $pendingWeight, $latestLoadTrack, $validated, $coilNetWeightTotal, $updatedNetWeight) {
+        DB::transaction(function () use ($machine, $coil, $baseLoadWeight, $pendingWeight, $latestLoadTrack, $validated, $coilNetWeightTotal, $updatedNetWeight, $unloadAction) {
             $machine->update([
                 'coil_id' => null,
             ]);
@@ -387,7 +402,7 @@ class SF001Controller extends Controller
             $coil->update([
                 'net_weight_kg' => $updatedNetWeight,
                 'process' => $updatedNetWeight > 0 ? 'available' : 'out_of_stock',
-                'process_type' => 'unload',
+                'process_type' => $unloadAction,
             ]);
 
             $track = CoilMachineTrack::query()->create([
@@ -395,7 +410,7 @@ class SF001Controller extends Controller
                 'coil_id' => $coil->id,
                 'load_weight' => $baseLoadWeight,
                 'unload_weight' => $pendingWeight,
-                'type' => 'unload',
+                'type' => $unloadAction,
                 'reference_track_id' => $latestLoadTrack?->id,
                 'event_at' => now(),
                 'remark' => $validated['remark'] ?? null,
@@ -405,7 +420,7 @@ class SF001Controller extends Controller
             ]);
 
             $this->storeCoilTrackLog(
-                'unload',
+                $unloadAction,
                 $track,
                 [
                     'machine_id' => $machine->id,

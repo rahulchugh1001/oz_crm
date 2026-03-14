@@ -11,6 +11,9 @@ class CoilMachineTrack extends Model
 {
     use HasFactory;
 
+    public const ACTION_LOAD = 'load';
+    public const ACTION_UNLOAD = 'unload';
+
     protected $table = 'coil_machine_track';
 
     protected $fillable = [
@@ -34,6 +37,14 @@ class CoilMachineTrack extends Model
         'status' => 'boolean',
         'is_deleted' => 'boolean',
     ];
+
+    public static function manageActionTabs(): array
+    {
+        return [
+            self::ACTION_LOAD => 'Load',
+            self::ACTION_UNLOAD => 'Unload',
+        ];
+    }
 
     public function machine(): BelongsTo
     {
