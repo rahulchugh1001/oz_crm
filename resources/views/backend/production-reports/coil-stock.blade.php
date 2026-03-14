@@ -48,23 +48,21 @@
         <div class="overflow-x-auto">
             <table class="min-w-full text-left">
                 <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Coil No</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Coil Size</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Supplier</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Thickness</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Net Weight (KG)</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Loaded Machine</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Created Date</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Status</th>
-                                <th class="px-6 py-4 text-sm font-semibold text-slate-700">Actions</th>
-                            </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 bg-white">
-                    @forelse($coils as $coil)
                     <tr>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Coil No</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Supplier</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Thickness</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Net Weight (KG)</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Loaded Machine</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Created At</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
+                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($coils as $coil)
+                    <tr class="hover:bg-slate-50">
                         <td class="px-6 py-5 text-slate-900 font-medium">{{ $coil->coil_no }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ $coil->coil_size }}</td>
                         <td class="px-6 py-5 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
                         <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->thickness, 0) }}</td>
                         <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
@@ -122,23 +120,13 @@
                         </td>
                         <td class="px-6 py-5 text-slate-500">
                             <div class="flex flex-wrap items-center gap-2">
-                                <button
-                                    type="button"
-                                    onclick="openViewCoilModal(this)"
+                                <a
+                                    href="{{ route('admin.production-reports.sf001.coil-stock.view', $coil->id) }}"
                                     title="View"
-                                    class="inline-flex items-center justify-center rounded-lg bg-slate-100 p-2 text-slate-700 hover:bg-slate-200"
-                                    data-coil-no="{{ $coil->coil_no }}"
-                                    data-coil-size="{{ $coil->coil_size }}"
-                                    data-supplier-name="{{ $coil->manufacture->name ?? '-' }}"
-                                    data-thickness="{{ number_format((float) $coil->thickness, 0) }}"
-                                    data-net-weight="{{ number_format((float) $coil->net_weight_kg, 0) }}"
-                                    data-machine-name="{{ $loadedMachineNames[$coil->id] ?? 'Not Loaded' }}"
-                                    data-machine-loaded="{{ !empty($loadedMachineNames[$coil->id]) ? '1' : '0' }}"
-                                    data-process="{{ $coil->process }}"
-                                    data-status="{{ (int) $coil->status }}"
+                                    class="inline-flex items-center justify-center rounded-lg bg-sky-100 p-2 text-sky-700 hover:bg-sky-200"
                                 >
                                     <i data-lucide="eye" class="w-4 h-4"></i>
-                                </button>
+                                </a>
 
                                 <button
                                     type="button"
@@ -183,7 +171,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-12 text-center text-slate-500">No coil stock found.</td>
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-500">No coil stock found.</td>
                     </tr>
                     @endforelse
                 </tbody>

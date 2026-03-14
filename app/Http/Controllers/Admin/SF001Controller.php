@@ -80,6 +80,65 @@ class SF001Controller extends Controller
     }
 
     /**
+     * Display detailed coil stock view page with reporting and history.
+     */
+    public function viewCoilStock(int $coilId): View
+    {
+        $coil = CoilStock::query()
+            ->with(['manufacture:id,name'])
+            ->where('id', $coilId)
+            ->where('is_deleted', 0)
+            ->firstOrFail();
+
+        $loadedMachines = Machine::query()
+            ->where('is_deleted', 0)
+            ->where('coil_id', $coil->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'machine_code', 'coil_id']);
+
+        $trackHistory = CoilMachineTrack::query()
+            ->with([
+                'machine:id,name,machine_code',
+                'creator:id,name',
+                'referenceTrack:id,load_weight,event_at',
+            ])
+            ->where('coil_id', $coil->id)
+            ->where('is_deleted', 0)
+            ->orderByDesc('event_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $logHistory = CoilMachineTrackLog::query()
+            ->with([
+                'machine:id,name,machine_code',
+                'creator:id,name',
+            ])
+            ->where('coil_id', $coil->id)
+            ->where('is_deleted', 0)
+            ->orderByDesc('id')
+            ->get();
+
+        $productionReports = ProductionReport::query()
+            ->with([
+                'machine:id,name,machine_code',
+                'slideSize:id,name,size',
+            ])
+            ->where('coil_id', $coil->id)
+            ->where('is_deleted', false)
+            ->orderByDesc('report_date')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('backend.production-reports.coil-stock-view', compact(
+            'coil',
+            'loadedMachines',
+            'trackHistory',
+            'logHistory',
+            'productionReports'
+        ));
+    }
+
+    /**
      * Store a new coil stock record.
      */
     public function storeCoilStock(Request $request): RedirectResponse

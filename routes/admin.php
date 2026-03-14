@@ -62,6 +62,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::redirect('/production-reports', '/admin/production-reports/sf001')->name('production-reports.index');
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
+    Route::get('/production-reports/sf001/coil-stock/{coilId}/view', [SF001Controller::class, 'viewCoilStock'])->name('production-reports.sf001.coil-stock.view');
     Route::post('/production-reports/sf001/coil-stock', [SF001Controller::class, 'storeCoilStock'])->name('production-reports.sf001.coil-stock.store');
     Route::post('/production-reports/sf001/coil-stock/load-machine', [SF001Controller::class, 'loadCoilToMachine'])->name('production-reports.sf001.coil-stock.load-machine');
     Route::put('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'updateCoilStock'])->name('production-reports.sf001.coil-stock.update');

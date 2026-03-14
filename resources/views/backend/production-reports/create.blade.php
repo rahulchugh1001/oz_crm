@@ -108,11 +108,11 @@
                 <div id="topScrollContainer" class="overflow-x-auto mb-2">
                     <div id="topScrollContent" class="h-1"></div>
                 </div>
-                <div id="tableScrollContainer" class="overflow-x-auto">
+                <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto max-h-[65vh]">
                 <table class="w-full border-collapse" id="productionTable">
                     <thead class="bg-slate-100">
                         <tr>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-50 min-w-20">
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-50 min-w-20 sticky top-0 z-20">
                                 <div class="flex flex-col items-center gap-1">
                                     <span>Select</span>
                                     <label class="inline-flex items-center cursor-pointer" title="Select All Machines">
@@ -128,26 +128,26 @@
                                     </label>
                                 </div>
                             </th>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-44">Machine</th>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-40">Slide Size</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">Total Set/Shift</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">Set/Hour</th>
+                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 bg-slate-100 min-w-44 sticky top-0 z-20">Machine</th>
+                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 bg-slate-100 min-w-40 sticky top-0 z-20">Slide Size</th>
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-24 sticky top-0 z-20">Total Set/Shift</th>
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-24 sticky top-0 z-20">Set/Hour</th>
                             <!-- Hourly Columns -->
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="8-9">8AM-9AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="9-10">9AM-10AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="10-11">10AM-11AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="11-12">11AM-12PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="12-1">12PM-1PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="1-2">1PM-2PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="2-3">2PM-3PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="3-4">3PM-4PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="4-5">4PM-5PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="5-6">5PM-6PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="6-7">6PM-7PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="7-8">7PM-8PM</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Actual Set</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Workman</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Staff</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="8-9">8AM-9AM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="9-10">9AM-10AM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="10-11">10AM-11AM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="11-12">11AM-12PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="12-1">12PM-1PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="1-2">1PM-2PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="2-3">2PM-3PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="3-4">3PM-4PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="4-5">4PM-5PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="5-6">5PM-6PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="6-7">6PM-7PM</th>
+                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="7-8">7PM-8PM</th>
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Actual Set</th>
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Workman</th>
+                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Staff</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
