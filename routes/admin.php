@@ -67,6 +67,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::post('/production-reports/sf001/coil-stock/load-machine', [SF001Controller::class, 'loadCoilToMachine'])->name('production-reports.sf001.coil-stock.load-machine');
     Route::put('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'updateCoilStock'])->name('production-reports.sf001.coil-stock.update');
     Route::delete('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'destroyCoilStock'])->name('production-reports.sf001.coil-stock.destroy');
+    Route::post('/production-reports/sf001/coil-manufacturers', [SF001Controller::class, 'storeManufacturer'])->name('production-reports.sf001.coil-manufacturers.store');
+    Route::put('/production-reports/sf001/coil-manufacturers/{id}', [SF001Controller::class, 'updateManufacturer'])->name('production-reports.sf001.coil-manufacturers.update');
+    Route::delete('/production-reports/sf001/coil-manufacturers/{id}', [SF001Controller::class, 'destroyManufacturer'])->name('production-reports.sf001.coil-manufacturers.destroy');
     Route::get('/production-reports/sf001/stock', [SF001Controller::class, 'stock'])->name('production-reports.sf001.stock');
     Route::post('/production-reports/sf001/stock/transfer', [SF001Controller::class, 'storeTransfer'])->name('production-reports.sf001.stock.transfer');
     Route::get('/production-reports/sf001/stock/{itemId}/history', [SF001Controller::class, 'stockHistory'])->name('production-reports.sf001.stock.history');

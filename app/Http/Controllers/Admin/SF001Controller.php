@@ -99,7 +99,12 @@ class SF001Controller extends Controller
 
         $trackActionTabs = CoilMachineTrack::manageActionTabs();
 
-        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames', 'loadedMachinesByCoil', 'coilTrackLogs', 'trackActionTabs'));
+        $manufacturers = CoilManufacture::query()
+            ->where('is_deleted', 0)
+            ->orderBy('name')
+            ->get(['id', 'name', 'status']);
+
+        return view('backend.production-reports.coil-stock', compact('coils', 'suppliers', 'machines', 'loadedMachineNames', 'loadedMachinesByCoil', 'coilTrackLogs', 'trackActionTabs', 'manufacturers'));
     }
 
     /**
@@ -167,7 +172,8 @@ class SF001Controller extends Controller
     public function storeCoilStock(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'manufacture_id' => 'required|integer|exists:coil_manufacture,id',
+            'manufacture_id' => 'required',
+            'new_manufacture_name' => 'nullable|string|max:100|unique:coil_manufacture,name',
             'coil_no' => 'required|string|max:120|unique:coil_stock,coil_no',
             'coil_size' => 'required|string|max:60',
             'thickness' => 'required|numeric|min:0',
@@ -176,8 +182,42 @@ class SF001Controller extends Controller
             'status' => 'required|in:0,1',
         ]);
 
+        $manufactureId = null;
+        $selectedManufactureId = (string) ($validated['manufacture_id'] ?? '');
+
+        if ($selectedManufactureId === '__new__') {
+            $newManufactureName = trim((string) ($validated['new_manufacture_name'] ?? ''));
+
+            if ($newManufactureName === '') {
+                return back()->withErrors([
+                    'new_manufacture_name' => 'Please enter new supplier name.',
+                ])->withInput();
+            }
+
+            $newManufacturer = CoilManufacture::query()->create([
+                'name' => $newManufactureName,
+                'status' => 1,
+                'is_deleted' => 0,
+            ]);
+
+            $manufactureId = (int) $newManufacturer->id;
+        } else {
+            $manufacture = CoilManufacture::query()
+                ->where('id', (int) $selectedManufactureId)
+                ->where('is_deleted', 0)
+                ->first();
+
+            if (!$manufacture) {
+                return back()->withErrors([
+                    'manufacture_id' => 'Please select a valid supplier.',
+                ])->withInput();
+            }
+
+            $manufactureId = (int) $manufacture->id;
+        }
+
         CoilStock::query()->create([
-            'manufacture_id' => (int) $validated['manufacture_id'],
+            'manufacture_id' => $manufactureId,
             'coil_no' => trim((string) $validated['coil_no']),
             'coil_size' => trim((string) $validated['coil_size']),
             'thickness' => (float) $validated['thickness'],
@@ -249,7 +289,7 @@ class SF001Controller extends Controller
             ->exists();
 
         if ($coil->process === 'in_use' || $isLoadedToMachine) {
-            return back()->with('error', 'In-use coil cannot be deleted.');
+            return back()->with('info', 'In-use coil cannot be deleted.');
         }
 
         $coil->update([
@@ -258,6 +298,79 @@ class SF001Controller extends Controller
         ]);
 
         return back()->with('success', 'Coil stock deleted successfully.');
+    }
+
+    /**
+     * Store a new coil manufacturer.
+     */
+    public function storeManufacturer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100|unique:coil_manufacture,name',
+        ]);
+
+        CoilManufacture::query()->create([
+            'name'       => trim((string) $validated['name']),
+            'status'     => 1,
+            'is_deleted' => 0,
+        ]);
+
+        return back()->with('success', 'Supplier added successfully.');
+    }
+
+    /**
+     * Update an existing coil manufacturer.
+     */
+    public function updateManufacturer(Request $request, int $id): RedirectResponse
+    {
+        $manufacturer = CoilManufacture::query()
+            ->where('id', $id)
+            ->where('is_deleted', 0)
+            ->first();
+
+        if (!$manufacturer) {
+            return back()->with('error', 'Supplier not found.');
+        }
+
+        $validated = $request->validate([
+            'name'   => 'required|string|max:100|unique:coil_manufacture,name,' . $id,
+            'status' => 'required|in:0,1',
+        ]);
+
+        $manufacturer->update([
+            'name'   => trim((string) $validated['name']),
+            'status' => (int) $validated['status'],
+        ]);
+
+        return back()->with('success', 'Supplier updated successfully.');
+    }
+
+    /**
+     * Soft delete a coil manufacturer.
+     */
+    public function destroyManufacturer(int $id): RedirectResponse
+    {
+        $manufacturer = CoilManufacture::query()
+            ->where('id', $id)
+            ->where('is_deleted', 0)
+            ->first();
+
+        if (!$manufacturer) {
+            return back()->with('error', 'Supplier not found.');
+        }
+
+        $isInUse = CoilStock::query()
+            ->where('manufacture_id', $id)
+            ->where('is_deleted', 0)
+            ->exists();
+
+        if ($isInUse) {
+            return back()->with('error', 'Cannot delete a supplier that has associated coil stock.');
+        }
+
+        $manufacturer->update(['is_deleted' => 1]);
+
+        return back()->with('success', 'Supplier deleted successfully.');
     }
 
     /**

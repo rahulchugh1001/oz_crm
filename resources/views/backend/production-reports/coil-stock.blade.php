@@ -17,6 +17,7 @@
             'id' => $machine->id,
             'name' => $machine->name,
             'machine_code' => $machine->machine_code,
+            'coil_id' => $machine->coil_id,
         ];
     })->values();
 
@@ -37,28 +38,22 @@
     }
 @endphp
 <div class="p-6">
-    @if(session('success'))
-    <div class="mb-4 p-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm">
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="mb-4 p-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-800 text-sm">
-        {{ session('error') }}
-    </div>
-    @endif
-
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-5">
             <div>
                 <h2 class="text-xl font-semibold text-slate-900">Coil Stock List</h2>
                 <p class="mt-1 text-sm text-slate-500">Raw material inventory for Roll Forming (SF1).</p>
             </div>
-            <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 transition-colors">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                Add Coil
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="openManageSuppliersModal()" title="Manage Suppliers" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                    Suppliers
+                </button>
+                <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 transition-colors">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Add Coil
+                </button>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -175,7 +170,7 @@
                                     <i data-lucide="truck" class="w-4 h-4 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck' : '' }}"></i>
                                 </button>
 
-                                <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this coil stock?');">
+                                <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline js-swal-delete-form" data-delete-title="Delete coil stock?" data-delete-text="Are you sure you want to delete coil {{ $coil->coil_no }}?">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" title="Delete" class="inline-flex items-center justify-center rounded-lg bg-rose-100 p-2 text-rose-700 hover:bg-rose-200">
@@ -322,11 +317,26 @@
                     <label for="manufacture_id" class="block text-sm font-semibold text-slate-700 mb-2">Supplier Name <span class="text-rose-500">*</span></label>
                     <select id="manufacture_id" name="manufacture_id" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('manufacture_id') border-rose-500 @enderror">
                         <option value="">Select Supplier</option>
+                        <option value="__new__" {{ old('manufacture_id') === '__new__' ? 'selected' : '' }}>+ Add New Supplier</option>
                         @foreach($suppliers as $supplier)
                             <option value="{{ $supplier->id }}" {{ old('manufacture_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
                         @endforeach
                     </select>
                     @error('manufacture_id')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+
+                    <div id="new_supplier_wrap" class="mt-3 {{ old('manufacture_id') === '__new__' ? '' : 'hidden' }}">
+                        <label for="new_manufacture_name" class="block text-xs font-semibold text-slate-600 mb-1.5">New Supplier Name <span class="text-rose-500">*</span></label>
+                        <input
+                            type="text"
+                            id="new_manufacture_name"
+                            name="new_manufacture_name"
+                            value="{{ old('new_manufacture_name') }}"
+                            maxlength="100"
+                            class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('new_manufacture_name') border-rose-500 @enderror"
+                            placeholder="e.g. OZ Steel"
+                        >
+                        @error('new_manufacture_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <div>
@@ -455,6 +465,128 @@
     </div>
 </div>
 
+{{-- Manage Suppliers Modal --}}
+<div id="manageSuppliersModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4 overflow-y-auto">
+    <div class="mx-auto mt-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-200 mb-10">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Manage Suppliers</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Add, edit or remove coil suppliers.</p>
+            </div>
+            <button type="button" onclick="closeManageSuppliersModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="px-6 pt-5 pb-4">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Existing Suppliers</h4>
+            @if($manufacturers->isEmpty())
+                <p class="text-sm text-slate-400 py-4 text-center">No suppliers added yet.</p>
+            @else
+            <div class="divide-y divide-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                @foreach($manufacturers as $manufacturer)
+                <div class="flex items-center justify-between gap-3 px-4 py-3 bg-white hover:bg-slate-50">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="text-sm font-medium text-slate-800 truncate">{{ $manufacturer->name }}</span>
+                        @if($manufacturer->status)
+                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">Active</span>
+                        @else
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Inactive</span>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button
+                            type="button"
+                            onclick="openEditSupplierForm(this)"
+                            class="supplier-edit-btn inline-flex items-center justify-center rounded-lg bg-amber-100 p-1.5 text-amber-700 hover:bg-amber-200"
+                            data-id="{{ $manufacturer->id }}"
+                            data-name="{{ $manufacturer->name }}"
+                            data-status="{{ (int) $manufacturer->status }}"
+                            data-update-url="{{ route('admin.production-reports.sf001.coil-manufacturers.update', $manufacturer->id) }}"
+                            title="Edit"
+                        >
+                            <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <form action="{{ route('admin.production-reports.sf001.coil-manufacturers.destroy', $manufacturer->id) }}" method="POST" class="inline js-swal-delete-form" data-delete-title="Delete supplier?" data-delete-text="Are you sure you want to delete supplier {{ $manufacturer->name }}? This cannot be undone.">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-rose-100 p-1.5 text-rose-700 hover:bg-rose-200" title="Delete">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+        </div>
+
+        <div class="px-6 pb-6 pt-4 border-t border-slate-100">
+            <div id="addSupplierSection">
+                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Add New Supplier</h4>
+                <form id="addSupplierForm" action="{{ route('admin.production-reports.sf001.coil-manufacturers.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="form_type" value="add_supplier">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-1">
+                            <input
+                                type="text"
+                                id="supplier_name"
+                                name="name"
+                                value="{{ old('name') }}"
+                                required
+                                maxlength="100"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-rose-500 @enderror"
+                                placeholder="e.g. OZ Steel"
+                            >
+                            @error('name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                        </div>
+                        <button type="submit" id="addSupplierButton" class="shrink-0 px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium text-sm">Add</button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="editSupplierSection" class="hidden">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500">Edit Supplier</h4>
+                    <button type="button" onclick="cancelEditSupplier()" class="text-xs text-slate-500 hover:text-slate-700 underline">Cancel</button>
+                </div>
+                <form id="editSupplierForm" action="#" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="form_type" value="edit_supplier">
+                    <input type="hidden" id="edit_supplier_id" name="edit_supplier_id" value="">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label for="edit_supplier_name" class="block text-xs font-semibold text-slate-600 mb-1.5">Supplier Name <span class="text-rose-500">*</span></label>
+                            <input
+                                type="text"
+                                id="edit_supplier_name"
+                                name="name"
+                                required
+                                maxlength="100"
+                                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                placeholder="Supplier name"
+                            >
+                        </div>
+                        <div>
+                            <label for="edit_supplier_status" class="block text-xs font-semibold text-slate-600 mb-1.5">Status <span class="text-rose-500">*</span></label>
+                            <select id="edit_supplier_status" name="status" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                                <option value="1">Active</option>
+                                <option value="0">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 mt-3">
+                        <button type="button" onclick="cancelEditSupplier()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm">Cancel</button>
+                        <button type="submit" id="editSupplierButton" class="px-4 py-2 rounded-lg bg-amber-600 text-white hover:bg-amber-700 font-medium text-sm">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -474,6 +606,10 @@
 
     .loaded-truck-bg {
         animation: truckBgFlash 1.1s ease-in-out infinite;
+    }
+
+    #manage_machine_id option:disabled {
+        color: #94a3b8;
     }
 
     @keyframes coilSpin {
@@ -689,10 +825,18 @@
             unloadWeightInput.disabled = true;
             machineSelect.onchange = null;
 
+            const freeMachineCount = allActiveMachines.filter(function (machine) {
+                return !machine.coil_id;
+            }).length;
+
             allActiveMachines.forEach(function (machine) {
                 const option = document.createElement('option');
                 option.value = machine.id;
-                option.textContent = machine.name + (machine.machine_code ? ' (' + machine.machine_code + ')' : '');
+                const label = machine.name + (machine.machine_code ? ' (' + machine.machine_code + ')' : '');
+                const isLoaded = !!machine.coil_id;
+
+                option.textContent = isLoaded ? (label + ' - Loaded') : label;
+                option.disabled = isLoaded;
                 machineSelect.appendChild(option);
             });
 
@@ -705,17 +849,22 @@
             }
 
             if (loadWeightHint) {
-                loadWeightHint.textContent = 'Max you can load ' + String(maxWeight) + ' KG net weight.';
+                if (freeMachineCount === 0) {
+                    loadWeightHint.textContent = 'No free machine available. Unload a machine first.';
+                } else {
+                    loadWeightHint.textContent = 'Loaded machines are shown but cannot be selected. Max you can load ' + String(maxWeight) + ' KG net weight.';
+                }
             }
 
             if (unloadWeightHint) {
                 unloadWeightHint.textContent = 'Select machine to see max pending weight.';
             }
 
-            submitButton.disabled = maxWeight <= 0;
-            submitButton.textContent = maxWeight <= 0 ? 'Load Disabled' : 'Load';
-            submitButton.classList.toggle('opacity-60', maxWeight <= 0);
-            submitButton.classList.toggle('cursor-not-allowed', maxWeight <= 0);
+            const isLoadDisabled = maxWeight <= 0 || freeMachineCount === 0;
+            submitButton.disabled = isLoadDisabled;
+            submitButton.textContent = isLoadDisabled ? 'Load Disabled' : 'Load';
+            submitButton.classList.toggle('opacity-60', isLoadDisabled);
+            submitButton.classList.toggle('cursor-not-allowed', isLoadDisabled);
         } else {
             loadSection.classList.add('hidden');
             unloadSection.classList.remove('hidden');
@@ -792,6 +941,7 @@
 
     function openAddCoilModal() {
         document.getElementById('addCoilModal').classList.remove('hidden');
+        toggleNewSupplierInput();
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
@@ -799,6 +949,20 @@
 
     function closeAddCoilModal() {
         document.getElementById('addCoilModal').classList.add('hidden');
+    }
+
+    function toggleNewSupplierInput() {
+        const supplierSelect = document.getElementById('manufacture_id');
+        const newSupplierWrap = document.getElementById('new_supplier_wrap');
+        const newSupplierInput = document.getElementById('new_manufacture_name');
+
+        if (!supplierSelect || !newSupplierWrap || !newSupplierInput) {
+            return;
+        }
+
+        const isNewSupplier = supplierSelect.value === '__new__';
+        newSupplierWrap.classList.toggle('hidden', !isNewSupplier);
+        newSupplierInput.required = isNewSupplier;
     }
 
     function openEditCoilModal(button) {
@@ -843,6 +1007,21 @@
             } else {
                 document.getElementById('manageCoilModal').classList.remove('hidden');
             }
+        @elseif(old('form_type') === 'add_supplier' || old('form_type') === 'edit_supplier')
+            openManageSuppliersModal();
+            @if(old('form_type') === 'edit_supplier')
+            (function() {
+                var oldEditId = @json(old('edit_supplier_id'));
+                if (oldEditId) {
+                    var editBtn = document.querySelector('.supplier-edit-btn[data-id="' + String(oldEditId) + '"]');
+                    if (editBtn) {
+                        editBtn.setAttribute('data-name', @json(old('name', '')));
+                        editBtn.setAttribute('data-status', @json(old('status', '1')));
+                        openEditSupplierForm(editBtn);
+                    }
+                }
+            })();
+            @endif
         @else
             openAddCoilModal();
         @endif
@@ -852,10 +1031,68 @@
     document.addEventListener('DOMContentLoaded', function () {
         const addCoilForm = document.getElementById('addCoilForm');
         const saveCoilButton = document.getElementById('saveCoilButton');
+        const supplierSelect = document.getElementById('manufacture_id');
         const editCoilForm = document.getElementById('editCoilForm');
         const updateCoilButton = document.getElementById('updateCoilButton');
         const manageCoilForm = document.getElementById('manageCoilForm');
         const manageCoilSubmitButton = document.getElementById('manageCoilSubmitButton');
+
+        if (typeof toastr !== 'undefined') {
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-top-right',
+                timeOut: 2500,
+            };
+
+            @if(session('success'))
+                toastr.success(@json(session('success')));
+            @endif
+
+            @if(session('error'))
+                toastr.error(@json(session('error')));
+            @endif
+
+            @if(session('info'))
+                toastr.info(@json(session('info')));
+            @endif
+
+            @if($errors->any())
+                toastr.error('Please fix the highlighted fields and try again.');
+            @endif
+        }
+
+        const deleteForms = document.querySelectorAll('.js-swal-delete-form');
+        if (deleteForms.length && typeof Swal !== 'undefined') {
+            deleteForms.forEach(function (form) {
+                form.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    const title = form.getAttribute('data-delete-title') || 'Confirm delete?';
+                    const text = form.getAttribute('data-delete-text') || 'This action cannot be undone.';
+
+                    const result = await Swal.fire({
+                        title: title,
+                        text: text,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Yes, delete it',
+                        cancelButtonText: 'Cancel',
+                    });
+
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        }
+
+        if (supplierSelect) {
+            supplierSelect.addEventListener('change', toggleNewSupplierInput);
+            toggleNewSupplierInput();
+        }
 
         document.querySelectorAll('.manage-action-tab').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -869,6 +1106,27 @@
                 saveCoilButton.disabled = true;
                 saveCoilButton.classList.add('opacity-60', 'cursor-not-allowed');
                 saveCoilButton.textContent = 'Saving...';
+            });
+        }
+
+        const addSupplierForm = document.getElementById('addSupplierForm');
+        const addSupplierButton = document.getElementById('addSupplierButton');
+        const editSupplierForm = document.getElementById('editSupplierForm');
+        const editSupplierButton = document.getElementById('editSupplierButton');
+
+        if (addSupplierForm && addSupplierButton) {
+            addSupplierForm.addEventListener('submit', function () {
+                addSupplierButton.disabled = true;
+                addSupplierButton.classList.add('opacity-60', 'cursor-not-allowed');
+                addSupplierButton.textContent = 'Adding...';
+            });
+        }
+
+        if (editSupplierForm && editSupplierButton) {
+            editSupplierForm.addEventListener('submit', function () {
+                editSupplierButton.disabled = true;
+                editSupplierButton.classList.add('opacity-60', 'cursor-not-allowed');
+                editSupplierButton.textContent = 'Updating...';
             });
         }
 
@@ -907,5 +1165,31 @@
             lucide.createIcons();
         }
     });
+
+    function openManageSuppliersModal() {
+        document.getElementById('manageSuppliersModal').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function closeManageSuppliersModal() {
+        document.getElementById('manageSuppliersModal').classList.add('hidden');
+        cancelEditSupplier();
+    }
+
+    function openEditSupplierForm(button) {
+        document.getElementById('edit_supplier_id').value = button.getAttribute('data-id') || '';
+        document.getElementById('edit_supplier_name').value = button.getAttribute('data-name') || '';
+        document.getElementById('edit_supplier_status').value = button.getAttribute('data-status') || '1';
+        document.getElementById('editSupplierForm').action = button.getAttribute('data-update-url') || '#';
+        document.getElementById('addSupplierSection').classList.add('hidden');
+        document.getElementById('editSupplierSection').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function cancelEditSupplier() {
+        document.getElementById('addSupplierSection').classList.remove('hidden');
+        document.getElementById('editSupplierSection').classList.add('hidden');
+        document.getElementById('editSupplierForm').action = '#';
+    }
 </script>
 @endpush
