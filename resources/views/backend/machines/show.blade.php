@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
             <div class="p-6 border-b border-slate-200">
                 <div class="flex items-center justify-between">
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <div class="p-6 space-y-6">
+            <div class="p-6">
                 <div class="flex items-center justify-between pb-6 border-b border-slate-200">
                     <div>
                         <p class="text-sm text-slate-500 mb-1">Machine ID</p>
@@ -50,31 +50,33 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-slate-500 mb-2">Machine Name</label>
-                    <p class="text-lg font-semibold text-slate-900">{{ $machine->name }}</p>
-                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Machine Name</label>
+                        <p class="text-lg font-semibold text-slate-900">{{ $machine->name }}</p>
+                    </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-slate-500 mb-2">Machine Code</label>
-                    <p class="text-slate-700 leading-relaxed">{{ $machine->machine_code }}</p>
-                </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Machine Code</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $machine->machine_code }}</p>
+                    </div>
 
-                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <i data-lucide="radio" class="w-6 h-6 text-blue-600"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-blue-600">RF Set</p>
-                            <p class="text-2xl font-bold text-blue-900">{{ $machine->rf_set ?: '-' }}</p>
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="radio" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-blue-600">RF Set</p>
+                                <p class="text-2xl font-bold text-blue-900">{{ $machine->rf_set ?: '-' }}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-slate-500 mb-2">Weight Capacity</label>
-                    <p class="text-slate-700 leading-relaxed">{{ $machine->weight_capacity ?: '-' }}</p>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Weight Capacity</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $machine->weight_capacity ?: '-' }}</p>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">

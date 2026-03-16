@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
             <div class="p-6 border-b border-slate-200">
                 <div class="flex items-center gap-3">
@@ -26,10 +26,11 @@
                 </div>
             </div>
 
-            <form id="machine-edit-form" action="{{ route('admin.machines.update', $machine) }}" method="POST" class="p-6 space-y-6">
+            <form id="machine-edit-form" action="{{ route('admin.machines.update', $machine) }}" method="POST" class="p-6">
                 @csrf
                 @method('PUT')
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
                         Machine Name <span class="text-rose-500">*</span>
@@ -141,6 +142,8 @@
                             {{ $message }}
                         </p>
                     @enderror
+                </div>
+
                 </div>
 
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
