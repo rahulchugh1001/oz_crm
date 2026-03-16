@@ -98,6 +98,31 @@
                 </div>
 
                 <div>
+                    <label for="weight_capacity" class="block text-sm font-semibold text-slate-700 mb-2">
+                        Weight Capacity
+                    </label>
+                    <select
+                        id="weight_capacity"
+                        name="weight_capacity"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight_capacity') border-rose-500 @enderror"
+                    >
+                        @php($selectedWeightCapacity = (string) old('weight_capacity', $machine->weight_capacity))
+                        <option value="">Select weight capacity</option>
+                        @foreach (\App\Models\Machine::WEIGHT_CAPACITY_OPTIONS as $option)
+                            <option value="{{ $option }}" {{ $selectedWeightCapacity === (string) $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('weight_capacity')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                <div>
                     <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
                         Status <span class="text-rose-500">*</span>
                     </label>

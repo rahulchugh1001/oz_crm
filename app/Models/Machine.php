@@ -20,11 +20,17 @@ class Machine extends Model
         'Ball Cage',
     ];
 
+    public const WEIGHT_CAPACITY_OPTIONS = [
+        '35',
+        '45',
+    ];
+
     protected $fillable = [
     'name',
     'machine_code',
     'rf_set',
     'coil_id',
+    'weight_capacity',
     'status',
     'is_deleted',
 ];

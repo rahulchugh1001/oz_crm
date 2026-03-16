@@ -72,6 +72,11 @@
                     </div>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-semibold text-slate-500 mb-2">Weight Capacity</label>
+                    <p class="text-slate-700 leading-relaxed">{{ $machine->weight_capacity ?: '-' }}</p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Created At</label>
