@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
             <!-- Header -->
             <div class="p-6 border-b border-slate-200">
@@ -53,16 +53,30 @@
                     </div>
                 </div>
 
-                <!-- Name -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name</label>
-                    <p class="text-lg font-semibold text-slate-900">{{ $item->name }}</p>
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name</label>
+                        <p class="text-lg font-semibold text-slate-900">{{ $item->name }}</p>
+                    </div>
 
-                <!-- Code -->
-                <div>
-                    <label class="block text-sm font-semibold text-slate-500 mb-2">Item Code</label>
-                    <p class="text-slate-700 leading-relaxed">{{ $item->code }}</p>
+                    <!-- Code -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Item Code</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $item->code }}</p>
+                    </div>
+
+                    <!-- SF2 Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name SF2</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $item->name_sf2 ?: '-' }}</p>
+                    </div>
+
+                    <!-- SF2 Code -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Item Code SF2</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $item->code_sf2 ?: '-' }}</p>
+                    </div>
                 </div>
 
                 <!-- Size & Weight Grid -->

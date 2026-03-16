@@ -11,6 +11,8 @@ class Item extends Model
     protected $fillable = [
         'name',
         'code',
+        'name_sf2',
+        'code_sf2',
         'size',
         'weight',
         'status',

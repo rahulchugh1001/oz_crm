@@ -7,6 +7,7 @@ use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 
 class ItemController extends Controller
 {
@@ -67,6 +68,8 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code',
+            'name_sf2' => 'nullable|string|max:255',
+            'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')],
             'size' => 'nullable|string|max:255',
             'weight' => 'required|numeric|min:0',
             'status' => 'required|boolean',
@@ -104,6 +107,8 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code,' . $item->id,
+            'name_sf2' => 'nullable|string|max:255',
+            'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')->ignore($item->id)],
             'size' => 'nullable|string|max:255',
             'weight' => 'required|numeric|min:0',
             'status' => 'required|boolean',

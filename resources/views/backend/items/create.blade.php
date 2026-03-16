@@ -12,7 +12,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
             <!-- Header -->
             <div class="p-6 border-b border-slate-200">
@@ -28,55 +28,96 @@
             </div>
 
             <!-- Form -->
-            <form id="item-create-form" action="{{ route('admin.items.store') }}" method="POST" class="p-6 space-y-6">
+            <form id="item-create-form" action="{{ route('admin.items.store') }}" method="POST" class="p-6">
                 @csrf
 
-                <!-- Name -->
-                <div>
-                    <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Item Name <span class="text-rose-500">*</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="name" 
-                        name="name" 
-                        value="{{ old('name') }}"
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('name') border-rose-500 @enderror"
-                        placeholder="Enter item name"
-                    >
-                    @error('name')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
-                </div>
-
-                <!-- Code -->
-                <div>
-                    <label for="code" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Item Code <span class="text-rose-500">*</span>
-                    </label>
-                    <input 
-                        type="text"
-                        id="code" 
-                        name="code" 
-                        value="{{ old('code') }}"
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('code') border-rose-500 @enderror"
-                        placeholder="Enter unique item code"
-                    >
-                    @error('code')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
-                </div>
-
-                <!-- Size & Weight -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Name -->
+                    <div>
+                        <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Item Name <span class="text-rose-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            name="name" 
+                            value="{{ old('name') }}"
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('name') border-rose-500 @enderror"
+                            placeholder="Enter item name"
+                        >
+                        @error('name')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- Code -->
+                    <div>
+                        <label for="code" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Item Code <span class="text-rose-500">*</span>
+                        </label>
+                        <input 
+                            type="text"
+                            id="code" 
+                            name="code" 
+                            value="{{ old('code') }}"
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('code') border-rose-500 @enderror"
+                            placeholder="Enter unique item code"
+                        >
+                        @error('code')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- SF2 Name -->
+                    <div>
+                        <label for="name_sf2" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Item Name SF2
+                        </label>
+                        <input 
+                            type="text" 
+                            id="name_sf2" 
+                            name="name_sf2" 
+                            value="{{ old('name_sf2') }}"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('name_sf2') border-rose-500 @enderror"
+                            placeholder="Enter item name (SF2)"
+                        >
+                        @error('name_sf2')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- SF2 Code -->
+                    <div>
+                        <label for="code_sf2" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Item Code SF2
+                        </label>
+                        <input 
+                            type="text"
+                            id="code_sf2" 
+                            name="code_sf2" 
+                            value="{{ old('code_sf2') }}"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('code_sf2') border-rose-500 @enderror"
+                            placeholder="Enter item code (SF2)"
+                        >
+                        @error('code_sf2')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
                     <!-- Size -->
                     <div>
                         <label for="size" class="block text-sm font-semibold text-slate-700 mb-2">
@@ -121,28 +162,28 @@
                             </p>
                         @enderror
                     </div>
-                </div>
 
-                <!-- Status -->
-                <div>
-                    <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Status <span class="text-rose-500">*</span>
-                    </label>
-                    <select 
-                        id="status" 
-                        name="status" 
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
-                    >
-                        <option value="1" {{ old('status', '1') === '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                    <!-- Status -->
+                    <div>
+                        <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Status <span class="text-rose-500">*</span>
+                        </label>
+                        <select 
+                            id="status" 
+                            name="status" 
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
+                        >
+                            <option value="1" {{ old('status', '1') === '1' ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') === '0' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Action Buttons -->
