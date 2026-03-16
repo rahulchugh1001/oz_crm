@@ -37,47 +37,47 @@
         ]);
     }
 @endphp
-<div class="p-6">
+<div class="p-4">
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-5">
+        <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3">
             <div>
-                <h2 class="text-xl font-semibold text-slate-900">Coil Stock List</h2>
-                <p class="mt-1 text-sm text-slate-500">Raw material inventory for Roll Forming (SF1).</p>
+                <h2 class="text-lg font-semibold text-slate-900">Coil Stock List</h2>
+                <p class="mt-1 text-xs text-slate-500">Raw material inventory for Roll Forming (SF1).</p>
             </div>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="openManageSuppliersModal()" title="Manage Suppliers" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-                    <i data-lucide="building-2" class="w-4 h-4"></i>
+                <button type="button" onclick="openManageSuppliersModal()" title="Manage Suppliers" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                    <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
                     Suppliers
                 </button>
-                <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-800 transition-colors">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
+                <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800 transition-colors">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     Add Coil
                 </button>
             </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full text-left">
+            <table class="min-w-full text-left text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Coil No</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Supplier</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Thickness</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Net Weight (KG)</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Loaded Machine</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Created At</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Status</th>
-                        <th class="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600">Action</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Coil No</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Supplier</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Thickness</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Net Weight (KG)</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Loaded Machine</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Created At</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Status</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($coils as $coil)
                     <tr class="hover:bg-slate-50">
-                        <td class="px-6 py-5 text-slate-900 font-medium">{{ $coil->coil_no }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->thickness, 0) }}</td>
-                        <td class="px-6 py-5 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
-                        <td class="px-6 py-5 text-slate-700">
+                        <td class="px-4 py-3 text-slate-900 font-medium">{{ $coil->coil_no }}</td>
+                        <td class="px-4 py-3 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
+                        <td class="px-4 py-3 text-slate-700">{{ number_format((float) $coil->thickness, 0) }}</td>
+                        <td class="px-4 py-3 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
+                        <td class="px-4 py-3 text-slate-700">
                             @if(!empty($loadedMachinesByCoil[$coil->id]))
                                 <div class="space-y-1.5 min-w-[180px]">
                                     @foreach($loadedMachinesByCoil[$coil->id] as $loadedMachine)
@@ -103,8 +103,8 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-6 py-5 text-slate-700">{{ $coil->created_at ? \Carbon\Carbon::parse($coil->created_at)->format('d-m-Y h:i A') : '-' }}</td>
-                        <td class="px-6 py-5">
+                        <td class="px-4 py-3 text-slate-700">{{ $coil->created_at ? \Carbon\Carbon::parse($coil->created_at)->format('d-m-Y h:i A') : '-' }}</td>
+                        <td class="px-4 py-3">
                             <div class="min-w-[150px]">
                                 @if($coil->process === 'available')
                                     <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
@@ -129,21 +129,21 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-5 text-slate-500">
+                        <td class="px-4 py-3 text-slate-500">
                             <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
                                 <a
                                     href="{{ route('admin.production-reports.sf001.coil-stock.view', $coil->id) }}"
                                     title="View"
-                                    class="inline-flex items-center justify-center rounded-lg bg-sky-100 p-2 text-sky-700 hover:bg-sky-200"
+                                    class="inline-flex items-center justify-center rounded-lg bg-sky-100 p-1.5 text-sky-700 hover:bg-sky-200"
                                 >
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                 </a>
 
                                 <button
                                     type="button"
                                     onclick="openEditCoilModal(this)"
                                     title="Edit"
-                                    class="inline-flex items-center justify-center rounded-lg bg-amber-100 p-2 text-amber-700 hover:bg-amber-200"
+                                    class="inline-flex items-center justify-center rounded-lg bg-amber-100 p-1.5 text-amber-700 hover:bg-amber-200"
                                     data-edit-id="{{ $coil->id }}"
                                     data-update-url="{{ route('admin.production-reports.sf001.coil-stock.update', $coil->id) }}"
                                     data-manufacture-id="{{ $coil->manufacture_id }}"
@@ -154,27 +154,27 @@
                                     data-process="{{ $coil->process }}"
                                     data-status="{{ (int) $coil->status }}"
                                 >
-                                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                 </button>
 
                                 <button
                                     type="button"
                                     onclick="openManageCoilModal(this)"
                                     title="Manage Load/Unload"
-                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-2 text-indigo-700 hover:bg-indigo-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck-bg' : '' }}"
+                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-1.5 text-indigo-700 hover:bg-indigo-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck-bg' : '' }}"
                                     data-coil-id="{{ $coil->id }}"
                                     data-coil-no="{{ $coil->coil_no }}"
                                     data-net-weight="{{ (float) $coil->net_weight_kg }}"
                                     data-loaded-machines='@json($loadedMachinesByCoil[$coil->id] ?? [])'
                                 >
-                                    <i data-lucide="truck" class="w-4 h-4 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck' : '' }}"></i>
+                                    <i data-lucide="truck" class="w-3.5 h-3.5 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck' : '' }}"></i>
                                 </button>
 
                                 <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline js-swal-delete-form" data-delete-title="Delete coil stock?" data-delete-text="Are you sure you want to delete coil {{ $coil->coil_no }}?">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" title="Delete" class="inline-flex items-center justify-center rounded-lg bg-rose-100 p-2 text-rose-700 hover:bg-rose-200">
-                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    <button type="submit" title="Delete" class="inline-flex items-center justify-center rounded-lg bg-rose-100 p-1.5 text-rose-700 hover:bg-rose-200">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </form>
                             </div>
@@ -182,7 +182,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-slate-500">No coil stock found.</td>
+                        <td colspan="8" class="px-4 py-10 text-center text-slate-500 text-xs">No coil stock found.</td>
                     </tr>
                     @endforelse
                 </tbody>

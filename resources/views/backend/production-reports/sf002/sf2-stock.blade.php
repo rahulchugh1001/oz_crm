@@ -11,32 +11,32 @@
 @endsection
 
 @section('content')
-<div class="p-6">
+<div class="p-4">
     @if(session('success'))
-    <div class="mb-4 p-4 rounded-xl bg-green-50 border border-green-200 flex items-center gap-3">
-        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 flex-shrink-0"></i>
-        <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+    <div class="mb-3 p-3 rounded-xl bg-green-50 border border-green-200 flex items-center gap-2.5">
+        <i data-lucide="check-circle" class="w-4 h-4 text-green-600 flex-shrink-0"></i>
+        <p class="text-xs font-medium text-green-800">{{ session('success') }}</p>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="mb-4 p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3">
-        <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
-        <p class="text-sm font-medium text-rose-800">{{ session('error') }}</p>
+    <div class="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2.5">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
+        <p class="text-xs font-medium text-rose-800">{{ session('error') }}</p>
     </div>
     @endif
 
     <!-- Header Section -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle mb-6">
-        <div class="p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle mb-4">
+        <div class="p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
-                        <i data-lucide="package" class="w-5 h-5 text-white"></i>
+                    <div class="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                        <i data-lucide="package" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">CED & Zinc (SF2) - Item Wise Stock</h2>
-                        <p class="text-sm text-slate-500">View aggregated SF2 stock quantities by item (CED and ZINC)</p>
+                        <h2 class="text-base font-semibold text-slate-900">CED & Zinc (SF2) - Item Wise Stock</h2>
+                        <p class="text-xs text-slate-500">View aggregated SF2 stock quantities by item (CED and ZINC)</p>
                     </div>
                 </div>
             </div>
@@ -47,7 +47,7 @@
             <button
                 id="tab-btn-ced"
                 onclick="switchTab('ced')"
-                class="flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors tab-btn-active"
+                class="flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors tab-btn-active"
             >
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">CED</span>
                 <span>CED Stock</span>
@@ -56,7 +56,7 @@
             <button
                 id="tab-btn-zinc"
                 onclick="switchTab('zinc')"
-                class="flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors tab-btn-inactive"
+                class="flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors tab-btn-inactive"
             >
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-100 text-cyan-700">ZINC</span>
                 <span>ZINC Stock</span>

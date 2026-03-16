@@ -13,7 +13,7 @@
 @endsection
 
 @section('content')
-<div class="p-6">
+<div class="p-4">
     @php
         $canUpdateStatus = auth()->user()->role === 'SF002';
     @endphp
@@ -27,13 +27,13 @@
     @endif
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
-        <div class="p-6 border-b border-slate-200">
+        <div class="p-4 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Assigned SF1 Stock Transfers</h2>
-                    <p class="text-sm text-slate-500">SF1 stock transfers assigned to this CED & Zinc (SF2) user</p>
+                    <h2 class="text-base font-semibold text-slate-900">Assigned SF1 Stock Transfers</h2>
+                    <p class="text-xs text-slate-500">SF1 stock transfers assigned to this CED & Zinc (SF2) user</p>
                 </div>
-                <div class="text-sm">
+                <div class="text-xs">
                     <span class="text-slate-500">Total Records:</span>
                     <span class="ml-1 font-semibold text-slate-900">{{ $assignedTransfers->count() }}</span>
                 </div>
@@ -41,22 +41,22 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-[1700px] w-full table-fixed text-[13px]">
+            <table class="min-w-[1700px] w-full table-fixed text-xs">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="w-[56px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                        <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
-                        <th class="w-[150px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">When Assigned</th>
-                        <th class="w-[120px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
-                        <th class="w-[180px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
-                        <th class="w-[130px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
-                        <th class="w-[110px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assign SF2</th>
-                        <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Received Quantity</th>
-                        <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected Quantity</th>
-                        <th class="w-[160px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
-                        <th class="w-[110px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="w-[220px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
-                        <th class="w-[220px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
+                        <th class="w-[56px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                        <th class="w-[130px] px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
+                        <th class="w-[150px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">When Assigned</th>
+                        <th class="w-[120px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
+                        <th class="w-[180px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
+                        <th class="w-[130px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
+                        <th class="w-[110px] px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assign SF2</th>
+                        <th class="w-[130px] px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Received Quantity</th>
+                        <th class="w-[130px] px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected Quantity</th>
+                        <th class="w-[160px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                        <th class="w-[110px] px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="w-[220px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Roll Forming (SF1) Remark</th>
+                        <th class="w-[220px] px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED & Zinc (SF2) Remark</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -69,12 +69,12 @@
                             $sf002ShortRemark = mb_strimwidth($sf002Remark, 0, 60, '...');
                             $acceptedQuantity = max((float) $transfer->quantity - (float) ($transfer->reject_quantity ?? 0), 0);
                         @endphp
-                        <td class="px-4 py-3 text-slate-700">{{ $index + 1 }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-3 py-2.5 text-slate-700">{{ $index + 1 }}</td>
+                        <td class="px-3 py-2.5">
                             <div class="flex items-center justify-center gap-2 flex-nowrap whitespace-nowrap">
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all bg-blue-50 text-blue-700 hover:bg-blue-100"
                                     onclick="openDetailsModal(this)"
                                     data-id="{{ $transfer->id }}"
                                     data-item-code="{{ $transfer->item_code }}"
@@ -103,7 +103,7 @@
                                 @if((int) $transfer->is_accept === 0)
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-green-50 text-green-700 hover:bg-green-100"
+                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all bg-green-50 text-green-700 hover:bg-green-100"
                                     onclick="openStatusModal(this)"
                                     data-action="{{ route('admin.production-reports.sf002.stock.status', $transfer->id) }}"
                                     data-status="1"
@@ -120,7 +120,7 @@
 
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-rose-50 text-rose-700 hover:bg-rose-100"
+                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all bg-rose-50 text-rose-700 hover:bg-rose-100"
                                     onclick="openStatusModal(this)"
                                     data-action="{{ route('admin.production-reports.sf002.stock.status', $transfer->id) }}"
                                     data-status="2"
@@ -142,48 +142,48 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-4 py-3 text-slate-700">{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}</td>
-                        <td class="px-4 py-3 font-medium text-slate-900">
+                        <td class="px-3 py-2.5 text-slate-700">{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}</td>
+                        <td class="px-3 py-2.5 font-medium text-slate-900">
                             <span class="block truncate" title="{{ $transfer->item_code }}">{{ $transfer->item_code }}</span>
                         </td>
-                        <td class="px-4 py-3 text-slate-700">
+                        <td class="px-3 py-2.5 text-slate-700">
                             <span class="block truncate" title="{{ $transfer->item_name }}">{{ $transfer->item_name }}</span>
                         </td>
-                        <td class="px-4 py-3 text-slate-700">
+                        <td class="px-3 py-2.5 text-slate-700">
                             <span class="block truncate" title="{{ $transfer->item_size }}">{{ $transfer->item_size }}</span>
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-3 py-2.5 text-center">
                             @if($transfer->assign_sf2 === 'CED')
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">CED</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">CED</span>
                             @elseif($transfer->assign_sf2 === 'ZINC')
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">ZINC</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">ZINC</span>
                             @else
                                 <span class="text-slate-400">-</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold">
                                 {{ number_format($transfer->quantity, 0) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2 py-1 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
+                        <td class="px-3 py-2.5 text-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-semibold">
                                 {{ number_format((float) ($transfer->reject_quantity ?? 0), 0) }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-slate-700">
+                        <td class="px-3 py-2.5 text-slate-700">
                             <span class="block truncate" title="{{ $transfer->transfer_by_name ?? 'N/A' }}">{{ $transfer->transfer_by_name ?? 'N/A' }}</span>
                         </td>
-                        <td class="px-4 py-3 text-center">
+                        <td class="px-3 py-2.5 text-center">
                             @if($transfer->is_accept == 1)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
                             @elseif($transfer->is_accept == 2)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Rejected</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Rejected</span>
                             @else
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Pending</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Pending</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-slate-700 align-top break-words">
+                        <td class="px-3 py-2.5 text-slate-700 align-top break-words">
                             @if($sf001Remark === '')
                                 -
                             @elseif($sf001Remark === $sf001ShortRemark)
@@ -196,7 +196,7 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-slate-700 align-top break-words">
+                        <td class="px-3 py-2.5 text-slate-700 align-top break-words">
                             @if($sf002Remark === '')
                                 -
                             @elseif($sf002Remark === $sf002ShortRemark)

@@ -2,80 +2,80 @@
 {{-- Variables: $stocks (collection), $tabType (string: ced|zinc), $tabLabel (string: CED|ZINC) --}}
 
 <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
-    <div class="p-6 border-b border-slate-200">
+    <div class="p-4 border-b border-slate-200">
         <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold text-slate-900">{{ $tabLabel }} Item Stock List</h3>
+            <h3 class="text-sm font-semibold text-slate-900">{{ $tabLabel }} Item Stock List</h3>
             <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-500">Total Items:</span>
-                <span class="text-sm font-semibold text-slate-900">{{ $stocks->count() }}</span>
+                <span class="text-xs text-slate-500">Total Items:</span>
+                <span class="text-xs font-semibold text-slate-900">{{ $stocks->count() }}</span>
             </div>
         </div>
     </div>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-[13px]">
+        <table class="w-full text-xs">
             <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Size</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Production</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">In Stock</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected</th>
-                    <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Last Stock Update</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assembly Lines</th>
-                    <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
+                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
+                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Size</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Production</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">In Stock</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected</th>
+                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Last Stock Update</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assembly Lines</th>
+                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
                 @forelse($stocks as $index => $item)
                 <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3 text-slate-700">{{ $index + 1 }}</td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2.5 text-slate-700">{{ $index + 1 }}</td>
+                    <td class="px-3 py-2.5">
                         <span class="font-medium text-slate-900">{{ $item->code }}</span>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2.5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="box" class="w-3.5 h-3.5 text-slate-400"></i>
                             <span class="font-medium text-slate-900">{{ $item->name }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2.5">
                         <span class="text-slate-600">{{ $item->size }}</span>
                     </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700">
-                            <i data-lucide="package" class="w-3.5 h-3.5"></i>
+                    <td class="px-3 py-2.5 text-center">
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700">
+                            <i data-lucide="package" class="w-3 h-3"></i>
                             <span class="font-semibold">{{ number_format($item->total_produced_stock, 0) }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700">
-                            <i data-lucide="hourglass" class="w-3.5 h-3.5"></i>
+                    <td class="px-3 py-2.5 text-center">
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-amber-50 text-amber-700">
+                            <i data-lucide="hourglass" class="w-3 h-3"></i>
                             <span class="font-semibold">{{ number_format($item->pending_quantity, 0) }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700">
-                            <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                    <td class="px-3 py-2.5 text-center">
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700">
+                            <i data-lucide="check-check" class="w-3 h-3"></i>
                             <span class="font-semibold">{{ number_format($item->transferred_quantity, 0) }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center">
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700">
-                            <i data-lucide="ban" class="w-3.5 h-3.5"></i>
+                    <td class="px-3 py-2.5 text-center">
+                        <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-rose-50 text-rose-700">
+                            <i data-lucide="ban" class="w-3 h-3"></i>
                             <span class="font-semibold">{{ number_format($item->rejected_quantity, 0) }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2.5">
                         <div class="flex items-center gap-1.5 text-slate-600">
                             <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
                             <span>{{ $item->last_stock_update ? \Carbon\Carbon::parse($item->last_stock_update)->format('M d, Y h:i A') : 'N/A' }}</span>
                         </div>
                     </td>
-                    <td class="px-4 py-3 text-center">
+                    <td class="px-3 py-2.5 text-center">
                         @if(!empty($item->sf3_process_lines))
                             <div class="flex flex-wrap justify-center gap-1">
                                 @foreach(explode(',', $item->sf3_process_lines) as $line)
@@ -92,7 +92,7 @@
                             <span class="text-slate-400 text-xs">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3">
+                    <td class="px-3 py-2.5">
                         <div class="flex items-center justify-center gap-2">
                             <button
                                 type="button"
@@ -103,13 +103,13 @@
                                 data-item-size="{{ $item->size }}"
                                 data-type="{{ $tabType }}"
                                 data-available-stock="{{ (int) $item->pending_quantity }}"
-                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
                             >
                                 <i data-lucide="arrow-right-left" class="w-3 h-3"></i>
                                 Transfer
                             </button>
                             <a href="{{ route('admin.production-reports.sf002.sf2-stock.history', $item->id) }}"
-                               class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                               class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
                                 <i data-lucide="history" class="w-3 h-3"></i>
                                 History
                             </a>
@@ -118,14 +118,14 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="11" class="px-6 py-12 text-center">
+                    <td colspan="11" class="px-4 py-10 text-center">
                         <div class="flex flex-col items-center gap-3">
                             <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                 <i data-lucide="package-x" class="w-8 h-8 text-slate-400"></i>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-slate-900">No items found</p>
-                                <p class="text-sm text-slate-500 mt-1">No {{ $tabLabel }} production records exist yet</p>
+                                <p class="text-xs font-medium text-slate-900">No items found</p>
+                                <p class="text-xs text-slate-500 mt-1">No {{ $tabLabel }} production records exist yet</p>
                             </div>
                         </div>
                     </td>
@@ -136,26 +136,26 @@
     </div>
 
     @if($stocks->count() > 0)
-    <div class="p-6 border-t border-slate-200 bg-slate-50">
+    <div class="p-4 border-t border-slate-200 bg-slate-50">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <div class="text-sm text-slate-600">
-                <i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i>
+            <div class="text-xs text-slate-600">
+                <i data-lucide="info" class="w-3.5 h-3.5 inline-block mr-1"></i>
                 Stock quantities are calculated from SF2 production reports (actual_set_shift)
             </div>
             <div class="flex flex-wrap items-center gap-4">
-                <div class="text-sm">
+                <div class="text-xs">
                     <span class="text-slate-600">Total Production:</span>
                     <span class="ml-2 font-semibold text-slate-900">{{ number_format($stocks->sum('total_produced_stock'), 0) }}</span>
                 </div>
-                <div class="text-sm">
+                <div class="text-xs">
                     <span class="text-slate-600">In Stock:</span>
                     <span class="ml-2 font-semibold text-amber-700">{{ number_format($stocks->sum('pending_quantity'), 0) }}</span>
                 </div>
-                <div class="text-sm">
+                <div class="text-xs">
                     <span class="text-slate-600">Transferred:</span>
                     <span class="ml-2 font-semibold text-blue-700">{{ number_format($stocks->sum('transferred_quantity'), 0) }}</span>
                 </div>
-                <div class="text-sm">
+                <div class="text-xs">
                     <span class="text-slate-600">Rejected:</span>
                     <span class="ml-2 font-semibold text-rose-700">{{ number_format($stocks->sum('rejected_quantity'), 0) }}</span>
                 </div>

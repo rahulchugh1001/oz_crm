@@ -11,7 +11,7 @@
 @endsection
 
 @section('content')
-<div class="p-6">
+<div class="p-4">
     @if(session('success'))
     <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-3">
         <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
@@ -20,7 +20,7 @@
     @endif
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
-        <div class="p-6 border-b border-slate-200">
+        <div class="p-4 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
@@ -31,7 +31,7 @@
                         <p class="text-sm text-slate-500">Manage your machine master data</p>
                     </div>
                 </div>
-                <a href="{{ route('admin.machines.create') }}" class="inline-flex items-center gap-2 px-4 py-2 gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105">
+                <a href="{{ route('admin.machines.create') }}" class="inline-flex items-center gap-2 px-3 py-1.5 gradient-primary text-white text-sm font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105">
                     <i data-lucide="plus" class="w-4 h-4"></i>
                     <span>Add New Machine</span>
                 </a>
@@ -60,14 +60,14 @@
                                 name="search"
                                 value="{{ $search ?? '' }}"
                                 placeholder="Search name, machine code, RF set..."
-                                class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full pl-10 pr-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
+                        <button type="submit" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
                             Search
                         </button>
                         @if(!empty($search))
-                        <a href="{{ route('admin.machines.index', ['mode' => $mode]) }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+                        <a href="{{ route('admin.machines.index', ['mode' => $mode]) }}" class="px-3 py-1.5 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                             Reset
                         </a>
                         @endif
@@ -80,39 +80,39 @@
             <table class="w-full">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">ID</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Machine Code</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">RF Set</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Name</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Machine Code</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">RF Set</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($machines as $machine)
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 text-sm text-slate-900 font-medium">#{{ $machine->id }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900 font-semibold">{{ $machine->name }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-600">{{ $machine->machine_code }}</td>
-                        <td class="px-6 py-4 text-sm text-slate-900">{{ $machine->rf_set ?: '-' }}</td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 py-3 text-xs text-slate-900 font-medium">#{{ $machine->id }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-900 font-semibold">{{ $machine->name }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-600">{{ $machine->machine_code }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-900">{{ $machine->rf_set ?: '-' }}</td>
+                        <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $machine->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
                                 {{ $machine->status ? 'Active' : 'Inactive' }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                <a href="{{ route('admin.machines.show', $machine) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
+                                <a href="{{ route('admin.machines.show', $machine) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </a>
-                                <a href="{{ route('admin.machines.edit', $machine) }}" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
+                                <a href="{{ route('admin.machines.edit', $machine) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                     <i data-lucide="edit" class="w-4 h-4"></i>
                                 </a>
                                 @if(!$machine->is_deleted)
                                     <form action="{{ route('admin.machines.destroy', $machine) }}" method="POST" class="inline js-swal-delete-form" data-machine-name="{{ $machine->name }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </button>
                                     </form>
@@ -138,7 +138,7 @@
         </div>
 
         @if($machines->hasPages())
-        <div class="px-6 py-4 border-t border-slate-200">
+        <div class="px-4 py-3 border-t border-slate-200">
             {{ $machines->links() }}
         </div>
         @endif
