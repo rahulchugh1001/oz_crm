@@ -5,11 +5,17 @@
     $canViewSf002 = $isAdmin || $userRole === 'SF002';
     $canViewSf003 = $isAdmin || $userRole === 'SF003';
 
-    $isSf001ProductionContext = request()->routeIs('admin.production-reports.sf001*')
+    $isSf001CoilStockRoute = request()->routeIs('admin.production-reports.sf001.coil-stock*');
+
+    // Note: Admin uses SF001 coil-stock screen as "Supplier" under Manage Masters.
+    // To avoid double-active menus, exclude coil-stock routes from SF001 context for Admin.
+    $isSf001ProductionContext = (!$isAdmin || !$isSf001CoilStockRoute) && (
+        request()->routeIs('admin.production-reports.sf001*')
         || request()->routeIs('admin.production-reports.index')
         || request()->routeIs('admin.production-reports.create')
         || request()->routeIs('admin.production-reports.show')
-        || request()->routeIs('admin.production-reports.edit');
+        || request()->routeIs('admin.production-reports.edit')
+    );
 
     $isSf002ProductionContext = request()->routeIs('admin.production-reports.sf002*')
         || request()->is('admin/production-reports/sf002/*');
@@ -49,6 +55,13 @@
         || request()->routeIs('admin.production-reports.sf003.production-report*')
         || request()->is('admin/production-reports/sf003/production-report/*')
     ) && $sf003Line === 'l3';
+
+    $isMasterDataContext = $isAdmin && (
+        request()->routeIs('admin.items.*')
+        || request()->routeIs('admin.machines.*')
+        || request()->routeIs('admin.reject-reasons.*')
+        || request()->routeIs('admin.production-reports.sf001.coil-stock*')
+    );
 @endphp
 
 <!-- Sidebar -->
@@ -71,19 +84,36 @@
             </a>
 
             @if($isAdmin)
-            <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.items.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
-                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.items.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                    <i data-lucide="box" class="w-4 h-4 {{ request()->routeIs('admin.items.*') ? 'text-white' : 'text-gray-400' }}"></i>
-                </div>
-                <span class="font-medium">Items</span>
-            </a>
+            <div class="mt-2">
+                <button onclick="toggleMasterDataDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isMasterDataContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ $isMasterDataContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="database" class="w-4 h-4 {{ $isMasterDataContext ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">Manage Masters</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="masterdata-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
 
-            <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.machines.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
-                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.machines.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
-                    <i data-lucide="cog" class="w-4 h-4 {{ request()->routeIs('admin.machines.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isMasterDataContext ? '' : 'hidden' }}" id="masterdata-dropdown">
+                    <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.machines.*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Machines</span>
+                    </a>
+                    <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.items.*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Items</span>
+                    </a>
+                    <a href="{{ route('admin.reject-reasons.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.reject-reasons.*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Reject Reasons</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf001.coil-stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf001.coil-stock*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Supplier</span>
+                    </a>
                 </div>
-                <span class="font-medium">Machines</span>
-            </a>
+            </div>
             @endif
 
             @if($canViewSf001)

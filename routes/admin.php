@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\MachineController;
 use App\Http\Controllers\Admin\ProductionReportController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RejectReasonController;
 use App\Http\Controllers\Admin\SF001Controller;
 use App\Http\Controllers\Admin\SF002Controller;
 use App\Http\Controllers\Admin\SF003Controller;
@@ -44,6 +45,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/machines/{machine}/edit', [MachineController::class, 'edit'])->name('machines.edit');
         Route::put('/machines/{machine}', [MachineController::class, 'update'])->name('machines.update');
         Route::delete('/machines/{machine}', [MachineController::class, 'destroy'])->name('machines.destroy');
+
+        // Reject Reasons Routes
+        Route::get('/reject-reasons', [RejectReasonController::class, 'index'])->name('reject-reasons.index');
+        Route::get('/reject-reasons/create', [RejectReasonController::class, 'create'])->name('reject-reasons.create');
+        Route::post('/reject-reasons', [RejectReasonController::class, 'store'])->name('reject-reasons.store');
+        Route::get('/reject-reasons/{rejectReason}/edit', [RejectReasonController::class, 'edit'])->name('reject-reasons.edit');
+        Route::put('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'update'])->name('reject-reasons.update');
+        Route::delete('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'destroy'])->name('reject-reasons.destroy');
 
         // Users Routes
         Route::get('/users', [UserController::class, 'index'])->name('users.index');

@@ -7,6 +7,7 @@
 
     <script>
         const sidebarDropdownConfig = [
+            { id: 'masterdata-dropdown', chevronId: 'masterdata-chevron' },
             { id: 'sf001-dropdown', chevronId: 'sf001-chevron' },
             { id: 'sf002-dropdown', chevronId: 'sf002-chevron' },
             { id: 'sf003-dropdown', chevronId: 'sf003-chevron' },
@@ -165,6 +166,11 @@
         // Toggle Masters Dropdown
         function toggleMastersDropdown() {
             toggleSidebarDropdown('masters-dropdown');
+        }
+
+        // Toggle Master Data Dropdown
+        function toggleMasterDataDropdown() {
+            toggleSidebarDropdown('masterdata-dropdown');
         }
 
         // Toggle SF001 Dropdown
