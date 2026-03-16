@@ -13,6 +13,13 @@ class Machine extends Model
     
  use HasFactory;
 
+    public const RF_SET_OPTIONS = [
+        'Inner',
+        'Outer',
+        'Middle',
+        'Ball Cage',
+    ];
+
     protected $fillable = [
     'name',
     'machine_code',

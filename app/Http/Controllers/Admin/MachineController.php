@@ -7,6 +7,7 @@ use App\Models\Machine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MachineController extends Controller
@@ -59,7 +60,7 @@ class MachineController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code',
-            'rf_set' => 'nullable|string|max:255',
+            'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
             'status' => 'required|boolean',
         ]);
 
@@ -101,7 +102,7 @@ class MachineController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code,' . $machine->id,
-            'rf_set' => 'nullable|string|max:255',
+            'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
             'status' => 'required|boolean',
         ]);
 

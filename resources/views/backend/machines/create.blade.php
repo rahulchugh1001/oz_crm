@@ -75,14 +75,18 @@
                     <label for="rf_set" class="block text-sm font-semibold text-slate-700 mb-2">
                         RF Set
                     </label>
-                    <input
-                        type="text"
+                    <select
                         id="rf_set"
                         name="rf_set"
-                        value="{{ old('rf_set') }}"
                         class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('rf_set') border-rose-500 @enderror"
-                        placeholder="Enter RF set"
                     >
+                        <option value="">Select RF set</option>
+                        @foreach (\App\Models\Machine::RF_SET_OPTIONS as $option)
+                            <option value="{{ $option }}" {{ old('rf_set') === $option ? 'selected' : '' }}>
+                                {{ $option }}
+                            </option>
+                        @endforeach
+                    </select>
                     @error('rf_set')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
                             <i data-lucide="alert-circle" class="w-4 h-4"></i>
