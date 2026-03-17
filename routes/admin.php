@@ -50,6 +50,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/reject-reasons', [RejectReasonController::class, 'index'])->name('reject-reasons.index');
         Route::get('/reject-reasons/create', [RejectReasonController::class, 'create'])->name('reject-reasons.create');
         Route::post('/reject-reasons', [RejectReasonController::class, 'store'])->name('reject-reasons.store');
+        Route::get('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'show'])->name('reject-reasons.show');
         Route::get('/reject-reasons/{rejectReason}/edit', [RejectReasonController::class, 'edit'])->name('reject-reasons.edit');
         Route::put('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'update'])->name('reject-reasons.update');
         Route::delete('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'destroy'])->name('reject-reasons.destroy');

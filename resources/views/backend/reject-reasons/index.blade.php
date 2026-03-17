@@ -79,6 +79,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Name</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Used Count</th>
                         <th class="px-4 py-3 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -92,8 +93,16 @@
                                     {{ $reason->status ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold">
+                                    {{ (int) ($reason->usage_count ?? 0) }}
+                                </span>
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.reject-reasons.show', $reason) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View Usage">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                    </a>
                                     <a href="{{ route('admin.reject-reasons.edit', $reason) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                         <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                     </a>
@@ -111,7 +120,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 py-10 text-center">
+                            <td colspan="5" class="px-4 py-10 text-center">
                                 <div class="flex flex-col items-center gap-2">
                                     <i data-lucide="inbox" class="w-10 h-10 text-slate-300"></i>
                                     <p class="text-xs text-slate-500">No reject reasons found</p>
