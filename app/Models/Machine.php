@@ -27,14 +27,18 @@ class Machine extends Model
     ];
 
     protected $fillable = [
-    'name',
-    'machine_code',
-    'rf_set',
-    'coil_id',
-    'weight_capacity',
-    'status',
-    'is_deleted',
-];
+        'name',
+        'machine_code',
+        'rf_set',
+        'coil_id',
+        'status',
+        'is_deleted',
+    ];
+
+    public function weight_capacities()
+    {
+        return $this->belongsToMany(WeightCapacity::class, 'machine_weight_capacities', 'machine_id', 'weight_capacity_id');
+    }
 
     public function coil(): BelongsTo
     {

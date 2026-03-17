@@ -75,7 +75,17 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Weight Capacity</label>
-                        <p class="text-slate-700 leading-relaxed">{{ $machine->weight_capacity ?: '-' }}</p>
+                        @if($machine->weight_capacities && $machine->weight_capacities->count())
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                @foreach($machine->weight_capacities as $capacity)
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full border border-blue-200">
+                                        {{ $capacity->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="inline-block text-slate-400">-</span>
+                        @endif
                     </div>
                 </div>
 

@@ -104,13 +104,13 @@
                     </label>
                     <select
                         id="weight_capacity"
-                        name="weight_capacity"
+                        name="weight_capacity[]"
+                        multiple
                         class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight_capacity') border-rose-500 @enderror"
                     >
-                        @php($selectedWeightCapacity = (string) old('weight_capacity', $machine->weight_capacity))
-                        <option value="">Select weight capacity</option>
+                        @php($selectedWeightCapacities = collect(old('weight_capacity', $machine->weight_capacities ? $machine->weight_capacities->pluck('name')->toArray() : [])))
                         @foreach (($weightCapacities ?? collect()) as $capacity)
-                            <option value="{{ (string) $capacity->name }}" {{ $selectedWeightCapacity === (string) $capacity->name ? 'selected' : '' }}>
+                            <option value="{{ (string) $capacity->name }}" {{ $selectedWeightCapacities->contains((string) $capacity->name) ? 'selected' : '' }}>
                                 {{ $capacity->name }}
                             </option>
                         @endforeach

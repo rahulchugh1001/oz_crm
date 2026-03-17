@@ -68,8 +68,8 @@ class MachineController extends Controller
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code',
             'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => [
-                'nullable',
+            'weight_capacity' => ['nullable', 'array'],
+            'weight_capacity.*' => [
                 'string',
                 'max:50',
                 Rule::exists('weight_capacities', 'name')->where(function ($q) {
@@ -80,8 +80,14 @@ class MachineController extends Controller
         ]);
 
         $validated['is_deleted'] = false;
+        $weightCapacities = $validated['weight_capacity'] ?? [];
+        unset($validated['weight_capacity']);
 
-        Machine::create($validated);
+        $machine = Machine::create($validated);
+        if (!empty($weightCapacities)) {
+            $weightCapacityIds = WeightCapacity::whereIn('name', $weightCapacities)->pluck('id')->toArray();
+            $machine->weight_capacities()->sync($weightCapacityIds);
+        }
 
         if ($this->isAjaxRequest($request)) {
             return response()->json([
@@ -124,8 +130,8 @@ class MachineController extends Controller
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code,' . $machine->id,
             'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => [
-                'nullable',
+            'weight_capacity' => ['nullable', 'array'],
+            'weight_capacity.*' => [
                 'string',
                 'max:50',
                 Rule::exists('weight_capacities', 'name')->where(function ($q) {
@@ -135,7 +141,16 @@ class MachineController extends Controller
             'status' => 'required|boolean',
         ]);
 
+        $weightCapacities = $validated['weight_capacity'] ?? [];
+        unset($validated['weight_capacity']);
+
         $machine->update($validated);
+        if (!empty($weightCapacities)) {
+            $weightCapacityIds = \App\Models\WeightCapacity::whereIn('name', $weightCapacities)->pluck('id')->toArray();
+            $machine->weight_capacities()->sync($weightCapacityIds);
+        } else {
+            $machine->weight_capacities()->sync([]);
+        }
 
         if ($this->isAjaxRequest($request)) {
             return response()->json([
