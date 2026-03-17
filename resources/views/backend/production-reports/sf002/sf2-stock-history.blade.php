@@ -146,6 +146,7 @@
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assigned To</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected Qty</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Reason</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF2 Remark</th>
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Remark</th>
@@ -195,6 +196,17 @@
                                     <span class="font-semibold">{{ number_format((float) ($transfer->rejected_quantity ?? 0), 0) }}</span>
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-slate-700">
+                                @php
+                                    $rejectReasonName = trim((string) ($transfer->reject_reason_name ?? ''));
+                                    $rejectedQty = (float) ($transfer->rejected_quantity ?? 0);
+                                @endphp
+                                @if($rejectedQty > 0 && $rejectReasonName !== '')
+                                    <span class="block truncate max-w-[220px]" title="{{ $rejectReasonName }}">{{ $rejectReasonName }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 @if($transfer->is_accept == 1)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
@@ -233,7 +245,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-10 text-center">
+                            <td colspan="11" class="px-4 py-10 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                         <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
@@ -346,6 +358,7 @@
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assigned To</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected Qty</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Reason</th>
                             <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF2 Remark</th>
                             <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Remark</th>
@@ -395,6 +408,17 @@
                                     <span class="font-semibold">{{ number_format((float) ($transfer->rejected_quantity ?? 0), 0) }}</span>
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-slate-700">
+                                @php
+                                    $rejectReasonName = trim((string) ($transfer->reject_reason_name ?? ''));
+                                    $rejectedQty = (float) ($transfer->rejected_quantity ?? 0);
+                                @endphp
+                                @if($rejectedQty > 0 && $rejectReasonName !== '')
+                                    <span class="block truncate max-w-[220px]" title="{{ $rejectReasonName }}">{{ $rejectReasonName }}</span>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-center">
                                 @if($transfer->is_accept == 1)
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
@@ -433,7 +457,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="px-4 py-10 text-center">
+                            <td colspan="11" class="px-4 py-10 text-center">
                                 <div class="flex flex-col items-center gap-3">
                                     <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                         <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>

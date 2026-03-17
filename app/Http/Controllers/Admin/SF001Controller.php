@@ -768,6 +768,8 @@ class SF001Controller extends Controller
                     WHEN transfers.is_accept = 1 THEN COALESCE(transfers.reject_quantity, 0)
                     ELSE 0
                 END as rejected_quantity"),
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
                 'transfers.date',
                 'transfers.time',
                 'transfers.is_accept',
@@ -781,6 +783,7 @@ class SF001Controller extends Controller
             )
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
             ->where('transfers.item_id', $itemId)
             ->where('transfers.is_deleted', false)
             ->orderByDesc('transfers.date')

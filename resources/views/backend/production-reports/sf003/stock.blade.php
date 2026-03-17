@@ -53,6 +53,7 @@
                         <th class="w-[110px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Process</th>
                         <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Received Quantity</th>
                         <th class="w-[130px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected Quantity</th>
+                        <th class="w-[170px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Reason</th>
                         <th class="w-[160px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="w-[110px] px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
                         <th class="w-[220px] px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">CED &amp; Zinc (SF2) Remark</th>
@@ -174,6 +175,17 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-slate-700">
+                            @php
+                                $rejectReasonName = trim((string) ($transfer->reject_reason_name ?? ''));
+                                $rejectedQty = (float) ($transfer->reject_quantity ?? 0);
+                            @endphp
+                            @if($rejectedQty > 0 && $rejectReasonName !== '')
+                                <span class="block truncate max-w-[170px]" title="{{ $rejectReasonName }}">{{ $rejectReasonName }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-slate-700">
                             <span class="block truncate" title="{{ $transfer->transfer_by_name ?? 'N/A' }}">{{ $transfer->transfer_by_name ?? 'N/A' }}</span>
                         </td>
                         <td class="px-4 py-3 text-center">
@@ -214,7 +226,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="13" class="px-4 py-10 text-center">
+                        <td colspan="14" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
@@ -312,9 +324,24 @@
             </label>
 
             <div id="reject_quantity_group" class="hidden">
-                <label for="reject_quantity_field" class="block text-sm font-semibold text-slate-700 mb-2">Reject Quantity</label>
-                <input type="number" id="reject_quantity_field" name="reject_quantity" min="0" step="0.01" value="0" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter reject quantity">
-                <p class="mt-1 text-xs text-slate-500">If no value entered, it will be saved as 0.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="reject_quantity_field" class="block text-sm font-semibold text-slate-700 mb-2">Reject Quantity</label>
+                        <input type="number" id="reject_quantity_field" name="reject_quantity" min="0" step="0.01" value="0" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter reject quantity">
+                        <p class="mt-1 text-xs text-slate-500">If no value entered, it will be saved as 0.</p>
+                    </div>
+
+                    <div>
+                        <label for="reject_reason_id_field" class="block text-sm font-semibold text-slate-700 mb-2">Reject Reason</label>
+                        <select id="reject_reason_id_field" name="reject_reason_id" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Select reject reason</option>
+                            @foreach(($rejectReasons ?? collect()) as $reason)
+                                <option value="{{ $reason->id }}">{{ $reason->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-slate-500">Required if you enter a reject quantity.</p>
+                    </div>
+                </div>
             </div>
 
             <div>
@@ -363,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusField = document.getElementById('status_field');
     const acceptAllField = document.getElementById('accept_all_quantity_field');
     const rejectQuantityField = document.getElementById('reject_quantity_field');
+    const rejectReasonField = document.getElementById('reject_reason_id_field');
     const rejectQuantityGroup = document.getElementById('reject_quantity_group');
     const acceptAllToggle = document.getElementById('accept_all_quantity_toggle');
     const acceptAllTrack = document.getElementById('accept_all_quantity_track');
@@ -384,6 +412,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isChecked) {
             rejectQuantityGroup.classList.add('hidden');
             rejectQuantityField.value = '0';
+            if (rejectReasonField) {
+                rejectReasonField.value = '';
+            }
             acceptAllTrack.classList.remove('bg-slate-300');
             acceptAllTrack.classList.add('bg-green-500');
             acceptAllThumb.classList.remove('left-1');
@@ -470,6 +501,9 @@ document.addEventListener('DOMContentLoaded', function() {
         acceptAllToggle.checked = true;
         rejectQuantityField.max = activeQuantity.toString();
         rejectQuantityField.value = '0';
+        if (rejectReasonField) {
+            rejectReasonField.value = '';
+        }
         updateToggleUI();
 
         statusModal.classList.remove('hidden');
@@ -532,6 +566,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (Number.isNaN(rejectQuantity) || rejectQuantity < 0) {
                 event.preventDefault();
                 alert('Please enter a valid reject quantity.');
+                return;
+            }
+
+            if (rejectQuantity > 0 && rejectReasonField && (rejectReasonField.value || '').trim() === '') {
+                event.preventDefault();
+                alert('Please select a reject reason.');
                 return;
             }
 

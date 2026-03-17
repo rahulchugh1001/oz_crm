@@ -53,6 +53,7 @@ class SF003Controller extends Controller
                 'transfers.item_id',
                 'transfers.quantity',
                 'transfers.reject_quantity',
+                'transfers.reject_reason_id',
                 'transfers.created_at',
                 'transfers.updated_at',
                 'transfers.date',
@@ -65,6 +66,7 @@ class SF003Controller extends Controller
                 'transfers.transfer_by',
                 'transfers.remark',
                 'transfers.sf003_remark',
+                'reject_reasons.name as reject_reason_name',
                 'items.code as item_code',
                 'items.name as item_name',
                 'items.size as item_size',
@@ -74,6 +76,7 @@ class SF003Controller extends Controller
             ->join('items', 'transfers.item_id', '=', 'items.id')
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assigned_to_user', 'transfers.assign_to', '=', 'assigned_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
             ->where('transfers.is_deleted', false)
             ->orderByDesc('transfers.date')
             ->orderByDesc('transfers.time')
@@ -103,7 +106,14 @@ class SF003Controller extends Controller
     {
         $assignedTransfers = $this->assignedTransfersQuery()->get();
 
-        return view('backend.production-reports.sf003.stock', compact('assignedTransfers'));
+        $rejectReasons = DB::table('reject_reasons')
+            ->select('id', 'name')
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get();
+
+        return view('backend.production-reports.sf003.stock', compact('assignedTransfers', 'rejectReasons'));
     }
 
     /**
@@ -522,6 +532,7 @@ class SF003Controller extends Controller
             'sf003_remark' => 'nullable|string|max:500',
             'accept_all_quantity' => 'nullable|boolean',
             'reject_quantity' => 'nullable|numeric|min:0',
+            'reject_reason_id' => 'nullable|integer|exists:reject_reasons,id',
         ]);
 
         $query = DB::table('sf002_stock_transfers')
@@ -556,6 +567,24 @@ class SF003Controller extends Controller
         $acceptAllQuantity = (bool) ($validated['accept_all_quantity'] ?? false);
         $rejectQuantity = $acceptAllQuantity ? 0.0 : (float) ($validated['reject_quantity'] ?? 0);
 
+        $rejectReasonId = null;
+        if (!$acceptAllQuantity && $rejectQuantity > 0) {
+            $rejectReasonId = (int) ($validated['reject_reason_id'] ?? 0);
+            if ($rejectReasonId <= 0) {
+                return back()->with('error', 'Please select a reject reason.');
+            }
+
+            $rejectReasonExists = DB::table('reject_reasons')
+                ->where('id', $rejectReasonId)
+                ->where('is_deleted', 0)
+                ->where('status', 1)
+                ->exists();
+
+            if (!$rejectReasonExists) {
+                return back()->with('error', 'Selected reject reason is not available.');
+            }
+        }
+
         if ($rejectQuantity > $currentQuantity) {
             return back()->with('error', 'Reject quantity cannot be greater than transfer quantity.');
         }
@@ -571,6 +600,7 @@ class SF003Controller extends Controller
                 'assign_to' => Auth::user()?->role === 'Admin' ? $transfer->assign_to : Auth::id(),
                 'sf003_remark' => $validated['sf003_remark'] ?? null,
                 'reject_quantity' => $rejectQuantity,
+                'reject_reason_id' => $rejectReasonId,
                 'updated_at' => now(),
             ]);
 

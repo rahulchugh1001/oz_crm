@@ -80,7 +80,14 @@ class SF002Controller extends Controller
     {
         $assignedTransfers = $this->assignedTransfersQuery()->get();
 
-        return view('backend.production-reports.sf002.stock', compact('assignedTransfers'));
+        $rejectReasons = DB::table('reject_reasons')
+            ->select('id', 'name')
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get();
+
+        return view('backend.production-reports.sf002.stock', compact('assignedTransfers', 'rejectReasons'));
     }
 
     /**
@@ -735,6 +742,8 @@ class SF002Controller extends Controller
                 'transfers.id',
                 'transfers.quantity',
                 'transfers.reject_quantity',
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
                 'transfers.sf3_process',
                 DB::raw("CASE
                     WHEN transfers.is_accept = 2 THEN 0
@@ -757,6 +766,7 @@ class SF002Controller extends Controller
             )
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
             ->where('transfers.item_id', $itemId)
             ->where('transfers.type', 'ced')
             ->where('transfers.is_deleted', false)
@@ -769,6 +779,8 @@ class SF002Controller extends Controller
                 'transfers.id',
                 'transfers.quantity',
                 'transfers.reject_quantity',
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
                 'transfers.sf3_process',
                 DB::raw("CASE
                     WHEN transfers.is_accept = 2 THEN 0
@@ -791,6 +803,7 @@ class SF002Controller extends Controller
             )
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
             ->where('transfers.item_id', $itemId)
             ->where('transfers.type', 'zinc')
             ->where('transfers.is_deleted', false)
@@ -813,6 +826,7 @@ class SF002Controller extends Controller
             'sf002_remark' => 'nullable|string|max:500',
             'accept_all_quantity' => 'nullable|boolean',
             'reject_quantity' => 'nullable|numeric|min:0',
+            'reject_reason_id' => 'nullable|integer|exists:reject_reasons,id',
         ]);
 
         $query = DB::table('sf001_stock_transfers')
@@ -847,6 +861,24 @@ class SF002Controller extends Controller
         $acceptAllQuantity = (bool) ($validated['accept_all_quantity'] ?? false);
         $rejectQuantity = $acceptAllQuantity ? 0.0 : (float) ($validated['reject_quantity'] ?? 0);
 
+        $rejectReasonId = null;
+        if (!$acceptAllQuantity && $rejectQuantity > 0) {
+            $rejectReasonId = (int) ($validated['reject_reason_id'] ?? 0);
+            if ($rejectReasonId <= 0) {
+                return back()->with('error', 'Please select a reject reason.');
+            }
+
+            $rejectReasonExists = DB::table('reject_reasons')
+                ->where('id', $rejectReasonId)
+                ->where('is_deleted', 0)
+                ->where('status', 1)
+                ->exists();
+
+            if (!$rejectReasonExists) {
+                return back()->with('error', 'Selected reject reason is not available.');
+            }
+        }
+
         if ($rejectQuantity > $currentQuantity) {
             return back()->with('error', 'Reject quantity cannot be greater than transfer quantity.');
         }
@@ -860,6 +892,7 @@ class SF002Controller extends Controller
             'assign_to' => Auth::user()?->role === 'Admin' ? $transfer->assign_to : Auth::id(),
             'sf002_remark' => $validated['sf002_remark'] ?? null,
             'reject_quantity' => $rejectQuantity,
+            'reject_reason_id' => $rejectReasonId,
             'updated_at' => now(),
         ];
 
