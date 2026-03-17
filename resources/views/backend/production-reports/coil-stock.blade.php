@@ -153,6 +153,7 @@
                                     data-net-weight="{{ number_format((float) $coil->net_weight_kg, 3, '.', '') }}"
                                     data-process="{{ $coil->process }}"
                                     data-status="{{ (int) $coil->status }}"
+                                    data-machine-ids='@json(($coil->machines ?? collect())->pluck("id")->values())'
                                 >
                                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                 </button>
@@ -301,8 +302,8 @@
     </div>
 </div>
 
-<div id="addCoilModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4">
-    <div class="mx-auto mt-10 w-full max-w-3xl rounded-2xl bg-white shadow-xl border border-slate-200">
+<div id="addCoilModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4 overflow-y-auto">
+    <div class="mx-auto mt-10 mb-10 w-full max-w-5xl rounded-2xl bg-white shadow-xl border border-slate-200">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h3 class="text-base font-bold text-slate-900">Add New Coil Stock</h3>
             <button type="button" onclick="closeAddCoilModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
@@ -313,6 +314,36 @@
         <form id="addCoilForm" action="{{ route('admin.production-reports.sf001.coil-stock.store') }}" method="POST" class="px-6 py-5 space-y-4">
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label for="machine_ids" class="block text-sm font-semibold text-slate-700 mb-2">Machines <span class="text-rose-500">*</span></label>
+                    <p class="text-sm text-slate-500 mb-3">Search and select multiple machines.</p>
+                    <div id="machine_ids_group" class="border border-slate-300 rounded-lg p-3 @error('machine_ids') border-rose-500 @enderror">
+                        <div id="machine_selected" class="flex flex-wrap gap-2"></div>
+                        <div class="mt-3 relative">
+                            <input
+                                type="text"
+                                id="machine_search"
+                                autocomplete="off"
+                                placeholder="Type to search machines..."
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            >
+                            <div id="machine_dropdown" class="hidden absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-subtle"></div>
+                        </div>
+                        <div id="machine_hidden_inputs"></div>
+                    </div>
+                    @error('machine_ids')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    @error('machine_ids.*')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
                 <div>
                     <label for="manufacture_id" class="block text-sm font-semibold text-slate-700 mb-2">Supplier Name <span class="text-rose-500">*</span></label>
                     <select id="manufacture_id" name="manufacture_id" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('manufacture_id') border-rose-500 @enderror">
@@ -392,8 +423,8 @@
     </div>
 </div>
 
-<div id="editCoilModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4">
-    <div class="mx-auto mt-10 w-full max-w-3xl rounded-2xl bg-white shadow-xl border border-slate-200">
+<div id="editCoilModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4 overflow-y-auto">
+    <div class="mx-auto mt-10 mb-10 w-full max-w-5xl rounded-2xl bg-white shadow-xl border border-slate-200">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <h3 class="text-base font-bold text-slate-900">Edit Coil Stock</h3>
             <button type="button" onclick="closeEditCoilModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
@@ -408,6 +439,37 @@
             <input type="hidden" id="edit_id" name="edit_id" value="{{ old('edit_id') }}">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label for="edit_machine_ids" class="block text-sm font-semibold text-slate-700 mb-2">Machines <span class="text-rose-500">*</span></label>
+                    <p class="text-sm text-slate-500 mb-3">Search and select multiple machines.</p>
+                    <div id="edit_machine_ids_group" class="border border-slate-300 rounded-lg p-3 @error('machine_ids') border-rose-500 @enderror">
+                        <div id="edit_machine_selected" class="flex flex-wrap gap-2"></div>
+                        <div class="mt-3 relative">
+                            <input
+                                type="text"
+                                id="edit_machine_search"
+                                autocomplete="off"
+                                placeholder="Click to select machines..."
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            >
+                            <div id="edit_machine_dropdown" class="hidden absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-subtle"></div>
+                        </div>
+                        <div id="edit_machine_hidden_inputs"></div>
+                    </div>
+                    @error('machine_ids')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    @error('machine_ids.*')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
                 <div>
                     <label for="edit_manufacture_id" class="block text-sm font-semibold text-slate-700 mb-2">Supplier Name <span class="text-rose-500">*</span></label>
                     <select id="edit_manufacture_id" name="manufacture_id" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -590,6 +652,258 @@
 @endsection
 
 @push('scripts')
+<script>
+    (() => {
+        const rawMachines = @json($machinesForJs);
+        const machines = (rawMachines || []).map((m) => {
+            const name = String(m?.name ?? '');
+            const code = String(m?.machine_code ?? '');
+            const label = code ? `${name} (${code})` : name;
+            return {
+                id: Number(m?.id),
+                name,
+                code,
+                label,
+            };
+        });
+
+        const initialSelectedIds = @json(collect(old('machine_ids', []))->map(fn ($id) => (string) $id)->all());
+
+        const selectedWrap = document.getElementById('machine_selected');
+        const searchInput = document.getElementById('machine_search');
+        const dropdown = document.getElementById('machine_dropdown');
+        const hiddenInputs = document.getElementById('machine_hidden_inputs');
+
+        if (!selectedWrap || !searchInput || !dropdown || !hiddenInputs) return;
+
+        const selected = new Map();
+
+        const normalize = (value) => String(value ?? '').toLowerCase().trim();
+
+        const createHiddenInput = (id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'machine_ids[]';
+            input.value = String(id);
+            input.dataset.machineId = String(id);
+            return input;
+        };
+
+        const renderChip = (machine) => {
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700';
+            chip.dataset.machineId = String(machine.id);
+
+            const label = document.createElement('span');
+            label.textContent = machine.label;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ml-2 text-rose-500 hover:text-rose-700 focus:outline-none';
+            removeBtn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+            removeBtn.onclick = () => {
+                selected.delete(machine.id);
+                updateUI();
+            };
+
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
+            return chip;
+        };
+
+        function updateUI() {
+            // Chips
+            selectedWrap.innerHTML = '';
+            selected.forEach((machine) => {
+                selectedWrap.appendChild(renderChip(machine));
+            });
+            // Hidden inputs
+            hiddenInputs.innerHTML = '';
+            selected.forEach((machine) => {
+                hiddenInputs.appendChild(createHiddenInput(machine.id));
+            });
+            // Dropdown
+            const search = normalize(searchInput.value);
+            const filtered = machines.filter((m) => !selected.has(m.id) && (search === '' || normalize(m.label).includes(search)));
+            dropdown.innerHTML = '';
+            const shouldShowDropdown = filtered.length > 0 && (
+                search.length > 0 || document.activeElement === searchInput
+            );
+
+            if (shouldShowDropdown) {
+                const visible = filtered.slice(0, 60);
+                visible.forEach((machine) => {
+                    const option = document.createElement('div');
+                    option.className = 'px-4 py-2 cursor-pointer hover:bg-blue-50';
+                    option.textContent = machine.label;
+                    option.onclick = () => {
+                        selected.set(machine.id, machine);
+                        searchInput.value = '';
+                        updateUI();
+                        dropdown.classList.add('hidden');
+                    };
+                    dropdown.appendChild(option);
+                });
+
+                if (filtered.length > visible.length) {
+                    const more = document.createElement('div');
+                    more.className = 'px-4 py-2 text-[11px] text-slate-500 bg-slate-50 border-t border-slate-100';
+                    more.textContent = `Showing ${visible.length} of ${filtered.length}. Type to filter...`;
+                    dropdown.appendChild(more);
+                }
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        searchInput.addEventListener('input', updateUI);
+        searchInput.addEventListener('focus', updateUI);
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== searchInput) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Initialize with old values
+        (initialSelectedIds || []).forEach((id) => {
+            const machine = machines.find((m) => String(m.id) === String(id));
+            if (machine) selected.set(machine.id, machine);
+        });
+        updateUI();
+    })();
+</script>
+<script>
+    (() => {
+        const rawMachines = @json($machinesForJs);
+        const machines = (rawMachines || []).map((m) => {
+            const name = String(m?.name ?? '');
+            const code = String(m?.machine_code ?? '');
+            const label = code ? `${name} (${code})` : name;
+            return {
+                id: Number(m?.id),
+                name,
+                code,
+                label,
+            };
+        });
+
+        const selectedWrap = document.getElementById('edit_machine_selected');
+        const searchInput = document.getElementById('edit_machine_search');
+        const dropdown = document.getElementById('edit_machine_dropdown');
+        const hiddenInputs = document.getElementById('edit_machine_hidden_inputs');
+
+        if (!selectedWrap || !searchInput || !dropdown || !hiddenInputs) return;
+
+        const selected = new Map();
+        const normalize = (value) => String(value ?? '').toLowerCase().trim();
+
+        const createHiddenInput = (id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'machine_ids[]';
+            input.value = String(id);
+            input.dataset.machineId = String(id);
+            return input;
+        };
+
+        const renderChip = (machine) => {
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700';
+            chip.dataset.machineId = String(machine.id);
+
+            const label = document.createElement('span');
+            label.textContent = machine.label;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'ml-2 text-rose-500 hover:text-rose-700 focus:outline-none';
+            removeBtn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+            removeBtn.onclick = () => {
+                selected.delete(machine.id);
+                updateUI();
+            };
+
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
+            return chip;
+        };
+
+        function setSelectedIds(ids) {
+            selected.clear();
+            (ids || []).forEach((id) => {
+                const machine = machines.find((m) => String(m.id) === String(id));
+                if (machine) selected.set(machine.id, machine);
+            });
+            updateUI();
+        }
+
+        function updateUI() {
+            selectedWrap.innerHTML = '';
+            selected.forEach((machine) => {
+                selectedWrap.appendChild(renderChip(machine));
+            });
+
+            hiddenInputs.innerHTML = '';
+            selected.forEach((machine) => {
+                hiddenInputs.appendChild(createHiddenInput(machine.id));
+            });
+
+            const search = normalize(searchInput.value);
+            const filtered = machines.filter((m) => !selected.has(m.id) && (search === '' || normalize(m.label).includes(search)));
+            dropdown.innerHTML = '';
+            const shouldShowDropdown = filtered.length > 0 && (
+                search.length > 0 || document.activeElement === searchInput
+            );
+
+            if (shouldShowDropdown) {
+                const visible = filtered.slice(0, 60);
+                visible.forEach((machine) => {
+                    const option = document.createElement('div');
+                    option.className = 'px-4 py-2 cursor-pointer hover:bg-blue-50';
+                    option.textContent = machine.label;
+                    option.onclick = () => {
+                        selected.set(machine.id, machine);
+                        searchInput.value = '';
+                        updateUI();
+                        dropdown.classList.add('hidden');
+                    };
+                    dropdown.appendChild(option);
+                });
+
+                if (filtered.length > visible.length) {
+                    const more = document.createElement('div');
+                    more.className = 'px-4 py-2 text-[11px] text-slate-500 bg-slate-50 border-t border-slate-100';
+                    more.textContent = `Showing ${visible.length} of ${filtered.length}. Type to filter...`;
+                    dropdown.appendChild(more);
+                }
+
+                dropdown.classList.remove('hidden');
+            } else {
+                dropdown.classList.add('hidden');
+            }
+
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        searchInput.addEventListener('input', updateUI);
+        searchInput.addEventListener('focus', updateUI);
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== searchInput) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // expose for openEditCoilModal()
+        window.setEditMachineIds = setSelectedIds;
+
+        // initialize from old() if any
+        const editInitialSelectedIds = @json(collect(old('machine_ids', []))->map(fn ($id) => (string) $id)->all());
+        setSelectedIds(editInitialSelectedIds);
+    })();
+</script>
 <style>
     .in-use-spin {
         animation: coilSpin 1.4s linear infinite;
@@ -979,6 +1293,17 @@
         document.getElementById('edit_net_weight_kg').value = button.getAttribute('data-net-weight') || '';
         document.getElementById('edit_process').value = button.getAttribute('data-process') || 'available';
         document.getElementById('edit_status').value = button.getAttribute('data-status') || '1';
+
+        let editMachineIds = [];
+        try {
+            editMachineIds = JSON.parse(button.getAttribute('data-machine-ids') || '[]');
+        } catch (e) {
+            editMachineIds = [];
+        }
+
+        if (typeof window.setEditMachineIds === 'function') {
+            window.setEditMachineIds(editMachineIds);
+        }
 
         document.getElementById('editCoilModal').classList.remove('hidden');
         if (typeof lucide !== 'undefined') {

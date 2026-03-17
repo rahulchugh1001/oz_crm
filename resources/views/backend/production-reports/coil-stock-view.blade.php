@@ -88,6 +88,39 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="px-5 py-4 border-b border-slate-200">
+            <h3 class="text-base font-bold text-slate-900">Assigned Machine(s)</h3>
+            <p class="text-xs text-slate-500 mt-1">Machines linked to this coil (with assigned time).</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-slate-100 text-slate-700">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Machine</th>
+                        <th class="px-4 py-3 text-left">Code</th>
+                        <th class="px-4 py-3 text-left">Assigned At</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($assignedMachines as $machine)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 text-slate-900 font-medium">{{ $machine->name }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $machine->machine_code ?: '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">
+                                {{ $machine->pivot?->created_at ? \Carbon\Carbon::parse($machine->pivot->created_at)->format('d-m-Y h:i A') : '-' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="px-4 py-6 text-center text-slate-500">No machines assigned to this coil.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
+        <div class="px-5 py-4 border-b border-slate-200">
             <h3 class="text-base font-bold text-slate-900">Production Reporting (Using This Coil)</h3>
         </div>
         <div class="overflow-x-auto">

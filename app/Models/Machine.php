@@ -47,6 +47,14 @@ class Machine extends Model
     }
 
     /**
+     * The coils that belong to the machine.
+     */
+    public function coils()
+    {
+        return $this->belongsToMany(CoilStock::class, 'coil_machine', 'machine_id', 'coil_stock_id')->withTimestamps();
+    }
+
+    /**
      * Get the value of the model's route key (encrypted).
      */
     public function getRouteKey(): mixed

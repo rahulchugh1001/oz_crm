@@ -113,7 +113,10 @@ class SF001Controller extends Controller
     public function viewCoilStock(int $coilId): View
     {
         $coil = CoilStock::query()
-            ->with(['manufacture:id,name'])
+            ->with([
+                'manufacture:id,name',
+                'machines:id,name,machine_code',
+            ])
             ->where('id', $coilId)
             ->where('is_deleted', 0)
             ->firstOrFail();
@@ -123,6 +126,10 @@ class SF001Controller extends Controller
             ->where('coil_id', $coil->id)
             ->orderBy('name')
             ->get(['id', 'name', 'machine_code', 'coil_id']);
+
+        $assignedMachines = $coil->machines()
+            ->orderBy('name')
+            ->get(['machines.id', 'machines.name', 'machines.machine_code']);
 
         $trackHistory = CoilMachineTrack::query()
             ->with([
@@ -160,6 +167,7 @@ class SF001Controller extends Controller
         return view('backend.production-reports.coil-stock-view', compact(
             'coil',
             'loadedMachines',
+            'assignedMachines',
             'trackHistory',
             'logHistory',
             'productionReports'
@@ -180,6 +188,8 @@ class SF001Controller extends Controller
             'net_weight_kg' => 'required|numeric|min:0',
             'process' => 'required|in:available,in_use,completed,out_of_stock',
             'status' => 'required|in:0,1',
+            'machine_ids' => 'required|array|min:1',
+            'machine_ids.*' => 'required|integer|exists:machines,id',
         ]);
 
         $manufactureId = null;
@@ -216,7 +226,7 @@ class SF001Controller extends Controller
             $manufactureId = (int) $manufacture->id;
         }
 
-        CoilStock::query()->create([
+        $coil = CoilStock::query()->create([
             'manufacture_id' => $manufactureId,
             'coil_no' => trim((string) $validated['coil_no']),
             'coil_size' => trim((string) $validated['coil_size']),
@@ -227,6 +237,9 @@ class SF001Controller extends Controller
             'status' => (int) $validated['status'],
             'is_deleted' => 0,
         ]);
+
+        // Sync machines
+        $coil->machines()->sync($validated['machine_ids']);
 
         return back()->with('success', 'New coil stock added successfully.');
     }
@@ -254,6 +267,8 @@ class SF001Controller extends Controller
             'net_weight_kg' => 'required|numeric|min:0',
             'process' => 'required|in:available,in_use,completed,out_of_stock',
             'status' => 'required|in:0,1',
+            'machine_ids' => 'required|array|min:1',
+            'machine_ids.*' => 'required|integer|exists:machines,id',
         ]);
 
         $coil->update([
@@ -265,6 +280,9 @@ class SF001Controller extends Controller
             'process' => (float) $validated['net_weight_kg'] <= 0 ? 'out_of_stock' : (string) $validated['process'],
             'status' => (int) $validated['status'],
         ]);
+
+        // Sync machines
+        $coil->machines()->sync($validated['machine_ids']);
 
         return back()->with('success', 'Coil stock updated successfully.');
     }

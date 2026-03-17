@@ -35,4 +35,12 @@ class CoilStock extends Model
     {
         return $this->belongsTo(CoilManufacture::class, 'manufacture_id');
     }
+
+    /**
+     * The machines that belong to the coil.
+     */
+    public function machines()
+    {
+        return $this->belongsToMany(Machine::class, 'coil_machine', 'coil_stock_id', 'machine_id')->withTimestamps();
+    }
 }
