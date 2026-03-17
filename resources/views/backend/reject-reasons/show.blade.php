@@ -55,6 +55,36 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900">Usage Graph (Last 30 Days)</h3>
+                <p class="text-xs text-slate-500">Daily reject counts using this reason</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+                <span class="inline-flex items-center gap-1.5 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-emerald-600"></span>
+                    SF001
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-amber-600"></span>
+                    SF002
+                </span>
+            </div>
+        </div>
+        <div class="p-4">
+            <div id="rejectReasonUsageChart"
+                 class="w-full"
+                 data-labels='@json($chartLabels ?? [])'
+                 data-sf1='@json($chartSf1 ?? [])'
+                 data-sf2='@json($chartSf2 ?? [])'>
+                <div class="h-44 w-full rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+                    <span class="text-xs text-slate-500">Loading chart…</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
             <h3 class="text-sm font-semibold text-slate-900">SF001 Stock Transfers</h3>
             <span class="text-xs text-slate-500">Records: <span class="font-semibold text-slate-900">{{ $sf1Usages->total() }}</span></span>
         </div>
@@ -192,5 +222,101 @@
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+
+    (function () {
+        const holder = document.getElementById('rejectReasonUsageChart');
+        if (!holder) return;
+
+        let labels = [];
+        let sf1 = [];
+        let sf2 = [];
+
+        try {
+            labels = JSON.parse(holder.getAttribute('data-labels') || '[]');
+            sf1 = JSON.parse(holder.getAttribute('data-sf1') || '[]');
+            sf2 = JSON.parse(holder.getAttribute('data-sf2') || '[]');
+        } catch (e) {
+            labels = [];
+            sf1 = [];
+            sf2 = [];
+        }
+
+        const n = Math.min(labels.length, sf1.length, sf2.length);
+        if (!n) {
+            holder.innerHTML = '<div class="h-44 w-full rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center"><span class="text-xs text-slate-500">No chart data.</span></div>';
+            return;
+        }
+
+        const totals = Array.from({ length: n }, (_, i) => (Number(sf1[i] || 0) + Number(sf2[i] || 0)));
+        const maxTotal = Math.max(1, ...totals);
+
+        const width = 920;
+        const height = 176;
+        const pad = { l: 32, r: 12, t: 10, b: 28 };
+        const plotW = width - pad.l - pad.r;
+        const plotH = height - pad.t - pad.b;
+        const gap = 2;
+        const barW = Math.max(3, Math.floor((plotW - gap * (n - 1)) / n));
+
+        const xAt = (i) => pad.l + i * (barW + gap);
+        const yAt = (v) => pad.t + (1 - (v / maxTotal)) * plotH;
+
+        let bars = '';
+        let xLabels = '';
+        const labelEvery = n > 12 ? 5 : 1;
+
+        for (let i = 0; i < n; i++) {
+            const v1 = Number(sf1[i] || 0);
+            const v2 = Number(sf2[i] || 0);
+
+            const total = v1 + v2;
+            const hTotal = (total / maxTotal) * plotH;
+            const h2 = (v2 / maxTotal) * plotH;
+            const h1 = (v1 / maxTotal) * plotH;
+
+            const x = xAt(i);
+            const yBase = pad.t + plotH;
+            const y2 = yBase - h2;
+            const y1 = y2 - h1;
+
+            const title = `${labels[i]}: SF001 ${v1}, SF002 ${v2}`;
+
+            if (h2 > 0) {
+                bars += `<g class="text-amber-600"><title>${title}</title><rect x="${x}" y="${y2}" width="${barW}" height="${h2}" rx="2" fill="currentColor" /></g>`;
+            }
+            if (h1 > 0) {
+                bars += `<g class="text-emerald-600"><title>${title}</title><rect x="${x}" y="${y1}" width="${barW}" height="${h1}" rx="2" fill="currentColor" /></g>`;
+            }
+
+            if (i % labelEvery === 0 || i === n - 1) {
+                const lx = x + barW / 2;
+                xLabels += `<text x="${lx}" y="${height - 10}" text-anchor="middle" class="text-slate-500" fill="currentColor" font-size="10">${labels[i]}</text>`;
+            }
+        }
+
+        const yAxis = `<g class="text-slate-300"><line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${pad.t + plotH}" stroke="currentColor" stroke-width="1" /></g>`;
+        const xAxis = `<g class="text-slate-300"><line x1="${pad.l}" y1="${pad.t + plotH}" x2="${pad.l + plotW}" y2="${pad.t + plotH}" stroke="currentColor" stroke-width="1" /></g>`;
+
+        const ticks = 4;
+        let yTicks = '';
+        for (let t = 0; t <= ticks; t++) {
+            const v = Math.round((maxTotal * t) / ticks);
+            const y = yAt(v);
+            yTicks += `<g class="text-slate-200"><line x1="${pad.l}" y1="${y}" x2="${pad.l + plotW}" y2="${y}" stroke="currentColor" stroke-width="1" /></g>`;
+            yTicks += `<text x="${pad.l - 8}" y="${y + 3}" text-anchor="end" class="text-slate-500" fill="currentColor" font-size="10">${v}</text>`;
+        }
+
+        holder.innerHTML = `
+            <div class="h-44 w-full rounded-xl border border-slate-200 bg-white overflow-hidden">
+                <svg viewBox="0 0 ${width} ${height}" class="w-full h-full">
+                    ${yTicks}
+                    ${yAxis}
+                    ${xAxis}
+                    ${bars}
+                    ${xLabels}
+                </svg>
+            </div>
+        `;
+    })();
 </script>
 @endpush

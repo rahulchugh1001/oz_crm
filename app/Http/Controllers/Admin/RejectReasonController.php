@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RejectReason;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,40 @@ class RejectReasonController extends Controller
 
     public function show(RejectReason $rejectReason): View
     {
+        $to = Carbon::today();
+        $from = (clone $to)->subDays(29);
+
+        $sf1Daily = DB::table('sf001_stock_transfers as transfers')
+            ->select('transfers.date', DB::raw('count(*) as c'))
+            ->where('transfers.is_deleted', 0)
+            ->where('transfers.reject_reason_id', $rejectReason->id)
+            ->whereRaw('COALESCE(transfers.reject_quantity, 0) > 0')
+            ->whereBetween('transfers.date', [$from->toDateString(), $to->toDateString()])
+            ->groupBy('transfers.date')
+            ->pluck('c', 'transfers.date');
+
+        $sf2Daily = DB::table('sf002_stock_transfers as transfers')
+            ->select('transfers.date', DB::raw('count(*) as c'))
+            ->where('transfers.is_deleted', 0)
+            ->where('transfers.reject_reason_id', $rejectReason->id)
+            ->whereRaw('COALESCE(transfers.reject_quantity, 0) > 0')
+            ->whereBetween('transfers.date', [$from->toDateString(), $to->toDateString()])
+            ->groupBy('transfers.date')
+            ->pluck('c', 'transfers.date');
+
+        $chartLabels = [];
+        $chartSf1 = [];
+        $chartSf2 = [];
+
+        $cursor = $from->copy();
+        while ($cursor->lte($to)) {
+            $key = $cursor->toDateString();
+            $chartLabels[] = $cursor->format('M d');
+            $chartSf1[] = (int) ($sf1Daily[$key] ?? 0);
+            $chartSf2[] = (int) ($sf2Daily[$key] ?? 0);
+            $cursor->addDay();
+        }
+
         $sf1UsageQuery = DB::table('sf001_stock_transfers as transfers')
             ->select(
                 'transfers.id',
@@ -129,7 +164,10 @@ class RejectReasonController extends Controller
             'sf2Usages',
             'sf1UsageCount',
             'sf2UsageCount',
-            'totalUsageCount'
+            'totalUsageCount',
+            'chartLabels',
+            'chartSf1',
+            'chartSf2'
         ));
     }
 
