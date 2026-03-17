@@ -131,7 +131,7 @@
                     </div>
 
                     <!-- SF2 Name -->
-                    <div>
+                    <div id="sf2-fields-name">
                         <label for="name_sf2" class="block text-sm font-semibold text-slate-700 mb-2">
                             Item Name SF2
                         </label>
@@ -152,7 +152,7 @@
                     </div>
 
                     <!-- SF2 Code -->
-                    <div>
+                    <div id="sf2-fields-code">
                         <label for="code_sf2" class="block text-sm font-semibold text-slate-700 mb-2">
                             Item Code SF2
                         </label>
@@ -171,6 +171,30 @@
                             </p>
                         @enderror
                     </div>
+@push('scripts')
+<script>
+    function toggleSF2Fields() {
+        const category = document.getElementById('category');
+        const sf2Name = document.getElementById('sf2-fields-name');
+        const sf2Code = document.getElementById('sf2-fields-code');
+        if (!category || !sf2Name || !sf2Code) return;
+        if (category.value === 'SF1-SF2') {
+            sf2Name.style.display = '';
+            sf2Code.style.display = '';
+        } else {
+            sf2Name.style.display = 'none';
+            sf2Code.style.display = 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        const category = document.getElementById('category');
+        if (category) {
+            category.addEventListener('change', toggleSF2Fields);
+            toggleSF2Fields();
+        }
+    });
+</script>
+@endpush
 
                     <!-- Size -->
                     <div>
