@@ -38,7 +38,56 @@
                         ->all();
                 @endphp
 
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- Category -->
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Category <span class="text-rose-500">*</span>
+                        </label>
+                        <select
+                            id="category"
+                            name="category"
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('category') border-rose-500 @enderror"
+                        >
+                            <option value="">Select category</option>
+                            <option value="SF1-SF2" {{ old('category', $item->category) === 'SF1-SF2' ? 'selected' : '' }}>SF1-SF2</option>
+                            <option value="SF3" {{ old('category', $item->category) === 'SF3' ? 'selected' : '' }}>SF3</option>
+                            <option value="Store" {{ old('category', $item->category) === 'Store' ? 'selected' : '' }}>Store</option>
+                        </select>
+                        @error('category')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- Weight -->
+                    <div>
+                        <label for="weight" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Weight <span class="text-rose-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="weight"
+                            name="weight"
+                            value="{{ old('weight', $item->weight) }}"
+                            required
+                            step="0.01"
+                            min="0"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight') border-rose-500 @enderror"
+                            placeholder="Enter weight"
+                        >
+                        @error('weight')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
                     <!-- Name -->
                     <div>
                         <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
@@ -146,29 +195,6 @@
                         @enderror
                     </div>
 
-                    <!-- Weight -->
-                    <div>
-                        <label for="weight" class="block text-sm font-semibold text-slate-700 mb-2">
-                            Weight <span class="text-rose-500">*</span>
-                        </label>
-                        <input 
-                            type="number" 
-                            id="weight" 
-                            name="weight" 
-                            value="{{ old('weight', $item->weight) }}"
-                            required
-                            min="0"
-                            step="0.01"
-                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight') border-rose-500 @enderror"
-                            placeholder="0.00"
-                        >
-                        @error('weight')
-                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                                {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
 
                     <!-- Machines -->
                     <div class="md:col-span-2">

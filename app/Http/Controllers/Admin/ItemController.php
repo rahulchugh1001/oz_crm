@@ -76,6 +76,7 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code',
+            'category' => ['required', Rule::in(['SF1-SF2', 'SF3', 'Store'])],
             'name_sf2' => 'nullable|string|max:255',
             'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')],
             'size' => 'nullable|string|max:255',
@@ -142,6 +143,7 @@ class ItemController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code,' . $item->id,
+            'category' => ['required', Rule::in(['SF1-SF2', 'SF3', 'Store'])],
             'name_sf2' => 'nullable|string|max:255',
             'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')->ignore($item->id)],
             'size' => 'nullable|string|max:255',

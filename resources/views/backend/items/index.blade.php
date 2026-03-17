@@ -100,8 +100,8 @@
                         <td class="px-4 py-3 text-xs text-slate-900 font-semibold">{{ $item->name }}</td>
                         <td class="px-4 py-3 text-xs text-slate-600">{{ $item->code }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900">{{ $item->size ?: '-' }}</td>
-                        <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ number_format((float) $item->weight, 2) }}</td>
-                        <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ number_format((float) ($item->total_production_count ?? 0), 2) }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ (int) $item->weight }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ (int) ($item->total_production_count ?? 0) }}</td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $item->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
                                 {{ $item->status ? 'Active' : 'Inactive' }}
