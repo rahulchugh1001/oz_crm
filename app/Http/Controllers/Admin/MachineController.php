@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Machine;
+use App\Models\WeightCapacity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,7 +50,13 @@ class MachineController extends Controller
      */
     public function create(): View
     {
-        return view('backend.machines.create');
+        $weightCapacities = WeightCapacity::query()
+            ->where('is_deleted', false)
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('backend.machines.create', compact('weightCapacities'));
     }
 
     /**
@@ -61,7 +68,14 @@ class MachineController extends Controller
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code',
             'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => ['nullable', Rule::in(Machine::WEIGHT_CAPACITY_OPTIONS)],
+            'weight_capacity' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::exists('weight_capacities', 'name')->where(function ($q) {
+                    $q->where('is_deleted', 0)->where('status', 1);
+                }),
+            ],
             'status' => 'required|boolean',
         ]);
 
@@ -92,7 +106,13 @@ class MachineController extends Controller
      */
     public function edit(Machine $machine): View
     {
-        return view('backend.machines.edit', compact('machine'));
+        $weightCapacities = WeightCapacity::query()
+            ->where('is_deleted', false)
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('backend.machines.edit', compact('machine', 'weightCapacities'));
     }
 
     /**
@@ -104,7 +124,14 @@ class MachineController extends Controller
             'name' => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code,' . $machine->id,
             'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => ['nullable', Rule::in(Machine::WEIGHT_CAPACITY_OPTIONS)],
+            'weight_capacity' => [
+                'nullable',
+                'string',
+                'max:50',
+                Rule::exists('weight_capacities', 'name')->where(function ($q) {
+                    $q->where('is_deleted', 0)->where('status', 1);
+                }),
+            ],
             'status' => 'required|boolean',
         ]);
 

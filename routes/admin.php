@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\SF001Controller;
 use App\Http\Controllers\Admin\SF002Controller;
 use App\Http\Controllers\Admin\SF003Controller;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\WeightCapacityController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,6 +55,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/reject-reasons/{rejectReason}/edit', [RejectReasonController::class, 'edit'])->name('reject-reasons.edit');
         Route::put('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'update'])->name('reject-reasons.update');
         Route::delete('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'destroy'])->name('reject-reasons.destroy');
+
+        // Weight Capacities Routes
+        Route::get('/weight-capacities', [WeightCapacityController::class, 'index'])->name('weight-capacities.index');
+        Route::get('/weight-capacities/create', [WeightCapacityController::class, 'create'])->name('weight-capacities.create');
+        Route::post('/weight-capacities', [WeightCapacityController::class, 'store'])->name('weight-capacities.store');
+        Route::get('/weight-capacities/{weightCapacity}/edit', [WeightCapacityController::class, 'edit'])->name('weight-capacities.edit');
+        Route::put('/weight-capacities/{weightCapacity}', [WeightCapacityController::class, 'update'])->name('weight-capacities.update');
+        Route::delete('/weight-capacities/{weightCapacity}', [WeightCapacityController::class, 'destroy'])->name('weight-capacities.destroy');
 
         // Users Routes
         Route::get('/users', [UserController::class, 'index'])->name('users.index');

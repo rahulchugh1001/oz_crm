@@ -109,9 +109,9 @@
                     >
                         @php($selectedWeightCapacity = (string) old('weight_capacity', $machine->weight_capacity))
                         <option value="">Select weight capacity</option>
-                        @foreach (\App\Models\Machine::WEIGHT_CAPACITY_OPTIONS as $option)
-                            <option value="{{ $option }}" {{ $selectedWeightCapacity === (string) $option ? 'selected' : '' }}>
-                                {{ $option }}
+                        @foreach (($weightCapacities ?? collect()) as $capacity)
+                            <option value="{{ (string) $capacity->name }}" {{ $selectedWeightCapacity === (string) $capacity->name ? 'selected' : '' }}>
+                                {{ $capacity->name }}
                             </option>
                         @endforeach
                     </select>

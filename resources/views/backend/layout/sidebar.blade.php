@@ -63,6 +63,7 @@
         request()->routeIs('admin.items.*')
         || request()->routeIs('admin.machines.*')
         || request()->routeIs('admin.reject-reasons.*')
+        || request()->routeIs('admin.weight-capacities.*')
         || $isMasterSupplierContext
     );
 @endphp
@@ -110,6 +111,10 @@
                     <a href="{{ route('admin.reject-reasons.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.reject-reasons.*') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Reject Reasons</span>
+                    </a>
+                    <a href="{{ route('admin.weight-capacities.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.weight-capacities.*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Weight Capacity</span>
                     </a>
                     <a href="{{ route('admin.production-reports.sf001.coil-stock', ['from' => 'masters']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isMasterSupplierContext ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>

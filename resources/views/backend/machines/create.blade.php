@@ -106,9 +106,9 @@
                         class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight_capacity') border-rose-500 @enderror"
                     >
                         <option value="">Select weight capacity</option>
-                        @foreach (\App\Models\Machine::WEIGHT_CAPACITY_OPTIONS as $option)
-                            <option value="{{ $option }}" {{ old('weight_capacity') === $option ? 'selected' : '' }}>
-                                {{ $option }}
+                        @foreach (($weightCapacities ?? collect()) as $capacity)
+                            <option value="{{ (string) $capacity->name }}" {{ (string) old('weight_capacity') === (string) $capacity->name ? 'selected' : '' }}>
+                                {{ $capacity->name }}
                             </option>
                         @endforeach
                     </select>
