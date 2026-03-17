@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
 
@@ -38,6 +39,11 @@ class Machine extends Model
     public function coil(): BelongsTo
     {
         return $this->belongsTo(CoilStock::class, 'coil_id');
+    }
+
+    public function items(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class)->withTimestamps();
     }
 
     /**

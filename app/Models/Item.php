@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Crypt;
 
@@ -28,6 +29,11 @@ class Item extends Model
     public function productionReports(): HasMany
     {
         return $this->hasMany(ProductionReport::class, 'slide_size_id');
+    }
+
+    public function machines(): BelongsToMany
+    {
+        return $this->belongsToMany(Machine::class)->withTimestamps();
     }
 
     /**

@@ -108,6 +108,43 @@
                     </div>
                 </div>
 
+                <!-- Machines -->
+                <div class="pt-6 border-t border-slate-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                            <i data-lucide="cpu" class="w-5 h-5 text-slate-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900">Machines</p>
+                            <p class="text-sm text-slate-500">Machines linked to this item</p>
+                        </div>
+                    </div>
+
+                    @if ($item->machines->count() === 0)
+                        <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+                            <p class="text-sm text-slate-600">No machines linked.</p>
+                        </div>
+                    @else
+                        <div class="flex flex-wrap gap-2">
+                            @foreach ($item->machines as $machine)
+                                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700">
+                                    <span class="font-semibold">{{ $machine->name }}</span>
+                                    <span class="text-slate-500">({{ $machine->machine_code }})</span>
+                                    <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $machine->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
+                                        {{ $machine->status ? 'Active' : 'Inactive' }}
+                                    </span>
+                                    @if ($machine->pivot && $machine->pivot->created_at)
+                                        <span class="ml-2 text-xs text-slate-400" title="Linked at">
+                                            <i data-lucide="clock" class="inline w-3 h-3 mr-1"></i>
+                                            {{ $machine->pivot->created_at->format('d M Y H:i') }}
+                                        </span>
+                                    @endif
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Timestamps -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
                     <div>

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Item;
+use App\Models\Machine;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -57,13 +59,19 @@ class ItemController extends Controller
      */
     public function create(): View
     {
-        return view('backend.items.create');
+        $machines = Machine::query()
+            ->where('is_deleted', false)
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'machine_code']);
+
+        return view('backend.items.create', compact('machines'));
     }
 
     /**
      * Store a newly created item in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -73,11 +81,24 @@ class ItemController extends Controller
             'size' => 'nullable|string|max:255',
             'weight' => 'required|numeric|min:0',
             'status' => 'required|boolean',
+            'machine_ids' => ['nullable', 'array'],
+            'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
         ]);
+
+        $machineIds = $validated['machine_ids'] ?? [];
+        unset($validated['machine_ids']);
 
         $validated['is_deleted'] = false;
 
-        Item::create($validated);
+        $item = Item::create($validated);
+
+        $item->machines()->sync($machineIds);
+
+        if ($this->isAjaxRequest($request)) {
+            return response()->json([
+                'message' => 'Item created successfully.',
+            ]);
+        }
 
         return redirect()->route('admin.items.index')
             ->with('success', 'Item created successfully.');
@@ -88,6 +109,12 @@ class ItemController extends Controller
      */
     public function show(Item $item): View
     {
+        $item->load([
+            'machines' => function ($query) {
+                $query->select('machines.id', 'machines.name', 'machines.machine_code', 'machines.status', 'machines.is_deleted');
+            },
+        ]);
+
         return view('backend.items.show', compact('item'));
     }
 
@@ -96,13 +123,21 @@ class ItemController extends Controller
      */
     public function edit(Item $item): View
     {
-        return view('backend.items.edit', compact('item'));
+        $machines = Machine::query()
+            ->where('is_deleted', false)
+            ->where('status', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'machine_code']);
+
+        $item->load(['machines:id']);
+
+        return view('backend.items.edit', compact('item', 'machines'));
     }
 
     /**
      * Update the specified item in storage.
      */
-    public function update(Request $request, Item $item): RedirectResponse
+    public function update(Request $request, Item $item): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -112,9 +147,22 @@ class ItemController extends Controller
             'size' => 'nullable|string|max:255',
             'weight' => 'required|numeric|min:0',
             'status' => 'required|boolean',
+            'machine_ids' => ['nullable', 'array'],
+            'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
         ]);
 
+        $machineIds = $validated['machine_ids'] ?? [];
+        unset($validated['machine_ids']);
+
         $item->update($validated);
+
+        $item->machines()->sync($machineIds);
+
+        if ($this->isAjaxRequest($request)) {
+            return response()->json([
+                'message' => 'Item updated successfully.',
+            ]);
+        }
 
         return redirect()->route('admin.items.index')
             ->with('success', 'Item updated successfully.');
@@ -129,5 +177,10 @@ class ItemController extends Controller
 
         return redirect()->route('admin.items.index')
             ->with('success', 'Item deleted successfully.');
+    }
+
+    protected function isAjaxRequest(Request $request): bool
+    {
+        return $request->ajax() || $request->wantsJson() || $request->expectsJson();
     }
 }

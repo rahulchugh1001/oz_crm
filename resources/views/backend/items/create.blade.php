@@ -31,6 +31,12 @@
             <form id="item-create-form" action="{{ route('admin.items.store') }}" method="POST" class="p-6">
                 @csrf
 
+                @php
+                    $selectedMachineIds = collect(old('machine_ids', []))
+                        ->map(fn ($id) => (string) $id)
+                        ->all();
+                @endphp
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Name -->
                     <div>
@@ -163,6 +169,44 @@
                         @enderror
                     </div>
 
+                    <!-- Machines -->
+                    <div class="md:col-span-2">
+                        <label for="machine_ids" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Machines
+                        </label>
+                        <p class="text-sm text-slate-500 mb-3">Search and select multiple machines.</p>
+
+                        <div id="machine_ids_group" class="border border-slate-300 rounded-lg p-3 @error('machine_ids') border-rose-500 @enderror">
+                            <div id="machine_selected" class="flex flex-wrap gap-2"></div>
+
+                            <div class="mt-3 relative">
+                                <input
+                                    type="text"
+                                    id="machine_search"
+                                    autocomplete="off"
+                                    placeholder="Type to search machines..."
+                                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                >
+
+                                <div id="machine_dropdown" class="hidden absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-subtle"></div>
+                            </div>
+
+                            <div id="machine_hidden_inputs"></div>
+                        </div>
+                        @error('machine_ids')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        @error('machine_ids.*')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
                     <!-- Status -->
                     <div>
                         <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
@@ -208,6 +252,144 @@
     lucide.createIcons();
 
     (() => {
+        const rawMachines = @json($machines);
+        const machines = (rawMachines || []).map((m) => {
+            const name = String(m?.name ?? '');
+            const code = String(m?.machine_code ?? '');
+            const label = code ? `${name} (${code})` : name;
+
+            return {
+                id: Number(m?.id),
+                name,
+                code,
+                label,
+            };
+        });
+
+        const initialSelectedIds = @json($selectedMachineIds);
+
+        const selectedWrap = document.getElementById('machine_selected');
+        const searchInput = document.getElementById('machine_search');
+        const dropdown = document.getElementById('machine_dropdown');
+        const hiddenInputs = document.getElementById('machine_hidden_inputs');
+
+        if (!selectedWrap || !searchInput || !dropdown || !hiddenInputs) return;
+
+        const selected = new Map();
+
+        const normalize = (value) => String(value ?? '').toLowerCase().trim();
+
+        const createHiddenInput = (id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'machine_ids[]';
+            input.value = String(id);
+            input.dataset.machineId = String(id);
+            return input;
+        };
+
+        const renderChip = (machine) => {
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700';
+            chip.dataset.machineId = String(machine.id);
+
+            const label = document.createElement('span');
+            label.textContent = machine.label;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'text-slate-500 hover:text-slate-700 font-semibold leading-none';
+            removeBtn.setAttribute('aria-label', 'Remove machine');
+            removeBtn.textContent = '×';
+
+            removeBtn.addEventListener('click', () => {
+                removeSelected(machine.id);
+            });
+
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
+            return chip;
+        };
+
+        const addSelected = (machine) => {
+            const id = String(machine.id);
+            if (selected.has(id)) return;
+
+            selected.set(id, machine);
+            selectedWrap.appendChild(renderChip(machine));
+            hiddenInputs.appendChild(createHiddenInput(machine.id));
+        };
+
+        const removeSelected = (id) => {
+            const key = String(id);
+            if (!selected.has(key)) return;
+            selected.delete(key);
+
+            selectedWrap.querySelectorAll(`[data-machine-id="${CSS.escape(key)}"]`).forEach((el) => el.remove());
+            hiddenInputs.querySelectorAll(`input[data-machine-id="${CSS.escape(key)}"]`).forEach((el) => el.remove());
+        };
+
+        const showDropdown = () => dropdown.classList.remove('hidden');
+        const hideDropdown = () => dropdown.classList.add('hidden');
+
+        const renderDropdown = (query) => {
+            const q = normalize(query);
+            dropdown.innerHTML = '';
+
+            const filtered = machines.filter((m) => {
+                if (selected.has(String(m.id))) return false;
+                if (!q) return true;
+                return normalize(m.label).includes(q) || normalize(m.name).includes(q) || normalize(m.code).includes(q);
+            });
+
+            if (filtered.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'px-4 py-3 text-sm text-slate-500';
+                empty.textContent = 'No machines found.';
+                dropdown.appendChild(empty);
+                return;
+            }
+
+            filtered.forEach((m) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-all';
+                option.textContent = m.label;
+                option.addEventListener('click', () => {
+                    addSelected(m);
+                    searchInput.value = '';
+                    renderDropdown('');
+                    searchInput.focus();
+                });
+                dropdown.appendChild(option);
+            });
+        };
+
+        // Init with old() selection
+        (initialSelectedIds || []).forEach((idStr) => {
+            const match = machines.find((m) => String(m.id) === String(idStr));
+            if (match) addSelected(match);
+        });
+
+        searchInput.addEventListener('focus', () => {
+            renderDropdown(searchInput.value);
+            showDropdown();
+        });
+
+        searchInput.addEventListener('input', () => {
+            renderDropdown(searchInput.value);
+            showDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!(target instanceof Node)) return;
+            if (dropdown.contains(target) || searchInput.contains(target) || selectedWrap.contains(target)) return;
+            hideDropdown();
+        });
+    })();
+
+    (() => {
         const form = document.getElementById('item-create-form');
         if (!form) return;
 
@@ -239,7 +421,17 @@
 
         const applyFieldErrors = (errors) => {
             Object.entries(errors).forEach(([field, messages]) => {
-                const input = form.querySelector(`[name="${field}"]`);
+                const input = (() => {
+                    const exact = form.querySelector(`[name="${field}"]`);
+                    if (exact) return exact;
+
+                    const base = String(field).split('.')[0];
+                    if (base === 'machine_ids') {
+                        return document.getElementById('machine_ids_group');
+                    }
+
+                    return form.querySelector(`[name="${base}"]`) || form.querySelector(`[name="${base}[]"]`);
+                })();
                 if (!input) return;
 
                 input.classList.add('ajax-error-input', 'border-rose-500');
