@@ -98,24 +98,37 @@
                     @enderror
                 </div>
 
-                <div>
+
+                <div class="md:col-span-2">
                     <label for="weight_capacity" class="block text-sm font-semibold text-slate-700 mb-2">
                         Weight Capacity
                     </label>
-                    <select
-                        id="weight_capacity"
-                        name="weight_capacity[]"
-                        multiple
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight_capacity') border-rose-500 @enderror"
-                    >
-                        @php($selectedWeightCapacities = collect(old('weight_capacity', $machine->weight_capacities ? $machine->weight_capacities->pluck('name')->toArray() : [])))
-                        @foreach (($weightCapacities ?? collect()) as $capacity)
-                            <option value="{{ (string) $capacity->name }}" {{ $selectedWeightCapacities->contains((string) $capacity->name) ? 'selected' : '' }}>
-                                {{ $capacity->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <p class="text-sm text-slate-500 mb-3">Search and select multiple weight capacities.</p>
+
+                    <div id="weight_capacity_group" class="border border-slate-300 rounded-lg p-3 @error('weight_capacity') border-rose-500 @enderror">
+                        <div id="weight_capacity_selected" class="flex flex-wrap gap-2"></div>
+
+                        <div class="mt-3 relative">
+                            <input
+                                type="text"
+                                id="weight_capacity_search"
+                                autocomplete="off"
+                                placeholder="Type to search weight capacities..."
+                                class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            >
+
+                            <div id="weight_capacity_dropdown" class="hidden absolute z-20 mt-2 w-full bg-white border border-slate-200 rounded-lg max-h-60 overflow-y-auto shadow-subtle"></div>
+                        </div>
+
+                        <div id="weight_capacity_hidden_inputs"></div>
+                    </div>
                     @error('weight_capacity')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    @error('weight_capacity.*')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
                             <i data-lucide="alert-circle" class="w-4 h-4"></i>
                             {{ $message }}
@@ -246,6 +259,138 @@
                 toastr.error('Network error. Please try again.');
             } finally {
                 setLoading(false);
+            }
+        });
+    })();
+
+    (() => {
+        const rawCapacities = @json($weightCapacities);
+        const capacities = (rawCapacities || []).map((c) => {
+            return {
+                id: String(c.id),
+                name: String(c.name),
+                label: String(c.name),
+            };
+        });
+        const initialSelected = @json(collect(old('weight_capacity', $machine->weight_capacities ? $machine->weight_capacities->pluck('name')->toArray() : []))->toArray());
+
+        const selectedWrap = document.getElementById('weight_capacity_selected');
+        const searchInput = document.getElementById('weight_capacity_search');
+        const dropdown = document.getElementById('weight_capacity_dropdown');
+        const hiddenInputs = document.getElementById('weight_capacity_hidden_inputs');
+        if (!selectedWrap || !searchInput || !dropdown || !hiddenInputs) return;
+
+        const selected = new Map();
+
+        const normalize = (value) => String(value ?? '').toLowerCase().trim();
+
+        const createHiddenInput = (name) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'weight_capacity[]';
+            input.value = name;
+            input.dataset.capacityName = name;
+            return input;
+        };
+
+        const renderChip = (capacity) => {
+            const chip = document.createElement('span');
+            chip.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-xs text-blue-800 font-semibold';
+            chip.dataset.capacityName = capacity.name;
+
+            const label = document.createElement('span');
+            label.textContent = capacity.label;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'text-blue-400 hover:text-blue-700 font-semibold leading-none';
+            removeBtn.setAttribute('aria-label', 'Remove weight capacity');
+            removeBtn.textContent = '×';
+            removeBtn.addEventListener('click', () => {
+                removeSelected(capacity.name);
+            });
+
+            chip.appendChild(label);
+            chip.appendChild(removeBtn);
+            return chip;
+        };
+
+        const addSelected = (capacity) => {
+            const name = String(capacity.name);
+            if (selected.has(name)) return;
+            selected.set(name, capacity);
+            selectedWrap.appendChild(renderChip(capacity));
+            hiddenInputs.appendChild(createHiddenInput(capacity.name));
+        };
+
+        const removeSelected = (name) => {
+            if (!selected.has(name)) return;
+            selected.delete(name);
+            selectedWrap.querySelectorAll(`[data-capacity-name="${CSS.escape(name)}"]`).forEach((el) => el.remove());
+            hiddenInputs.querySelectorAll(`input[data-capacity-name="${CSS.escape(name)}"]`).forEach((el) => el.remove());
+        };
+
+        const showDropdown = () => dropdown.classList.remove('hidden');
+        const hideDropdown = () => dropdown.classList.add('hidden');
+
+        const renderDropdown = (query) => {
+            const q = normalize(query);
+            dropdown.innerHTML = '';
+            const filtered = capacities.filter((c) => {
+                if (selected.has(String(c.name))) return false;
+                if (!q) return true;
+                return normalize(c.label).includes(q);
+            });
+            if (filtered.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'px-4 py-3 text-sm text-slate-500';
+                empty.textContent = 'No weight capacities found.';
+                dropdown.appendChild(empty);
+                return;
+            }
+            filtered.forEach((c) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'w-full text-left px-4 py-3 text-sm text-blue-800 hover:bg-blue-50 transition-all';
+                option.textContent = c.label;
+                option.addEventListener('click', () => {
+                    addSelected(c);
+                    searchInput.value = '';
+                    renderDropdown('');
+                    searchInput.focus();
+                });
+                dropdown.appendChild(option);
+            });
+        };
+
+        // Init with old() selection
+        (initialSelected || []).forEach((name) => {
+            const match = capacities.find((c) => String(c.name) === String(name));
+            if (match) addSelected(match);
+        });
+
+        let dropdownShouldStay = false;
+        const openDropdown = () => {
+            renderDropdown(searchInput.value);
+            showDropdown();
+        };
+        searchInput.addEventListener('focus', openDropdown);
+        searchInput.addEventListener('input', openDropdown);
+
+        // Keep dropdown open while typing or clicking
+        dropdown.addEventListener('mousedown', () => {
+            dropdownShouldStay = true;
+        });
+        searchInput.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (!dropdownShouldStay) hideDropdown();
+                dropdownShouldStay = false;
+            }, 150);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && e.target !== searchInput) {
+                hideDropdown();
             }
         });
     })();
