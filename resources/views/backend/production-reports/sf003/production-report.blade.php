@@ -172,8 +172,33 @@
                     </div>
 
                     <div id="in-stock" class="tab-content" style="display: none;">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5">
-                            <p class="text-sm font-medium text-slate-700">Upcoming...</p>
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table id="stockTable" class="w-full border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100">
+                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Date</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Code</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Name</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stockTableBody">
+                                    <tr class="text-center text-slate-500">
+                                        <td colspan="5" class="py-4">Select an item to view in-stock transfers</td>
+                                    </tr>
+                                </tbody>
+                                <tbody id="stockTableLoader" style="display: none;">
+                                    <tr class="text-center">
+                                        <td colspan="5" class="py-6">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                                                <span class="text-slate-600 font-medium">Loading in-stock transfers...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -312,8 +337,12 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedItemSize) selectedItemSize.textContent = '-';
             if (selectedQuantityInput) selectedQuantityInput.value = '0';
             const requiredTbody = document.getElementById('productTableBody');
+            const stockTbody = document.getElementById('stockTableBody');
             if (requiredTbody) {
                 requiredTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">Select an item to view required stock</td></tr>';
+            }
+            if (stockTbody) {
+                stockTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">Select an item to view in-stock transfers</td></tr>';
             }
             return;
         }
@@ -342,6 +371,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const itemId = selectedOption.getAttribute('data-item-id');
         if (itemId) {
             fetchItemProducts(itemId);
+            fetchItemProductsStock(itemId);
         }
     }
 
@@ -572,6 +602,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return Promise.resolve();
+    }
+
+    function fetchItemProductsStock(itemId) {
+        const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId + '&line_code={{ $lineCode }}';
+        const tbody = document.getElementById('stockTableBody');
+        const loader = document.getElementById('stockTableLoader');
+
+        if (tbody) tbody.style.display = 'none';
+        if (loader) loader.style.display = '';
+
+        fetch(url)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                const rows = data.products || [];
+
+                if (!tbody) return;
+
+                if (loader) loader.style.display = 'none';
+                tbody.style.display = '';
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No in-stock transfer data found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = rows.map(function (row) {
+                    return '<tr class="hover:bg-slate-50">' +
+                        '<td class="border border-slate-300 px-3 py-2">' + ((row.date || '-') + (row.time ? ' ' + row.time : '')) + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2">' + (row.item_code || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2">' + (row.item_name || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2 text-center">' + (row.item_category || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(row.quantity || 0) + '</td>' +
+                        '</tr>';
+                }).join('');
+            })
+            .catch(function (error) {
+                console.error('Error fetching in-stock transfers:', error);
+                if (loader) loader.style.display = 'none';
+                if (tbody) {
+                    tbody.style.display = '';
+                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading in-stock transfer data</td></tr>';
+                }
+            });
     }
 
     form.addEventListener('submit', async function (event) {

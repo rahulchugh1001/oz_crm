@@ -652,43 +652,58 @@ class SF003Controller extends Controller
     }
 
     /**
-     * Fetch available stock for SF3 products for a given item.
+     * Fetch in-stock transfer data from SF002 transfers for a given SF3 line.
      */
     public function getItemProductsStock(Request $request): JsonResponse
     {
         $itemId = (int) ($request->query('item_id') ?? 0);
+        $lineCode = (string) $request->query('line_code', '');
 
         if ($itemId <= 0) {
             return response()->json(['products' => []]);
         }
 
-        $products = DB::table('item_sf3_products as sf3p')
-            ->join('items', 'sf3p.product', '=', 'items.id')
+        // Parent SF3 item -> child product ids from item_sf3_products
+        $productIds = DB::table('item_sf3_products')
+            ->where('item_id', $itemId)
+            ->pluck('product')
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        if ($productIds->isEmpty()) {
+            return response()->json(['products' => []]);
+        }
+
+        $stockRows = DB::table('sf002_stock_transfers as transfers')
+            ->join('items', 'transfers.item_id', '=', 'items.id')
             ->select(
-                'sf3p.id',
-                'sf3p.item_id',
-                'sf3p.product',
-                'sf3p.quantity',
-                'items.code as product_code',
-                'items.name as product_name',
-                'items.category as product_category'
+                'transfers.id',
+                'transfers.item_id',
+                'transfers.date',
+                'transfers.time',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.category as item_category',
+                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as quantity')
             )
-            ->where('sf3p.item_id', $itemId)
-            ->orderBy('sf3p.product')
-            ->get()
-            ->map(function ($product) {
-                $totalStock = DB::table('sf002_stock_transfers')
-                    ->where('item_id', $product->product)
-                    ->where('is_deleted', false)
-                    ->where('is_accept', 1)
-                    ->sum(DB::raw('GREATEST(quantity - COALESCE(reject_quantity, 0), 0)'));
+            ->where('transfers.is_deleted', false)
+            ->where('transfers.is_accept', 1)
+            ->whereIn('transfers.item_id', $productIds->all())
+            ->when($lineCode !== '', function ($query) use ($lineCode) {
+                $query->where('transfers.sf3_process', $lineCode);
+            })
+            ->orderByDesc('transfers.date')
+            ->orderByDesc('transfers.time')
+            ->orderByDesc('transfers.created_at')
+            ->get();
 
-                $product->stock_available = (int) ($totalStock ?? 0);
-
-                return $product;
-            });
-
-        return response()->json(['products' => $products]);
+        return response()->json(['products' => $stockRows]);
     }
 }
 
