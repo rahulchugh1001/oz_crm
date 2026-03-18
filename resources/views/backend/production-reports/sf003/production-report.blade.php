@@ -1,8 +1,9 @@
 @extends('backend.layout.app')
 
 @php
-    $transferHour = !empty($transfer->time) ? (int) date('G', strtotime((string) $transfer->time)) : (int) date('G');
-    $defaultShift = ($transferHour >= 8 && $transferHour < 20) ? 'morning' : 'night';
+    $currentHour = (int) date('G');
+    $defaultShift = ($currentHour >= 8 && $currentHour < 20) ? 'morning' : 'night';
+    $hasPersistedShift = old('sf3_shift') !== null || !empty($existingReport->shift ?? null);
 @endphp
 
 @section('title', $lineTitle . ' SF3 Production Report - Hourly')
@@ -287,10 +288,56 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    function detectShiftByCurrentTime() {
+        const hour = new Date().getHours();
+        return (hour >= 8 && hour < 20) ? 'morning' : 'night';
+    }
+
     if (shiftSelect) {
-        updateShiftLabels(shiftSelect.value || 'morning');
-        shiftSelect.addEventListener('change', function () {
-            updateShiftLabels(this.value || 'morning');
+        const hasPersistedShift = @json($hasPersistedShift);
+        if (!hasPersistedShift) {
+            shiftSelect.value = detectShiftByCurrentTime();
+        }
+
+        let previousShift = shiftSelect.value || 'morning';
+        let ignoreShiftChange = false;
+
+        updateShiftLabels(previousShift);
+
+        shiftSelect.addEventListener('change', async function () {
+            if (ignoreShiftChange) return;
+
+            const nextShift = this.value || 'morning';
+            if (nextShift === previousShift) return;
+
+            let confirmed = false;
+
+            if (typeof Swal !== 'undefined') {
+                const result = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Change Shift?',
+                    text: 'Are you sure you want to change the shift?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, change it',
+                    cancelButtonText: 'No',
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#64748b',
+                });
+                confirmed = !!result.isConfirmed;
+            } else {
+                confirmed = window.confirm('Are you sure you want to change the shift?');
+            }
+
+            if (!confirmed) {
+                ignoreShiftChange = true;
+                this.value = previousShift;
+                updateShiftLabels(previousShift);
+                ignoreShiftChange = false;
+                return;
+            }
+
+            previousShift = nextShift;
+            updateShiftLabels(nextShift);
         });
     }
 

@@ -181,7 +181,7 @@
 
                 <!-- Modal Footer -->
                 <div class="mt-6 flex items-center gap-3">
-                    <button type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <button id="transfer_submit_btn" type="submit" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                         Save Transfer
                     </button>
                     <button type="button" onclick="closeTransferModal()" class="flex-1 px-4 py-2.5 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">
@@ -201,6 +201,7 @@
 
 <script>
     const transferState = { available: 0 };
+    let transferSubmitting = false;
 
     function switchTab(tab) {
         const panels  = { ced: 'panel-ced',  zinc: 'panel-zinc'  };
@@ -282,6 +283,13 @@
     }
 
     document.getElementById('transferForm').addEventListener('submit', function(event) {
+        const submitBtn = document.getElementById('transfer_submit_btn');
+
+        if (transferSubmitting) {
+            event.preventDefault();
+            return;
+        }
+
         const quantity = parseFloat(document.getElementById('transfer_quantity').value || '0');
         if (quantity > transferState.available) {
             event.preventDefault();
@@ -291,6 +299,20 @@
                 text: `Quantity cannot exceed available stock (${Math.round(transferState.available)}).`,
                 confirmButtonColor: '#4f46e5',
             });
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                submitBtn.textContent = 'Save Transfer';
+            }
+            transferSubmitting = false;
+            return;
+        }
+
+        transferSubmitting = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            submitBtn.textContent = 'Transferring...';
         }
     });
 
