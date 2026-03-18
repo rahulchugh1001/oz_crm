@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.reject-reasons.update', $rejectReason) }}" method="POST" class="p-4">
+        <form id="reject-reason-edit-form" action="{{ route('admin.reject-reasons.update', $rejectReason) }}" method="POST" class="p-4">
             @csrf
             @method('PUT')
 
@@ -58,6 +58,7 @@
                     >
                         <option value="SF1" {{ old('category', $rejectReason->category ?? 'SF1') === 'SF1' ? 'selected' : '' }}>SF1</option>
                         <option value="SF2" {{ old('category', $rejectReason->category) === 'SF2' ? 'selected' : '' }}>SF2</option>
+                        <option value="Both" {{ old('category', $rejectReason->category) === 'Both' ? 'selected' : '' }}>Both</option>
                     </select>
                     @error('category')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
@@ -81,7 +82,7 @@
 
             <div class="flex items-center justify-end gap-2 mt-6">
                 <a href="{{ route('admin.reject-reasons.index') }}" class="px-4 py-2 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">Cancel</a>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Update</button>
+                <button id="reject-reason-edit-submit" type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Update</button>
             </div>
         </form>
     </div>
@@ -91,5 +92,17 @@
 @push('scripts')
 <script>
     lucide.createIcons();
+
+    (() => {
+        const form = document.getElementById('reject-reason-edit-form');
+        const submitButton = document.getElementById('reject-reason-edit-submit');
+        if (!form || !submitButton) return;
+
+        form.addEventListener('submit', () => {
+            submitButton.disabled = true;
+            submitButton.classList.add('opacity-70', 'cursor-not-allowed');
+            submitButton.textContent = 'Updating...';
+        });
+    })();
 </script>
 @endpush

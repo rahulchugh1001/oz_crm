@@ -84,6 +84,7 @@ class SF002Controller extends Controller
             ->select('id', 'name')
             ->where('is_deleted', 0)
             ->where('status', 1)
+            ->whereIn('category', ['SF1', 'Both'])
             ->orderBy('name')
             ->get();
 
@@ -872,6 +873,7 @@ class SF002Controller extends Controller
                 ->where('id', $rejectReasonId)
                 ->where('is_deleted', 0)
                 ->where('status', 1)
+                ->whereIn('category', ['SF1', 'Both'])
                 ->exists();
 
             if (!$rejectReasonExists) {

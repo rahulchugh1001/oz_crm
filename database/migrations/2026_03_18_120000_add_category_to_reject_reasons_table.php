@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reject_reasons', function (Blueprint $table) {
-            $table->enum('category', ['SF1', 'SF2'])->default('SF1')->after('name');
+            $table->enum('category', ['SF1', 'SF2', 'Both'])->default('SF1')->after('name');
         });
     }
 

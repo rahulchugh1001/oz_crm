@@ -50,6 +50,7 @@ class RejectReasonController extends Controller
         }
 
         $rejectReasons = $query
+            ->orderByDesc('usage_count')
             ->orderBy('name')
             ->paginate(10)
             ->withQueryString();
@@ -180,7 +181,7 @@ class RejectReasonController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('reject_reasons', 'name')],
-            'category' => ['required', Rule::in(['SF1', 'SF2'])],
+            'category' => ['required', Rule::in(['SF1', 'SF2', 'Both'])],
             'status' => ['required', 'boolean'],
         ]);
 
@@ -202,7 +203,7 @@ class RejectReasonController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('reject_reasons', 'name')->ignore($rejectReason->id)],
-            'category' => ['required', Rule::in(['SF1', 'SF2'])],
+            'category' => ['required', Rule::in(['SF1', 'SF2', 'Both'])],
             'status' => ['required', 'boolean'],
         ]);
 

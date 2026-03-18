@@ -13,6 +13,11 @@
 @endsection
 
 @section('content')
+@php
+    $reasonCategory = $rejectReason->category ?? 'SF1';
+    $showSf1 = in_array($reasonCategory, ['SF1', 'Both'], true);
+    $showSf2 = in_array($reasonCategory, ['SF2', 'Both'], true);
+@endphp
 <div class="p-4 space-y-4">
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="p-4 border-b border-slate-200 flex items-center justify-between">
@@ -32,7 +37,7 @@
         </div>
 
         <div class="p-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="grid grid-cols-1 {{ $showSf1 && $showSf2 ? 'md:grid-cols-5' : 'md:grid-cols-4' }} gap-3">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <p class="text-[11px] uppercase tracking-wider text-slate-500">Category</p>
                     <p class="text-sm font-semibold text-slate-900 mt-1">{{ $rejectReason->category ?? 'SF1' }}</p>
@@ -45,14 +50,18 @@
                     <p class="text-[11px] uppercase tracking-wider text-slate-500">Total Used</p>
                     <p class="text-sm font-semibold text-slate-900 mt-1">{{ (int) $totalUsageCount }}</p>
                 </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-[11px] uppercase tracking-wider text-slate-500">SF001 Transfers</p>
-                    <p class="text-sm font-semibold text-slate-900 mt-1">{{ (int) $sf1UsageCount }}</p>
-                </div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                    <p class="text-[11px] uppercase tracking-wider text-slate-500">SF002 Transfers</p>
-                    <p class="text-sm font-semibold text-slate-900 mt-1">{{ (int) $sf2UsageCount }}</p>
-                </div>
+                @if($showSf1)
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-[11px] uppercase tracking-wider text-slate-500">SF001 Transfers</p>
+                        <p class="text-sm font-semibold text-slate-900 mt-1">{{ (int) $sf1UsageCount }}</p>
+                    </div>
+                @endif
+                @if($showSf2)
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                        <p class="text-[11px] uppercase tracking-wider text-slate-500">SF002 Transfers</p>
+                        <p class="text-sm font-semibold text-slate-900 mt-1">{{ (int) $sf2UsageCount }}</p>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
@@ -64,14 +73,18 @@
                 <p class="text-xs text-slate-500">Daily reject counts using this reason</p>
             </div>
             <div class="flex items-center gap-3 text-xs">
-                <span class="inline-flex items-center gap-1.5 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-sm bg-emerald-600"></span>
-                    SF001
-                </span>
-                <span class="inline-flex items-center gap-1.5 text-slate-700">
-                    <span class="w-2.5 h-2.5 rounded-sm bg-amber-600"></span>
-                    SF002
-                </span>
+                @if($showSf1)
+                    <span class="inline-flex items-center gap-1.5 text-slate-700">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-600"></span>
+                        SF001
+                    </span>
+                @endif
+                @if($showSf2)
+                    <span class="inline-flex items-center gap-1.5 text-slate-700">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-amber-600"></span>
+                        SF002
+                    </span>
+                @endif
             </div>
         </div>
         <div class="p-4">
@@ -79,7 +92,9 @@
                  class="w-full"
                  data-labels='@json($chartLabels ?? [])'
                  data-sf1='@json($chartSf1 ?? [])'
-                 data-sf2='@json($chartSf2 ?? [])'>
+                 data-sf2='@json($chartSf2 ?? [])'
+                 data-show-sf1='@json($showSf1)'
+                 data-show-sf2='@json($showSf2)'>
                 <div class="h-44 w-full rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center">
                     <span class="text-xs text-slate-500">Loading chart…</span>
                 </div>
@@ -87,28 +102,29 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
-        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-900">SF001 Stock Transfers</h3>
-            <span class="text-xs text-slate-500">Records: <span class="font-semibold text-slate-900">{{ $sf1Usages->total() }}</span></span>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-[1200px] w-full text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Qty</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Qty</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF2</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    @forelse($sf1Usages as $index => $row)
+    @if($showSf1)
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-900">SF001 Stock Transfers</h3>
+                <span class="text-xs text-slate-500">Records: <span class="font-semibold text-slate-900">{{ $sf1Usages->total() }}</span></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-[1200px] w-full text-xs">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Qty</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF2</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF002 Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse($sf1Usages as $index => $row)
                         @php
                             $dt = ($row->date ?? '') . ' ' . ($row->time ?? '');
                             $sf002Remark = trim((string) ($row->sf002_remark ?? ''));
@@ -137,44 +153,46 @@
                                 @endif
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="px-4 py-10 text-center text-xs text-slate-500">No SF001 usage found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($sf1Usages->hasPages())
-            <div class="px-4 py-3 border-t border-slate-200">
-                {{ $sf1Usages->links() }}
+                        @empty
+                            <tr>
+                                <td colspan="9" class="px-4 py-10 text-center text-xs text-slate-500">No SF001 usage found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
-        <div class="p-4 border-b border-slate-200 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-900">SF002 Stock Transfers</h3>
-            <span class="text-xs text-slate-500">Records: <span class="font-semibold text-slate-900">{{ $sf2Usages->total() }}</span></span>
+            @if($sf1Usages->hasPages())
+                <div class="px-4 py-3 border-t border-slate-200">
+                    {{ $sf1Usages->links() }}
+                </div>
+            @endif
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-[1200px] w-full text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Type</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Process</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Qty</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Qty</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Remark</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200">
-                    @forelse($sf2Usages as $index => $row)
+    @endif
+
+    @if($showSf2)
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-slate-900">SF002 Stock Transfers</h3>
+                <span class="text-xs text-slate-500">Records: <span class="font-semibold text-slate-900">{{ $sf2Usages->total() }}</span></span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-[1200px] w-full text-xs">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Date & Time</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Type</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Process</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Qty</th>
+                            <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Reject Qty</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        @forelse($sf2Usages as $index => $row)
                         @php
                             $dt = ($row->date ?? '') . ' ' . ($row->time ?? '');
                             $sf3Remark = trim((string) ($row->sf003_remark ?? ''));
@@ -204,20 +222,21 @@
                                 @endif
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="px-4 py-10 text-center text-xs text-slate-500">No SF002 usage found.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($sf2Usages->hasPages())
-            <div class="px-4 py-3 border-t border-slate-200">
-                {{ $sf2Usages->links() }}
+                        @empty
+                            <tr>
+                                <td colspan="10" class="px-4 py-10 text-center text-xs text-slate-500">No SF002 usage found.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
-    </div>
+            @if($sf2Usages->hasPages())
+                <div class="px-4 py-3 border-t border-slate-200">
+                    {{ $sf2Usages->links() }}
+                </div>
+            @endif
+        </div>
+    @endif
 </div>
 @endsection
 
@@ -234,15 +253,21 @@
         let labels = [];
         let sf1 = [];
         let sf2 = [];
+        let showSf1 = true;
+        let showSf2 = true;
 
         try {
             labels = JSON.parse(holder.getAttribute('data-labels') || '[]');
             sf1 = JSON.parse(holder.getAttribute('data-sf1') || '[]');
             sf2 = JSON.parse(holder.getAttribute('data-sf2') || '[]');
+            showSf1 = JSON.parse(holder.getAttribute('data-show-sf1') || 'true');
+            showSf2 = JSON.parse(holder.getAttribute('data-show-sf2') || 'true');
         } catch (e) {
             labels = [];
             sf1 = [];
             sf2 = [];
+            showSf1 = true;
+            showSf2 = true;
         }
 
         const n = Math.min(labels.length, sf1.length, sf2.length);
@@ -270,8 +295,8 @@
         const labelEvery = n > 12 ? 5 : 1;
 
         for (let i = 0; i < n; i++) {
-            const v1 = Number(sf1[i] || 0);
-            const v2 = Number(sf2[i] || 0);
+            const v1 = showSf1 ? Number(sf1[i] || 0) : 0;
+            const v2 = showSf2 ? Number(sf2[i] || 0) : 0;
 
             const total = v1 + v2;
             const hTotal = (total / maxTotal) * plotH;
