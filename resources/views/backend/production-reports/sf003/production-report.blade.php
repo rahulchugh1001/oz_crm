@@ -137,7 +137,7 @@
                             Required Stock
                         </button>
                         <button id="inStockTab" type="button" class="px-4 py-2 font-medium text-slate-600 border-b-2 border-transparent hover:text-slate-900 tab-button" data-tab="in-stock">
-                            In Stock (Upcoming)
+                            In Stock
                         </button>
                     </div>
 
@@ -201,6 +201,8 @@
                             </table>
                         </div>
                     </div>
+
+                    <div id="stockCapacityNote" class="hidden mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
                 </div>
 
                 <div class="mt-6 flex items-center justify-end gap-3">
@@ -235,6 +237,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('productionReportForm');
+    const saveButton = form ? form.querySelector('button[type="submit"]') : null;
     const shiftSelect = document.getElementById('sf3_shift');
     const hourLabels = document.querySelectorAll('.hour-label');
     const itemSelector = document.getElementById('item_selector');
@@ -246,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSetShiftInput = form.querySelector('input[name="sf3_total_set_shift"]');
     const setPerHourInput = form.querySelector('input[name="sf3_set_per_hour"]');
     const actualSetShiftInput = form.querySelector('input[name="sf3_actual_set_shift"]');
+    const stockCapacityNote = document.getElementById('stockCapacityNote');
     const hourlyInputs = [
         'sf3_hour_8_9', 'sf3_hour_9_10', 'sf3_hour_10_11', 'sf3_hour_11_12',
         'sf3_hour_12_1', 'sf3_hour_1_2', 'sf3_hour_2_3', 'sf3_hour_3_4',
@@ -254,11 +258,97 @@ document.addEventListener('DOMContentLoaded', function () {
         return form.querySelector('input[name="' + name + '"]');
     }).filter(Boolean);
     let limitWarningTimeout;
+    let isSaving = false;
+    let stockInsufficient = false;
+    let requiredProductsData = [];
+    let stockRowsData = [];
 
     if (!form) return;
 
     function getSelectedQuantity() {
         return Math.max(parseFloat(selectedQuantityInput ? selectedQuantityInput.value : '0') || 0, 0);
+    }
+
+    function applySaveButtonState() {
+        if (!saveButton) return;
+
+        const mustDisable = isSaving || stockInsufficient;
+        saveButton.disabled = mustDisable;
+
+        if (mustDisable) {
+            saveButton.classList.add('opacity-60', 'cursor-not-allowed');
+        } else {
+            saveButton.classList.remove('opacity-60', 'cursor-not-allowed');
+        }
+    }
+
+    function updateStockCapabilityNote(message) {
+        if (!stockCapacityNote) return;
+
+        if (!message) {
+            stockCapacityNote.textContent = '';
+            stockCapacityNote.classList.add('hidden');
+            return;
+        }
+
+        stockCapacityNote.textContent = message;
+        stockCapacityNote.classList.remove('hidden');
+    }
+
+    function evaluateStockCapability() {
+        const selectedValue = itemSelector ? itemSelector.value : '';
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
+
+        if (!selectedValue || totalSetShift <= 0 || requiredProductsData.length === 0) {
+            stockInsufficient = false;
+            updateStockCapabilityNote('');
+            applySaveButtonState();
+            return;
+        }
+
+        const stockByProduct = {};
+        stockRowsData.forEach(function (row) {
+            const productId = parseInt(row.item_id || 0, 10);
+            const quantity = Math.max(parseFloat(row.quantity || 0) || 0, 0);
+
+            if (!productId) return;
+            stockByProduct[productId] = (stockByProduct[productId] || 0) + quantity;
+        });
+
+        const shortProducts = requiredProductsData
+            .map(function (product) {
+                const productId = parseInt(product.product || 0, 10);
+                const requiredPerSet = Math.max(parseFloat(product.quantity || 0) || 0, 0);
+                const requiredTotal = requiredPerSet * totalSetShift;
+                const inStock = stockByProduct[productId] || 0;
+
+                return {
+                    name: product.product_code || product.product_name || 'Product',
+                    required: requiredTotal,
+                    stock: inStock,
+                };
+            })
+            .filter(function (row) {
+                return row.required > row.stock;
+            });
+
+        if (shortProducts.length === 0) {
+            stockInsufficient = false;
+            updateStockCapabilityNote('');
+            applySaveButtonState();
+            return;
+        }
+
+        stockInsufficient = true;
+        const summary = shortProducts
+            .slice(0, 3)
+            .map(function (row) {
+                return row.name + ' (Required: ' + Math.round(row.required) + ', In Stock: ' + Math.round(row.stock) + ')';
+            })
+            .join(', ');
+
+        updateStockCapabilityNote('In Stock quantity is not capable to create this item in this quantity (Total Set/Shift) which you have set. ' + summary);
+        applySaveButtonState();
     }
 
     function showLimitWarning(message) {
@@ -344,6 +434,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (stockTbody) {
                 stockTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">Select an item to view in-stock transfers</td></tr>';
             }
+            requiredProductsData = [];
+            stockRowsData = [];
+            evaluateStockCapability();
             return;
         }
 
@@ -365,6 +458,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         clampToSelectedQuantity(actualSetShiftInput);
         updateSetPerHour();
+
+        requiredProductsData = [];
+        stockRowsData = [];
+        evaluateStockCapability();
 
         // Fetch products for the selected item
         const itemId = selectedOption.getAttribute('data-item-id');
@@ -389,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(function (data) {
                 const products = data.products || [];
+                requiredProductsData = products;
                 
                 if (!tbody) return;
 
@@ -398,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (products.length === 0) {
                     tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">No required stock found for this item</td></tr>';
+                    evaluateStockCapability();
                     return;
                 }
 
@@ -409,9 +508,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(product.quantity || 0) + '</td>' +
                         '</tr>';
                 }).join('');
+
+                evaluateStockCapability();
             })
             .catch(function (error) {
                 console.error('Error fetching products:', error);
+                requiredProductsData = [];
                 
                 // Hide loader
                 if (loader) loader.style.display = 'none';
@@ -419,6 +521,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     tbody.style.display = '';
                     tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="4" class="py-4">Error loading required stock</td></tr>';
                 }
+
+                evaluateStockCapability();
             });
     }
 
@@ -529,11 +633,13 @@ document.addEventListener('DOMContentLoaded', function () {
         totalSetShiftInput.addEventListener('input', function () {
             normalizeWholeNumber(totalSetShiftInput);
             updateSetPerHour();
+            evaluateStockCapability();
         });
 
         totalSetShiftInput.addEventListener('blur', function () {
             normalizeWholeNumber(totalSetShiftInput);
             updateSetPerHour();
+            evaluateStockCapability();
         });
     }
 
@@ -615,6 +721,29 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(function (data) {
                 const rows = data.products || [];
+                const requiredOrderMap = {};
+
+                requiredProductsData.forEach(function (product, index) {
+                    const productId = parseInt(product.product || 0, 10);
+                    if (productId > 0) {
+                        requiredOrderMap[productId] = index;
+                    }
+                });
+
+                rows.sort(function (a, b) {
+                    const aId = parseInt(a.item_id || 0, 10);
+                    const bId = parseInt(b.item_id || 0, 10);
+                    const aOrder = Object.prototype.hasOwnProperty.call(requiredOrderMap, aId) ? requiredOrderMap[aId] : Number.MAX_SAFE_INTEGER;
+                    const bOrder = Object.prototype.hasOwnProperty.call(requiredOrderMap, bId) ? requiredOrderMap[bId] : Number.MAX_SAFE_INTEGER;
+
+                    if (aOrder !== bOrder) {
+                        return aOrder - bOrder;
+                    }
+
+                    return String(a.item_code || '').localeCompare(String(b.item_code || ''));
+                });
+
+                stockRowsData = rows;
 
                 if (!tbody) return;
 
@@ -623,6 +752,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (rows.length === 0) {
                     tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No in-stock transfer data found</td></tr>';
+                    evaluateStockCapability();
                     return;
                 }
 
@@ -635,20 +765,34 @@ document.addEventListener('DOMContentLoaded', function () {
                         '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(row.quantity || 0) + '</td>' +
                         '</tr>';
                 }).join('');
+
+                evaluateStockCapability();
             })
             .catch(function (error) {
                 console.error('Error fetching in-stock transfers:', error);
+                stockRowsData = [];
                 if (loader) loader.style.display = 'none';
                 if (tbody) {
                     tbody.style.display = '';
                     tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading in-stock transfer data</td></tr>';
                 }
+
+                evaluateStockCapability();
             });
     }
 
     form.addEventListener('submit', async function (event) {
         const selectedQuantity = getSelectedQuantity();
         const actualSetShiftValue = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
+
+        evaluateStockCapability();
+
+        if (stockInsufficient) {
+            event.preventDefault();
+            showSubmitError('In Stock quantity is not capable to create this item in this quantity (Total Set/Shift) which you have set.');
+            if (totalSetShiftInput) totalSetShiftInput.focus();
+            return;
+        }
 
         if (actualSetShiftValue > selectedQuantity) {
             event.preventDefault();
@@ -663,7 +807,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!submitBtn) return;
 
         const defaultSubmitHtml = submitBtn.innerHTML;
-        submitBtn.disabled = true;
+        isSaving = true;
+        applySaveButtonState();
         submitBtn.innerHTML = '<span class="flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i>Saving...</span>';
 
         try {
@@ -695,13 +840,16 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             showSubmitError('Network error while saving. Please try again.');
         } finally {
-            submitBtn.disabled = false;
+            isSaving = false;
+            applySaveButtonState();
             submitBtn.innerHTML = defaultSubmitHtml;
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
         }
     });
+
+    applySaveButtonState();
 });
 
 </script>
