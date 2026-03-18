@@ -35,6 +35,16 @@
                     $selectedMachineIds = collect(old('machine_ids', []))
                         ->map(fn ($id) => (string) $id)
                         ->all();
+
+                    $oldSf3Products = old('sf3_products', [
+                        ['product' => '', 'quantity' => ''],
+                    ]);
+
+                    if (!is_array($oldSf3Products) || count($oldSf3Products) === 0) {
+                        $oldSf3Products = [
+                            ['product' => '', 'quantity' => ''],
+                        ];
+                    }
                 @endphp
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -171,30 +181,81 @@
                             </p>
                         @enderror
                     </div>
-@push('scripts')
-<script>
-    function toggleSF2Fields() {
-        const category = document.getElementById('category');
-        const sf2Name = document.getElementById('sf2-fields-name');
-        const sf2Code = document.getElementById('sf2-fields-code');
-        if (!category || !sf2Name || !sf2Code) return;
-        if (category.value === 'SF1-SF2') {
-            sf2Name.style.display = '';
-            sf2Code.style.display = '';
-        } else {
-            sf2Name.style.display = 'none';
-            sf2Code.style.display = 'none';
-        }
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-        const category = document.getElementById('category');
-        if (category) {
-            category.addEventListener('change', toggleSF2Fields);
-            toggleSF2Fields();
-        }
-    });
-</script>
-@endpush
+
+                    <!-- SF3 Products -->
+                    <div id="sf3-products-section" class="md:col-span-2 border border-slate-200 rounded-xl bg-slate-50/70 p-4" style="display: none;">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-800">SF3 Products & Quantity</h3>
+                                <p class="text-xs text-slate-500">Add one or more product and quantity rows for SF3.</p>
+                            </div>
+                            <button
+                                type="button"
+                                id="add-sf3-row"
+                                class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg font-medium text-sm transition-all"
+                            >
+                                <span>+ Add Product</span>
+                            </button>
+                        </div>
+
+                        <div id="sf3-product-rows" class="space-y-3">
+                            @foreach ($oldSf3Products as $index => $row)
+                                <div class="sf3-row grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg border border-slate-200 bg-white" data-row-index="{{ $index }}">
+                                    <div class="md:col-span-7">
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
+                                        <input
+                                            type="text"
+                                            name="sf3_products[{{ $index }}][product]"
+                                            value="{{ data_get($row, 'product') }}"
+                                            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                            placeholder="Enter product name"
+                                        >
+                                    </div>
+
+                                    <div class="md:col-span-4">
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            name="sf3_products[{{ $index }}][quantity]"
+                                            value="{{ data_get($row, 'quantity') }}"
+                                            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                            placeholder="0"
+                                        >
+                                    </div>
+
+                                    <div class="md:col-span-1 flex items-end">
+                                        <button
+                                            type="button"
+                                            class="remove-sf3-row w-full px-3 py-2.5 border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg font-medium text-sm transition-all"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @error('sf3_products')
+                            <p class="mt-3 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        @error('sf3_products.*.product')
+                            <p class="mt-3 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                        @error('sf3_products.*.quantity')
+                            <p class="mt-3 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
 
                     <!-- Size -->
                     <div>
@@ -299,6 +360,139 @@
 <script>
  
     lucide.createIcons();
+
+    (() => {
+        const category = document.getElementById('category');
+        const sf2Name = document.getElementById('sf2-fields-name');
+        const sf2Code = document.getElementById('sf2-fields-code');
+        const sf3Section = document.getElementById('sf3-products-section');
+        const sf3Rows = document.getElementById('sf3-product-rows');
+        const addSf3RowBtn = document.getElementById('add-sf3-row');
+
+        if (!category || !sf2Name || !sf2Code) return;
+
+        const buildSf3Row = (index) => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'sf3-row grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg border border-slate-200 bg-white';
+            wrapper.dataset.rowIndex = String(index);
+            wrapper.innerHTML = `
+                <div class="md:col-span-7">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
+                    <input
+                        type="text"
+                        name="sf3_products[${index}][product]"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="Enter product name"
+                    >
+                </div>
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        name="sf3_products[${index}][quantity]"
+                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="0"
+                    >
+                </div>
+                <div class="md:col-span-1 flex items-end">
+                    <button
+                        type="button"
+                        class="remove-sf3-row w-full px-3 py-2.5 border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg font-medium text-sm transition-all"
+                    >
+                        Remove
+                    </button>
+                </div>
+            `;
+            return wrapper;
+        };
+
+        const updateSf3InputNames = () => {
+            if (!sf3Rows) return;
+            const rows = Array.from(sf3Rows.querySelectorAll('.sf3-row'));
+
+            rows.forEach((row, index) => {
+                row.dataset.rowIndex = String(index);
+                const productInput = row.querySelector('input[name*="[product]"]');
+                const quantityInput = row.querySelector('input[name*="[quantity]"]');
+
+                if (productInput) productInput.name = `sf3_products[${index}][product]`;
+                if (quantityInput) quantityInput.name = `sf3_products[${index}][quantity]`;
+            });
+        };
+
+        const addSf3Row = () => {
+            if (!sf3Rows) return;
+            const nextIndex = sf3Rows.querySelectorAll('.sf3-row').length;
+            sf3Rows.appendChild(buildSf3Row(nextIndex));
+        };
+
+        const ensureAtLeastOneSf3Row = () => {
+            if (!sf3Rows) return;
+            if (sf3Rows.querySelectorAll('.sf3-row').length === 0) {
+                sf3Rows.appendChild(buildSf3Row(0));
+            }
+            updateSf3InputNames();
+        };
+
+        const setSf3RequiredState = (isRequired) => {
+            if (!sf3Rows) return;
+            sf3Rows.querySelectorAll('input[name*="[product]"]').forEach((input) => {
+                input.required = isRequired;
+            });
+            sf3Rows.querySelectorAll('input[name*="[quantity]"]').forEach((input) => {
+                input.required = isRequired;
+            });
+        };
+
+        const toggleCategoryFields = () => {
+            const selectedCategory = category.value;
+
+            if (selectedCategory === 'SF1-SF2') {
+                sf2Name.style.display = '';
+                sf2Code.style.display = '';
+            } else {
+                sf2Name.style.display = 'none';
+                sf2Code.style.display = 'none';
+            }
+
+            if (sf3Section) {
+                if (selectedCategory === 'SF3') {
+                    sf3Section.style.display = '';
+                    ensureAtLeastOneSf3Row();
+                    setSf3RequiredState(true);
+                } else {
+                    sf3Section.style.display = 'none';
+                    setSf3RequiredState(false);
+                }
+            }
+        };
+
+        if (addSf3RowBtn) {
+            addSf3RowBtn.addEventListener('click', addSf3Row);
+        }
+
+        if (sf3Rows) {
+            sf3Rows.addEventListener('click', (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+
+                const removeBtn = target.closest('.remove-sf3-row');
+                if (!removeBtn) return;
+
+                const row = removeBtn.closest('.sf3-row');
+                if (!row) return;
+
+                row.remove();
+                ensureAtLeastOneSf3Row();
+                setSf3RequiredState(category.value === 'SF3');
+            });
+        }
+
+        category.addEventListener('change', toggleCategoryFields);
+        toggleCategoryFields();
+    })();
 
     (() => {
         const rawMachines = @json($machines);

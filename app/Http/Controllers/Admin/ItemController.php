@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class ItemController extends Controller
 {
@@ -73,7 +74,7 @@ class ItemController extends Controller
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code',
             'category' => ['required', Rule::in(['SF1-SF2', 'SF3', 'Store'])],
@@ -84,16 +85,36 @@ class ItemController extends Controller
             'status' => 'required|boolean',
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
-        ]);
+            'sf3_products' => ['nullable', 'array'],
+            'sf3_products.*.product' => ['nullable', 'string', 'max:255'],
+            'sf3_products.*.quantity' => ['nullable', 'numeric', 'min:0'],
+        ];
+
+        if ($request->input('category') === 'SF3') {
+            $rules['sf3_products'] = ['required', 'array', 'min:1'];
+            $rules['sf3_products.*.product'] = ['required', 'string', 'max:255'];
+            $rules['sf3_products.*.quantity'] = ['required', 'numeric', 'min:0'];
+        }
+
+        $validated = $request->validate($rules);
 
         $machineIds = $validated['machine_ids'] ?? [];
-        unset($validated['machine_ids']);
+        $sf3Products = $validated['sf3_products'] ?? [];
+        unset($validated['machine_ids'], $validated['sf3_products']);
 
         $validated['is_deleted'] = false;
 
-        $item = Item::create($validated);
+        $item = DB::transaction(function () use ($validated, $machineIds, $sf3Products) {
+            $item = Item::create($validated);
 
-        $item->machines()->sync($machineIds);
+            $item->machines()->sync($machineIds);
+
+            if ($item->category === 'SF3' && count($sf3Products) > 0) {
+                $item->sf3Products()->createMany($this->normalizeSf3Products($sf3Products));
+            }
+
+            return $item;
+        });
 
         if ($this->isAjaxRequest($request)) {
             return response()->json([
@@ -114,6 +135,9 @@ class ItemController extends Controller
             'machines' => function ($query) {
                 $query->select('machines.id', 'machines.name', 'machines.machine_code', 'machines.status', 'machines.is_deleted');
             },
+            'sf3Products' => function ($query) {
+                $query->select('id', 'item_id', 'product', 'quantity')->orderBy('id');
+            },
         ]);
 
         return view('backend.items.show', compact('item'));
@@ -130,7 +154,10 @@ class ItemController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'machine_code']);
 
-        $item->load(['machines:id']);
+        $item->load([
+            'machines:id',
+            'sf3Products:id,item_id,product,quantity',
+        ]);
 
         return view('backend.items.edit', compact('item', 'machines'));
     }
@@ -140,7 +167,7 @@ class ItemController extends Controller
      */
     public function update(Request $request, Item $item): RedirectResponse|JsonResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:items,code,' . $item->id,
             'category' => ['required', Rule::in(['SF1-SF2', 'SF3', 'Store'])],
@@ -151,14 +178,33 @@ class ItemController extends Controller
             'status' => 'required|boolean',
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
-        ]);
+            'sf3_products' => ['nullable', 'array'],
+            'sf3_products.*.product' => ['nullable', 'string', 'max:255'],
+            'sf3_products.*.quantity' => ['nullable', 'numeric', 'min:0'],
+        ];
+
+        if ($request->input('category') === 'SF3') {
+            $rules['sf3_products'] = ['required', 'array', 'min:1'];
+            $rules['sf3_products.*.product'] = ['required', 'string', 'max:255'];
+            $rules['sf3_products.*.quantity'] = ['required', 'numeric', 'min:0'];
+        }
+
+        $validated = $request->validate($rules);
 
         $machineIds = $validated['machine_ids'] ?? [];
-        unset($validated['machine_ids']);
+        $sf3Products = $validated['sf3_products'] ?? [];
+        unset($validated['machine_ids'], $validated['sf3_products']);
 
-        $item->update($validated);
+        DB::transaction(function () use ($item, $validated, $machineIds, $sf3Products) {
+            $item->update($validated);
 
-        $item->machines()->sync($machineIds);
+            $item->machines()->sync($machineIds);
+
+            $item->sf3Products()->delete();
+            if ($item->category === 'SF3' && count($sf3Products) > 0) {
+                $item->sf3Products()->createMany($this->normalizeSf3Products($sf3Products));
+            }
+        });
 
         if ($this->isAjaxRequest($request)) {
             return response()->json([
@@ -184,5 +230,22 @@ class ItemController extends Controller
     protected function isAjaxRequest(Request $request): bool
     {
         return $request->ajax() || $request->wantsJson() || $request->expectsJson();
+    }
+
+    /**
+     * @param  array<int, array{product?: mixed, quantity?: mixed}>  $rows
+     * @return array<int, array{product: string, quantity: float}>
+     */
+    protected function normalizeSf3Products(array $rows): array
+    {
+        return collect($rows)
+            ->map(function (array $row): array {
+                return [
+                    'product' => trim((string) ($row['product'] ?? '')),
+                    'quantity' => (float) ($row['quantity'] ?? 0),
+                ];
+            })
+            ->values()
+            ->all();
     }
 }

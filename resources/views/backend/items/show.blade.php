@@ -66,6 +66,12 @@
                         <p class="text-slate-700 leading-relaxed">{{ $item->code }}</p>
                     </div>
 
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-500 mb-2">Category</label>
+                        <p class="text-slate-700 leading-relaxed">{{ $item->category ?: '-' }}</p>
+                    </div>
+
                     <!-- SF2 Name -->
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name SF2</label>
@@ -102,11 +108,50 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-emerald-600">Weight</p>
-                                <p class="text-2xl font-bold text-emerald-900">{{ number_format((float) $item->weight, 2) }}</p>
+                                <p class="text-2xl font-bold text-emerald-900">{{ (int) $item->weight }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                @if ($item->category === 'SF3')
+                    <div class="pt-6 border-t border-slate-200">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                                <i data-lucide="boxes" class="w-5 h-5 text-blue-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">SF3 Products</p>
+                                <p class="text-sm text-slate-500">Product and quantity rows linked to this item</p>
+                            </div>
+                        </div>
+
+                        @if ($item->sf3Products->count() === 0)
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+                                <p class="text-sm text-slate-600">No SF3 products added.</p>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                                <table class="min-w-full divide-y divide-slate-200 bg-white">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Product</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200">
+                                        @foreach ($item->sf3Products as $sf3Product)
+                                            <tr>
+                                                <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ $sf3Product->product }}</td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">{{ (float) $sf3Product->quantity }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                @endif
 
                 <!-- Machines -->
                 <div class="pt-6 border-t border-slate-200">

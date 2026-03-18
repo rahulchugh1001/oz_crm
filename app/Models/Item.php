@@ -37,6 +37,11 @@ class Item extends Model
         return $this->belongsToMany(Machine::class)->withTimestamps();
     }
 
+    public function sf3Products(): HasMany
+    {
+        return $this->hasMany(ItemSf3Product::class);
+    }
+
     /**
      * Get the value of the model's route key (encrypted).
      */
