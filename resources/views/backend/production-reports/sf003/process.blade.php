@@ -6,6 +6,9 @@
     $lineBadgeLabel = $lineLabel . ' Production';
     $stockCount = $acceptedTransfers->count();
     $firstAcceptedTransfer = $acceptedTransfers->first();
+    $addProductionUrl = $firstAcceptedTransfer
+        ? route('admin.production-reports.sf003.production-report', ['transferId' => $firstAcceptedTransfer->id, 'line' => $requestedLine])
+        : route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'stock']);
 @endphp
 
 @section('title', 'Assemble SF3 ' . $lineLabel . ' Process')
@@ -54,17 +57,10 @@
                         <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
                     </div>
                     @else
-                    @if($firstAcceptedTransfer)
-                    <a href="{{ route('admin.production-reports.sf003.production-report', ['transferId' => $firstAcceptedTransfer->id, 'line' => $requestedLine]) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors" title="Add Production">
+                    <a href="{{ $addProductionUrl }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors" title="Add Production">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         Add Production
                     </a>
-                    @else
-                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-300 text-slate-600 text-sm font-medium cursor-not-allowed" title="No accepted stock available" disabled>
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        Add Production
-                    </button>
-                    @endif
                     @endif
                 </div>
 

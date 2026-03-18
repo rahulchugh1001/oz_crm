@@ -110,6 +110,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/production-report/{transferId}', [SF003Controller::class, 'productionReport'])->name('production-report');
         Route::post('/production-report/{transferId}', [SF003Controller::class, 'storeProductionReport'])->name('production-report.store');
         Route::post('/stock/{transferId}/status', [SF003Controller::class, 'updateStatus'])->name('stock.status');
+        Route::get('/item-products', [SF003Controller::class, 'getItemProducts'])->name('item-products');
+        Route::get('/item-products-stock', [SF003Controller::class, 'getItemProductsStock'])->name('item-products-stock');
     });
     Route::get('/production-reports/sf002', [ProductionReportController::class, 'sf002'])->name('production-reports.sf002');
     Route::get('/production-reports/sf003', [ProductionReportController::class, 'sf003'])->name('production-reports.sf003');

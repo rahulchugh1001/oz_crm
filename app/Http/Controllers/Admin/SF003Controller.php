@@ -94,6 +94,7 @@ class SF003Controller extends Controller
                             ->orWhere('transfers.assign_to', Auth::id());
                     });
             }
+
         }
 
         return $query;
@@ -264,7 +265,8 @@ class SF003Controller extends Controller
                 'transfers.sf3_process',
                 'items.code as item_code',
                 'items.name as item_name',
-                'items.size as item_size'
+                'items.size as item_size',
+                'items.category'
             )
             ->join('items', 'transfers.item_id', '=', 'items.id')
             ->where('transfers.is_deleted', false)
@@ -322,6 +324,14 @@ class SF003Controller extends Controller
             abort(404, 'No accepted transfer found for selected SF3 process line.');
         }
 
+        // Fetch all SF3 items for the dropdown
+        $sf3Items = DB::table('items')
+            ->where('category', 'SF3')
+            ->where('is_deleted', false)
+            ->orderBy('code')
+            ->orderBy('name')
+            ->get();
+
         return view('backend.production-reports.sf003.production-report', compact(
             'transfer',
             'availableTransfers',
@@ -329,7 +339,8 @@ class SF003Controller extends Controller
             'requestedLine',
             'lineCode',
             'lineLabel',
-            'lineTitle'
+            'lineTitle',
+            'sf3Items'
         ));
     }
 
@@ -386,11 +397,13 @@ class SF003Controller extends Controller
 
         $selectedTransferId = (int) ($validated['selected_transfer_id'] ?? $transferId);
 
-        $query = DB::table('sf002_stock_transfers')
-            ->where('id', $selectedTransferId)
-            ->where('is_deleted', false)
-            ->where('is_accept', 1)
-            ->where('sf3_process', $lineCode);
+        $query = DB::table('sf002_stock_transfers as transfers')
+            ->join('items', 'transfers.item_id', '=', 'items.id')
+            ->select('transfers.*')
+            ->where('transfers.id', $selectedTransferId)
+            ->where('transfers.is_deleted', false)
+            ->where('transfers.is_accept', 1)
+            ->where('transfers.sf3_process', $lineCode);
 
         if (Auth::user()?->role !== 'Admin') {
             $role = $this->currentAssignableRole();
@@ -398,8 +411,8 @@ class SF003Controller extends Controller
             if (!$role) {
                 $query->whereRaw('1 = 0');
             } else {
-                $query->where('assign_role', $role)
-                    ->where('assign_to', Auth::id());
+                $query->where('transfers.assign_role', $role)
+                    ->where('transfers.assign_to', Auth::id());
             }
         }
 
@@ -608,4 +621,74 @@ class SF003Controller extends Controller
 
         return back()->with('success', 'Transfer status updated successfully.');
     }
+
+    /**
+     * Fetch SF3 products for a given item.
+     */
+    public function getItemProducts(Request $request): JsonResponse
+    {
+        $itemId = (int) ($request->query('item_id') ?? 0);
+
+        if ($itemId <= 0) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = DB::table('item_sf3_products as sf3p')
+            ->join('items', 'sf3p.product', '=', 'items.id')
+            ->select(
+                'sf3p.id',
+                'sf3p.item_id',
+                'sf3p.product',
+                'sf3p.quantity',
+                'items.code as product_code',
+                'items.name as product_name',
+                'items.category as product_category'
+            )
+            ->where('sf3p.item_id', $itemId)
+            ->orderBy('sf3p.product')
+            ->get();
+
+        return response()->json(['products' => $products]);
+    }
+
+    /**
+     * Fetch available stock for SF3 products for a given item.
+     */
+    public function getItemProductsStock(Request $request): JsonResponse
+    {
+        $itemId = (int) ($request->query('item_id') ?? 0);
+
+        if ($itemId <= 0) {
+            return response()->json(['products' => []]);
+        }
+
+        $products = DB::table('item_sf3_products as sf3p')
+            ->join('items', 'sf3p.product', '=', 'items.id')
+            ->select(
+                'sf3p.id',
+                'sf3p.item_id',
+                'sf3p.product',
+                'sf3p.quantity',
+                'items.code as product_code',
+                'items.name as product_name',
+                'items.category as product_category'
+            )
+            ->where('sf3p.item_id', $itemId)
+            ->orderBy('sf3p.product')
+            ->get()
+            ->map(function ($product) {
+                $totalStock = DB::table('sf002_stock_transfers')
+                    ->where('item_id', $product->product)
+                    ->where('is_deleted', false)
+                    ->where('is_accept', 1)
+                    ->sum(DB::raw('GREATEST(quantity - COALESCE(reject_quantity, 0), 0)'));
+
+                $product->stock_available = (int) ($totalStock ?? 0);
+
+                return $product;
+            });
+
+        return response()->json(['products' => $products]);
+    }
 }
+

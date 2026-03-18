@@ -50,25 +50,25 @@
                     <div>
                         <label for="item_selector" class="block text-sm font-medium text-slate-700 mb-2">Select Item</label>
                         <select id="item_selector" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            @foreach($availableTransfers as $row)
+                            <option value="" disabled selected>-- Select Item --</option>
+                            @foreach($sf3Items as $item)
                                 <option
-                                    value="{{ $row->id }}"
-                                    data-item-id="{{ $row->item_id }}"
-                                    data-item-code="{{ $row->item_code }}"
-                                    data-item-name="{{ $row->item_name }}"
-                                    data-item-size="{{ $row->item_size }}"
-                                    data-quantity="{{ number_format((float) ($row->pending_quantity ?? 0), 0, '.', '') }}"
-                                    {{ (int) $row->id === (int) $transfer->id ? 'selected' : '' }}
+                                    value="{{ $item->id }}"
+                                    data-item-id="{{ $item->id }}"
+                                    data-item-code="{{ $item->code }}"
+                                    data-item-name="{{ $item->name }}"
+                                    data-item-size="{{ $item->size }}"
                                 >
-                                    {{ $row->item_code }} - {{ $row->item_name }} ({{ $row->item_size }})
+                                    {{ $item->code }} - {{ $item->name }} ({{ $item->size }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div>
+                    <input type="hidden" id="selected_item_quantity" value="{{ number_format((float) ($transfer->pending_quantity ?? 0), 0, '.', '') }}">
+                    {{-- <div>
                         <label for="selected_item_quantity" class="block text-sm font-medium text-slate-700 mb-2">Pending Quantity</label>
                         <input type="text" id="selected_item_quantity" value="{{ number_format((float) ($transfer->pending_quantity ?? 0), 0, '.', '') }}" readonly class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50">
-                    </div>
+                    </div> --}}
                     <div>
                         <label for="sf3_report_date" class="block text-sm font-medium text-slate-700 mb-2">Report Date</label>
                         <input type="date" id="sf3_report_date" name="sf3_report_date" value="{{ old('sf3_report_date', $existingReport->report_date ?? ($transfer->date ?? date('Y-m-d'))) }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -131,6 +131,53 @@
                     </table>
                 </div>
 
+                <div class="mt-6">
+                    <div class="flex gap-2 border-b border-slate-200 mb-4">
+                        <button id="requiredStockTab" type="button" class="px-4 py-2 font-medium text-slate-700 border-b-2 border-blue-600 text-blue-600 tab-button" data-tab="required-stock">
+                            Required Stock
+                        </button>
+                        <button id="inStockTab" type="button" class="px-4 py-2 font-medium text-slate-600 border-b-2 border-transparent hover:text-slate-900 tab-button" data-tab="in-stock">
+                            In Stock (Upcoming)
+                        </button>
+                    </div>
+
+                    <div id="required-stock" class="tab-content">
+                        <div class="overflow-x-auto rounded-xl border border-slate-200">
+                            <table id="productTable" class="w-full border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-slate-100">
+                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Code</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Name</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
+                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity Required</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productTableBody">
+                                    <tr class="text-center text-slate-500">
+                                        <td colspan="4" class="py-4">Select an item to view required stock</td>
+                                    </tr>
+                                </tbody>
+                                <tbody id="productTableLoader" style="display: none;">
+                                    <tr class="text-center">
+                                        <td colspan="4" class="py-6">
+                                            <div class="flex items-center justify-center gap-2">
+                                                <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                                                <span class="text-slate-600 font-medium">Loading required stock...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="in-stock" class="tab-content" style="display: none;">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5">
+                            <p class="text-sm font-medium text-slate-700">Upcoming...</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mt-6 flex items-center justify-end gap-3">
                     <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">Cancel</a>
                     <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">
@@ -141,6 +188,7 @@
         </div>
     </div>
 </div>
+
 @endsection
 
 @push('styles')
@@ -255,8 +303,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedOption = itemSelector.options[itemSelector.selectedIndex];
         if (!selectedOption) return;
 
+        const selectedValue = selectedOption.value;
+        
+        // If no item selected, reset everything
+        if (!selectedValue) {
+            if (selectedItemCode) selectedItemCode.textContent = '-';
+            if (selectedItemName) selectedItemName.textContent = '-';
+            if (selectedItemSize) selectedItemSize.textContent = '-';
+            if (selectedQuantityInput) selectedQuantityInput.value = '0';
+            const requiredTbody = document.getElementById('productTableBody');
+            if (requiredTbody) {
+                requiredTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">Select an item to view required stock</td></tr>';
+            }
+            return;
+        }
+
         if (selectedTransferInput) {
-            selectedTransferInput.value = selectedOption.value || '';
+            selectedTransferInput.value = selectedValue || '';
         }
         if (selectedQuantityInput) {
             selectedQuantityInput.value = selectedOption.getAttribute('data-quantity') || '0';
@@ -274,6 +337,60 @@ document.addEventListener('DOMContentLoaded', function () {
         clampToSelectedQuantity(totalSetShiftInput);
         clampToSelectedQuantity(actualSetShiftInput);
         updateSetPerHour();
+
+        // Fetch products for the selected item
+        const itemId = selectedOption.getAttribute('data-item-id');
+        if (itemId) {
+            fetchItemProducts(itemId);
+        }
+    }
+
+    function fetchItemProducts(itemId) {
+        const url = '{{ route("admin.production-reports.sf003.item-products") }}?item_id=' + itemId;
+        const tbody = document.getElementById('productTableBody');
+        const loader = document.getElementById('productTableLoader');
+
+        // Show loader
+        if (tbody) tbody.style.display = 'none';
+        if (loader) loader.style.display = '';
+
+        fetch(url)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                const products = data.products || [];
+                
+                if (!tbody) return;
+
+                // Hide loader
+                if (loader) loader.style.display = 'none';
+                tbody.style.display = '';
+
+                if (products.length === 0) {
+                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">No required stock found for this item</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = products.map(function (product) {
+                    return '<tr class="hover:bg-slate-50">' +
+                        '<td class="border border-slate-300 px-3 py-2">' + (product.product_code || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2">' + (product.product_name || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2 text-center">' + (product.product_category || '-') + '</td>' +
+                        '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(product.quantity || 0) + '</td>' +
+                        '</tr>';
+                }).join('');
+            })
+            .catch(function (error) {
+                console.error('Error fetching products:', error);
+                
+                // Hide loader
+                if (loader) loader.style.display = 'none';
+                if (tbody) {
+                    tbody.style.display = '';
+                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="4" class="py-4">Error loading required stock</td></tr>';
+                }
+            });
     }
 
     function updateShiftLabels(shift) {
@@ -341,9 +458,42 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    updateSelectedItemMeta();
+    // Initialize with default state
+    if (selectedItemCode) selectedItemCode.textContent = '-';
+    if (selectedItemName) selectedItemName.textContent = '-';
+    if (selectedItemSize) selectedItemSize.textContent = '-';
+
     if (itemSelector) {
         itemSelector.addEventListener('change', updateSelectedItemMeta);
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                const tabName = this.getAttribute('data-tab');
+
+                // Hide all tabs
+                tabContents.forEach(function (tab) {
+                    tab.style.display = 'none';
+                });
+
+                // Show selected tab
+                const selectedTab = document.getElementById(tabName);
+                if (selectedTab) {
+                    selectedTab.style.display = 'block';
+                }
+
+                // Update button styles
+                tabButtons.forEach(function (btn) {
+                    btn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600');
+                    btn.classList.add('border-b-2', 'border-transparent', 'text-slate-600');
+                });
+                this.classList.remove('border-b-2', 'border-transparent', 'text-slate-600');
+                this.classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
+            });
+        });
+
     }
 
     if (totalSetShiftInput) {
@@ -489,5 +639,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+
 </script>
 @endpush
