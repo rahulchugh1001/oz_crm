@@ -34,6 +34,10 @@
         <div class="p-4">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <p class="text-[11px] uppercase tracking-wider text-slate-500">Category</p>
+                    <p class="text-sm font-semibold text-slate-900 mt-1">{{ $rejectReason->category ?? 'SF1' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                     <p class="text-[11px] uppercase tracking-wider text-slate-500">Status</p>
                     <p class="text-sm font-semibold text-slate-900 mt-1">{{ $rejectReason->status ? 'Active' : 'Inactive' }}</p>
                 </div>
