@@ -363,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
             selectedItemSize.textContent = selectedOption.getAttribute('data-item-size') || '-';
         }
 
-        clampToSelectedQuantity(totalSetShiftInput);
         clampToSelectedQuantity(actualSetShiftInput);
         updateSetPerHour();
 
@@ -529,13 +528,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (totalSetShiftInput) {
         totalSetShiftInput.addEventListener('input', function () {
             normalizeWholeNumber(totalSetShiftInput);
-            clampToSelectedQuantity(totalSetShiftInput);
             updateSetPerHour();
         });
 
         totalSetShiftInput.addEventListener('blur', function () {
             normalizeWholeNumber(totalSetShiftInput);
-            clampToSelectedQuantity(totalSetShiftInput);
             updateSetPerHour();
         });
     }
@@ -557,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         input.addEventListener('blur', function () {
             normalizeWholeNumber(input);
-            if (input === totalSetShiftInput || input === actualSetShiftInput) {
+            if (input === actualSetShiftInput) {
                 clampToSelectedQuantity(input);
             }
         });
@@ -651,15 +648,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('submit', async function (event) {
         const selectedQuantity = getSelectedQuantity();
-        const totalSetShiftValue = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
         const actualSetShiftValue = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
-
-        if (totalSetShiftValue > selectedQuantity) {
-            event.preventDefault();
-            showSubmitError('Total Set/Shift cannot be greater than pending quantity.');
-            if (totalSetShiftInput) totalSetShiftInput.focus();
-            return;
-        }
 
         if (actualSetShiftValue > selectedQuantity) {
             event.preventDefault();
