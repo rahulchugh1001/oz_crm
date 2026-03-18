@@ -14,11 +14,18 @@ class ItemSf3Product extends Model
     ];
 
     protected $casts = [
+        'product'  => 'integer',
         'quantity' => 'decimal:2',
     ];
 
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /** The linked product item (SF1-SF2 or Store). */
+    public function productItem(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'product');
     }
 }

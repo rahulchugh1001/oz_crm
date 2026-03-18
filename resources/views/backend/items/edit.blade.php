@@ -211,8 +211,7 @@
 
                         <div id="sf3-product-rows" class="space-y-3">
                             @php
-                                $sf1sf2Items = $productItems->where('category', 'SF1-SF2');
-                                $storeItems  = $productItems->where('category', 'Store');
+                                $groupedProductItems = $productItems->groupBy('category');
                             @endphp
                             @foreach ($oldSf3Products as $index => $row)
                                 <div class="sf3-row grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg border border-slate-200 bg-white" data-row-index="{{ $index }}">
@@ -223,21 +222,16 @@
                                             class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                         >
                                             <option value="">Select product</option>
-                                            @if ($sf1sf2Items->isNotEmpty())
-                                                <optgroup label="SF1-SF2">
-                                                    @foreach ($sf1sf2Items as $pi)
-                                                        @php $piLabel = $pi->name_sf2 ?: $pi->name; @endphp
-                                                        <option value="{{ $piLabel }}" {{ data_get($row, 'product') === $piLabel ? 'selected' : '' }}>{{ $piLabel }}</option>
+                                            @foreach ($groupedProductItems as $productCategory => $items)
+                                                <optgroup label="{{ $productCategory }}">
+                                                    @foreach ($items as $pi)
+                                                        @php
+                                                            $piLabel = $productCategory === 'SF1-SF2' ? ($pi->name_sf2 ?: $pi->name) : $pi->name;
+                                                        @endphp
+                                                        <option value="{{ $pi->id }}" {{ (string) data_get($row, 'product') === (string) $pi->id ? 'selected' : '' }}>{{ $piLabel }}</option>
                                                     @endforeach
                                                 </optgroup>
-                                            @endif
-                                            @if ($storeItems->isNotEmpty())
-                                                <optgroup label="Store">
-                                                    @foreach ($storeItems as $pi)
-                                                        <option value="{{ $pi->name }}" {{ data_get($row, 'product') === $pi->name ? 'selected' : '' }}>{{ $pi->name }}</option>
-                                                    @endforeach
-                                                </optgroup>
-                                            @endif
+                                            @endforeach
                                         </select>
                                     </div>
 
@@ -406,26 +400,24 @@
         const rawProductItems = @json($productItems);
 
         const buildProductOptions = (selectedValue = '') => {
-            const sf1sf2 = rawProductItems.filter(i => i.category === 'SF1-SF2');
-            const store  = rawProductItems.filter(i => i.category === 'Store');
+            const grouped = rawProductItems.reduce((acc, item) => {
+                const categoryKey = item.category || 'Other';
+                if (!acc[categoryKey]) acc[categoryKey] = [];
+                acc[categoryKey].push(item);
+                return acc;
+            }, {});
+
             let html = '<option value="">Select product</option>';
-            if (sf1sf2.length) {
-                html += '<optgroup label="SF1-SF2">';
-                sf1sf2.forEach(i => {
-                    const label = i.name_sf2 || i.name;
-                    const sel = selectedValue === label ? ' selected' : '';
-                    html += `<option value="${label}"${sel}>${label}</option>`;
+            Object.keys(grouped).forEach((categoryKey) => {
+                html += `<optgroup label="${categoryKey}">`;
+                grouped[categoryKey].forEach((i) => {
+                    const label = categoryKey === 'SF1-SF2' ? (i.name_sf2 || i.name) : i.name;
+                    const sel = String(selectedValue) === String(i.id) ? ' selected' : '';
+                    html += `<option value="${i.id}"${sel}>${label}</option>`;
                 });
                 html += '</optgroup>';
-            }
-            if (store.length) {
-                html += '<optgroup label="Store">';
-                store.forEach(i => {
-                    const sel = selectedValue === i.name ? ' selected' : '';
-                    html += `<option value="${i.name}"${sel}>${i.name}</option>`;
-                });
-                html += '</optgroup>';
-            }
+            });
+
             return html;
         };
 

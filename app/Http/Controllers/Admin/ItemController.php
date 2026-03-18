@@ -93,13 +93,13 @@ class ItemController extends Controller
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
             'sf3_products' => ['nullable', 'array'],
-            'sf3_products.*.product' => ['nullable', 'string', 'max:255'],
+            'sf3_products.*.product' => ['nullable', 'integer', Rule::exists('items', 'id')],
             'sf3_products.*.quantity' => ['nullable', 'numeric', 'min:0'],
         ];
 
         if ($request->input('category') === 'SF3') {
             $rules['sf3_products'] = ['required', 'array', 'min:1'];
-            $rules['sf3_products.*.product'] = ['required', 'string', 'max:255'];
+            $rules['sf3_products.*.product'] = ['required', 'integer', Rule::exists('items', 'id')];
             $rules['sf3_products.*.quantity'] = ['required', 'numeric', 'min:0'];
         }
 
@@ -144,6 +144,9 @@ class ItemController extends Controller
             },
             'sf3Products' => function ($query) {
                 $query->select('id', 'item_id', 'product', 'quantity')->orderBy('id');
+            },
+            'sf3Products.productItem' => function ($query) {
+                $query->select('id', 'name', 'name_sf2', 'category');
             },
         ]);
 
@@ -193,13 +196,13 @@ class ItemController extends Controller
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
             'sf3_products' => ['nullable', 'array'],
-            'sf3_products.*.product' => ['nullable', 'string', 'max:255'],
+            'sf3_products.*.product' => ['nullable', 'integer', Rule::exists('items', 'id')],
             'sf3_products.*.quantity' => ['nullable', 'numeric', 'min:0'],
         ];
 
         if ($request->input('category') === 'SF3') {
             $rules['sf3_products'] = ['required', 'array', 'min:1'];
-            $rules['sf3_products.*.product'] = ['required', 'string', 'max:255'];
+            $rules['sf3_products.*.product'] = ['required', 'integer', Rule::exists('items', 'id')];
             $rules['sf3_products.*.quantity'] = ['required', 'numeric', 'min:0'];
         }
 
@@ -255,7 +258,7 @@ class ItemController extends Controller
         return collect($rows)
             ->map(function (array $row): array {
                 return [
-                    'product' => trim((string) ($row['product'] ?? '')),
+                    'product'  => (int) ($row['product'] ?? 0),
                     'quantity' => (float) ($row['quantity'] ?? 0),
                 ];
             })

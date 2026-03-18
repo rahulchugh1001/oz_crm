@@ -221,7 +221,7 @@
                                                         @php
                                                             $piLabel = $productCategory === 'SF1-SF2' ? ($pi->name_sf2 ?: $pi->name) : $pi->name;
                                                         @endphp
-                                                        <option value="{{ $piLabel }}" {{ data_get($row, 'product') === $piLabel ? 'selected' : '' }}>{{ $piLabel }}</option>
+                                                        <option value="{{ $pi->id }}" {{ (string) data_get($row, 'product') === (string) $pi->id ? 'selected' : '' }}>{{ $piLabel }}</option>
                                                     @endforeach
                                                 </optgroup>
                                             @endforeach
@@ -406,8 +406,8 @@
                 html += `<optgroup label="${categoryKey}">`;
                 grouped[categoryKey].forEach((i) => {
                     const label = categoryKey === 'SF1-SF2' ? (i.name_sf2 || i.name) : i.name;
-                    const sel = selectedValue === label ? ' selected' : '';
-                    html += `<option value="${label}"${sel}>${label}</option>`;
+                    const sel = String(selectedValue) === String(i.id) ? ' selected' : '';
+                    html += `<option value="${i.id}"${sel}>${label}</option>`;
                 });
                 html += '</optgroup>';
             });

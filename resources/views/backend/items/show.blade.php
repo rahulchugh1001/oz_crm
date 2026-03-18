@@ -72,6 +72,7 @@
                         <p class="text-slate-700 leading-relaxed">{{ $item->category ?: '-' }}</p>
                     </div>
 
+                    @if ($item->category !== 'SF3')
                     <!-- SF2 Name -->
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name SF2</label>
@@ -83,6 +84,7 @@
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Item Code SF2</label>
                         <p class="text-slate-700 leading-relaxed">{{ $item->code_sf2 ?: '-' }}</p>
                     </div>
+                    @endif
                 </div>
 
                 <!-- Size & Weight Grid -->
@@ -141,8 +143,14 @@
                                     </thead>
                                     <tbody class="divide-y divide-slate-200">
                                         @foreach ($item->sf3Products as $sf3Product)
+                                            @php
+                                                $productItem = $sf3Product->productItem;
+                                                $productLabel = $productItem
+                                                    ? ($productItem->category === 'SF1-SF2' ? ($productItem->name_sf2 ?: $productItem->name) : $productItem->name)
+                                                    : $sf3Product->product;
+                                            @endphp
                                             <tr>
-                                                <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ $sf3Product->product }}</td>
+                                                <td class="px-4 py-3 text-sm font-medium text-slate-800">{{ $productLabel }}</td>
                                                 <td class="px-4 py-3 text-sm text-slate-700">{{ (float) $sf3Product->quantity }}</td>
                                             </tr>
                                         @endforeach
@@ -175,7 +183,8 @@
                                 <span class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700">
                                     <span class="font-semibold">{{ $machine->name }}</span>
                                     <span class="text-slate-500">({{ $machine->machine_code }})</span>
-                                    <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $machine->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
+                                    <span class="ml-1 flex items-center gap-1 text-xs font-semibold {{ $machine->status ? 'text-emerald-700' : 'text-slate-400' }}">
+                                        <span class="inline-block w-2 h-2 rounded-full {{ $machine->status ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
                                         {{ $machine->status ? 'Active' : 'Inactive' }}
                                     </span>
                                     @if ($machine->pivot && $machine->pivot->created_at)
