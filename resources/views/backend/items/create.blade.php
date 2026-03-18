@@ -203,17 +203,29 @@
                         </div>
 
                         <div id="sf3-product-rows" class="space-y-3">
+                            @php
+                                $groupedProductItems = $productItems->groupBy('category');
+                            @endphp
                             @foreach ($oldSf3Products as $index => $row)
                                 <div class="sf3-row grid grid-cols-1 md:grid-cols-12 gap-3 p-3 rounded-lg border border-slate-200 bg-white" data-row-index="{{ $index }}">
                                     <div class="md:col-span-7">
                                         <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
-                                        <input
-                                            type="text"
+                                        <select
                                             name="sf3_products[{{ $index }}][product]"
-                                            value="{{ data_get($row, 'product') }}"
                                             class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                            placeholder="Enter product name"
                                         >
+                                            <option value="">Select product</option>
+                                            @foreach ($groupedProductItems as $productCategory => $items)
+                                                <optgroup label="{{ $productCategory }}">
+                                                    @foreach ($items as $pi)
+                                                        @php
+                                                            $piLabel = $productCategory === 'SF1-SF2' ? ($pi->name_sf2 ?: $pi->name) : $pi->name;
+                                                        @endphp
+                                                        <option value="{{ $piLabel }}" {{ data_get($row, 'product') === $piLabel ? 'selected' : '' }}>{{ $piLabel }}</option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
                                     </div>
 
                                     <div class="md:col-span-4">
@@ -379,6 +391,30 @@
 
         if (!category || !nameLabel || !codeLabel || !nameInput || !codeInput || !sf2Name || !sf2Code) return;
 
+        const rawProductItems = @json($productItems);
+
+        const buildProductOptions = (selectedValue = '') => {
+            const grouped = rawProductItems.reduce((acc, item) => {
+                const categoryKey = item.category || 'Other';
+                if (!acc[categoryKey]) acc[categoryKey] = [];
+                acc[categoryKey].push(item);
+                return acc;
+            }, {});
+
+            let html = '<option value="">Select product</option>';
+            Object.keys(grouped).forEach((categoryKey) => {
+                html += `<optgroup label="${categoryKey}">`;
+                grouped[categoryKey].forEach((i) => {
+                    const label = categoryKey === 'SF1-SF2' ? (i.name_sf2 || i.name) : i.name;
+                    const sel = selectedValue === label ? ' selected' : '';
+                    html += `<option value="${label}"${sel}>${label}</option>`;
+                });
+                html += '</optgroup>';
+            });
+
+            return html;
+        };
+
         const applyPrimaryFieldLabels = (selectedCategory) => {
             const isSf1Sf2 = selectedCategory === 'SF1-SF2';
 
@@ -399,12 +435,12 @@
             wrapper.innerHTML = `
                 <div class="md:col-span-7">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
-                    <input
-                        type="text"
+                    <select
                         name="sf3_products[${index}][product]"
                         class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                        placeholder="Enter product name"
                     >
+                        ${buildProductOptions()}
+                    </select>
                 </div>
                 <div class="md:col-span-4">
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Quantity</label>
@@ -435,7 +471,7 @@
 
             rows.forEach((row, index) => {
                 row.dataset.rowIndex = String(index);
-                const productInput = row.querySelector('input[name*="[product]"]');
+                const productInput = row.querySelector('[name*="[product]"]');
                 const quantityInput = row.querySelector('input[name*="[quantity]"]');
 
                 if (productInput) productInput.name = `sf3_products[${index}][product]`;
@@ -459,8 +495,8 @@
 
         const setSf3RequiredState = (isRequired) => {
             if (!sf3Rows) return;
-            sf3Rows.querySelectorAll('input[name*="[product]"]').forEach((input) => {
-                input.required = isRequired;
+            sf3Rows.querySelectorAll('[name*="[product]"]').forEach((el) => {
+                el.required = isRequired;
             });
             sf3Rows.querySelectorAll('input[name*="[quantity]"]').forEach((input) => {
                 input.required = isRequired;

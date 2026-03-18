@@ -66,7 +66,14 @@ class ItemController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'machine_code']);
 
-        return view('backend.items.create', compact('machines'));
+        $productItems = Item::query()
+            ->where('is_deleted', false)
+            ->where('category', '!=', 'SF3')
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get(['id', 'name', 'name_sf2', 'category']);
+
+        return view('backend.items.create', compact('machines', 'productItems'));
     }
 
     /**
@@ -159,7 +166,14 @@ class ItemController extends Controller
             'sf3Products:id,item_id,product,quantity',
         ]);
 
-        return view('backend.items.edit', compact('item', 'machines'));
+        $productItems = Item::query()
+            ->where('is_deleted', false)
+            ->where('category', '!=', 'SF3')
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get(['id', 'name', 'name_sf2', 'category']);
+
+        return view('backend.items.edit', compact('item', 'machines', 'productItems'));
     }
 
     /**
