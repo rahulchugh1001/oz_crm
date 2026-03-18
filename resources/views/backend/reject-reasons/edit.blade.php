@@ -51,6 +51,20 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Category <span class="text-rose-600">*</span></label>
+                    <select
+                        name="category"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="SF1" {{ old('category', $rejectReason->category ?? 'SF1') === 'SF1' ? 'selected' : '' }}>SF1</option>
+                        <option value="SF2" {{ old('category', $rejectReason->category) === 'SF2' ? 'selected' : '' }}>SF2</option>
+                    </select>
+                    @error('category')
+                        <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label class="block text-xs font-medium text-slate-700 mb-1">Status</label>
                     <select
                         name="status"

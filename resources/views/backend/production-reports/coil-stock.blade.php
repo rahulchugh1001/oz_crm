@@ -72,6 +72,19 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($coils as $coil)
+                    @php
+                        $assignedMachinesForManage = ($coil->machines ?? collect())
+                            ->map(function ($machine) {
+                                return [
+                                    'id' => $machine->id,
+                                    'name' => $machine->name,
+                                    'machine_code' => $machine->machine_code,
+                                    'coil_id' => $machine->coil_id,
+                                ];
+                            })
+                            ->values()
+                            ->all();
+                    @endphp
                     <tr class="hover:bg-slate-50">
                         <td class="px-4 py-3 text-slate-900 font-medium">{{ $coil->coil_no }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
@@ -166,6 +179,7 @@
                                     data-coil-id="{{ $coil->id }}"
                                     data-coil-no="{{ $coil->coil_no }}"
                                     data-net-weight="{{ (float) $coil->net_weight_kg }}"
+                                    data-assigned-machines='@json($assignedMachinesForManage)'
                                     data-loaded-machines='@json($loadedMachinesByCoil[$coil->id] ?? [])'
                                 >
                                     <i data-lucide="truck" class="w-3.5 h-3.5 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck' : '' }}"></i>
@@ -980,6 +994,7 @@
     const allActiveMachines = @json($machinesForJs);
     const manageActionTabs = @json($manageActionTabs);
     let currentManageContext = {
+        assignedMachines: [],
         loadedMachines: [],
         netWeight: 0,
     };
@@ -1063,11 +1078,12 @@
         });
     }
 
-    function setManageAction(action, loadedMachines, netWeight) {
+    function setManageAction(action, loadedMachines, assignedMachines, netWeight) {
         const allowedActions = Array.isArray(manageActionTabs)
             ? manageActionTabs.map(function (tab) { return tab.value; })
             : [];
         const isAlreadyLoaded = Array.isArray(loadedMachines) ? loadedMachines.length > 0 : false;
+        const availableAssignedMachines = Array.isArray(assignedMachines) ? assignedMachines : [];
 
         if (isAlreadyLoaded && action === 'load') {
             action = 'unload';
@@ -1139,11 +1155,11 @@
             unloadWeightInput.disabled = true;
             machineSelect.onchange = null;
 
-            const freeMachineCount = allActiveMachines.filter(function (machine) {
+            const freeMachineCount = availableAssignedMachines.filter(function (machine) {
                 return !machine.coil_id;
             }).length;
 
-            allActiveMachines.forEach(function (machine) {
+            availableAssignedMachines.forEach(function (machine) {
                 const option = document.createElement('option');
                 option.value = machine.id;
                 const label = machine.name + (machine.machine_code ? ' (' + machine.machine_code + ')' : '');
@@ -1163,10 +1179,12 @@
             }
 
             if (loadWeightHint) {
-                if (freeMachineCount === 0) {
+                if (availableAssignedMachines.length === 0) {
+                    loadWeightHint.textContent = 'No machine is assigned to this coil.';
+                } else if (freeMachineCount === 0) {
                     loadWeightHint.textContent = 'No free machine available. Unload a machine first.';
                 } else {
-                    loadWeightHint.textContent = 'Loaded machines are shown but cannot be selected. Max you can load ' + String(maxWeight) + ' KG net weight.';
+                    loadWeightHint.textContent = 'Only machines assigned to this coil are shown. Max you can load ' + String(maxWeight) + ' KG net weight.';
                 }
             }
 
@@ -1219,6 +1237,13 @@
         const coilNo = button.getAttribute('data-coil-no') || '';
         const netWeight = parseFloat(button.getAttribute('data-net-weight') || '0');
 
+        let assignedMachines = [];
+        try {
+            assignedMachines = JSON.parse(button.getAttribute('data-assigned-machines') || '[]');
+        } catch (e) {
+            assignedMachines = [];
+        }
+
         let loadedMachines = [];
         try {
             loadedMachines = JSON.parse(button.getAttribute('data-loaded-machines') || '[]');
@@ -1230,6 +1255,7 @@
         document.getElementById('manage_coil_no').value = coilNo;
 
         currentManageContext = {
+            assignedMachines: assignedMachines,
             loadedMachines: loadedMachines,
             netWeight: netWeight,
         };
@@ -1241,7 +1267,7 @@
         const preferredAction = loadedMachines.length > 0 && allowedActions.includes('unload') ? 'unload' : fallbackAction;
         const defaultAction = forcedAction && allowedActions.includes(forcedAction) ? forcedAction : preferredAction;
 
-        setManageAction(defaultAction, loadedMachines, netWeight);
+        setManageAction(defaultAction, loadedMachines, assignedMachines, netWeight);
 
         document.getElementById('manageCoilModal').classList.remove('hidden');
         if (typeof lucide !== 'undefined') {

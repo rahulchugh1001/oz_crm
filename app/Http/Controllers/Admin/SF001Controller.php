@@ -36,7 +36,15 @@ class SF001Controller extends Controller
             ->get(['id', 'name', 'machine_code', 'coil_id']);
 
         $coils = CoilStock::query()
-            ->with(['manufacture:id,name'])
+            ->with([
+                'manufacture:id,name',
+                'machines' => function ($query) {
+                    $query->where('machines.is_deleted', 0)
+                        ->where('machines.status', 1)
+                        ->orderBy('machines.name')
+                        ->select('machines.id', 'machines.name', 'machines.machine_code', 'machines.coil_id');
+                },
+            ])
             ->where('is_deleted', 0)
             ->orderByDesc('id')
             ->get();
@@ -438,6 +446,16 @@ class SF001Controller extends Controller
                 return back()->with('error', 'Selected coil is not available for loading.');
             }
 
+            $isMachineAssignedToCoil = $coil->machines()
+                ->where('machines.id', $machine->id)
+                ->where('machines.is_deleted', 0)
+                ->where('machines.status', 1)
+                ->exists();
+
+            if (!$isMachineAssignedToCoil) {
+                return back()->with('error', 'Selected machine is not assigned to this coil.');
+            }
+
             if (!empty($machine->coil_id)) {
                 return back()->with('error', 'Selected machine already has a loaded coil. Please unload first.');
             }
@@ -523,6 +541,16 @@ class SF001Controller extends Controller
 
         if (!empty($validated['coil_id']) && (int) $validated['coil_id'] !== (int) $coil->id) {
             return back()->with('error', 'Selected coil does not match the currently loaded coil on this machine.');
+        }
+
+        $isMachineAssignedToCoil = $coil->machines()
+            ->where('machines.id', $machine->id)
+            ->where('machines.is_deleted', 0)
+            ->where('machines.status', 1)
+            ->exists();
+
+        if (!$isMachineAssignedToCoil) {
+            return back()->with('error', 'Selected machine is not assigned to this coil.');
         }
 
         $latestLoadTrack = CoilMachineTrack::query()
