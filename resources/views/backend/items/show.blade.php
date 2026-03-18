@@ -180,15 +180,11 @@
                     @else
                         <div class="flex flex-wrap gap-2">
                             @foreach ($item->machines as $machine)
-                                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700">
+                                <span class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-r-4 {{ $machine->status ? 'border-r-emerald-500' : 'border-r-rose-500' }} border-slate-200 bg-white text-sm text-slate-700" title="{{ $machine->status ? 'Active' : 'Inactive' }}">
                                     <span class="font-semibold">{{ $machine->name }}</span>
                                     <span class="text-slate-500">({{ $machine->machine_code }})</span>
-                                    <span class="ml-1 flex items-center gap-1 text-xs font-semibold {{ $machine->status ? 'text-emerald-700' : 'text-slate-400' }}">
-                                        <span class="inline-block w-2 h-2 rounded-full {{ $machine->status ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
-                                        {{ $machine->status ? 'Active' : 'Inactive' }}
-                                    </span>
                                     @if ($machine->pivot && $machine->pivot->created_at)
-                                        <span class="ml-2 text-xs text-slate-400" title="Linked at">
+                                        <span class="text-xs text-slate-400" title="Linked at">
                                             <i data-lucide="clock" class="inline w-3 h-3 mr-1"></i>
                                             {{ $machine->pivot->created_at->format('d M Y H:i') }}
                                         </span>
