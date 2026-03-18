@@ -98,7 +98,7 @@
                     </div>
                     <!-- Name -->
                     <div>
-                        <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
+                        <label id="name-label" for="name" class="block text-sm font-semibold text-slate-700 mb-2">
                             Item Name <span class="text-rose-500">*</span>
                         </label>
                         <input 
@@ -109,6 +109,8 @@
                             required
                             class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('name') border-rose-500 @enderror"
                             placeholder="Enter item name"
+                            data-default-placeholder="Enter item name"
+                            data-sf12-placeholder="Enter item name SF1"
                         >
                         @error('name')
                             <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
@@ -120,7 +122,7 @@
 
                     <!-- Code -->
                     <div>
-                        <label for="code" class="block text-sm font-semibold text-slate-700 mb-2">
+                        <label id="code-label" for="code" class="block text-sm font-semibold text-slate-700 mb-2">
                             Item Code <span class="text-rose-500">*</span>
                         </label>
                         <input 
@@ -131,6 +133,8 @@
                             required
                             class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('code') border-rose-500 @enderror"
                             placeholder="Enter unique item code"
+                            data-default-placeholder="Enter unique item code"
+                            data-sf12-placeholder="Enter unique item code SF1"
                         >
                         @error('code')
                             <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
@@ -363,13 +367,30 @@
 
     (() => {
         const category = document.getElementById('category');
+        const nameLabel = document.getElementById('name-label');
+        const codeLabel = document.getElementById('code-label');
+        const nameInput = document.getElementById('name');
+        const codeInput = document.getElementById('code');
         const sf2Name = document.getElementById('sf2-fields-name');
         const sf2Code = document.getElementById('sf2-fields-code');
         const sf3Section = document.getElementById('sf3-products-section');
         const sf3Rows = document.getElementById('sf3-product-rows');
         const addSf3RowBtn = document.getElementById('add-sf3-row');
 
-        if (!category || !sf2Name || !sf2Code) return;
+        if (!category || !nameLabel || !codeLabel || !nameInput || !codeInput || !sf2Name || !sf2Code) return;
+
+        const applyPrimaryFieldLabels = (selectedCategory) => {
+            const isSf1Sf2 = selectedCategory === 'SF1-SF2';
+
+            nameLabel.innerHTML = `${isSf1Sf2 ? 'Item Name SF1' : 'Item Name'} <span class="text-rose-500">*</span>`;
+            codeLabel.innerHTML = `${isSf1Sf2 ? 'Item Code SF1' : 'Item Code'} <span class="text-rose-500">*</span>`;
+            nameInput.placeholder = isSf1Sf2
+                ? (nameInput.dataset.sf12Placeholder || nameInput.placeholder)
+                : (nameInput.dataset.defaultPlaceholder || nameInput.placeholder);
+            codeInput.placeholder = isSf1Sf2
+                ? (codeInput.dataset.sf12Placeholder || codeInput.placeholder)
+                : (codeInput.dataset.defaultPlaceholder || codeInput.placeholder);
+        };
 
         const buildSf3Row = (index) => {
             const wrapper = document.createElement('div');
@@ -448,6 +469,8 @@
 
         const toggleCategoryFields = () => {
             const selectedCategory = category.value;
+
+            applyPrimaryFieldLabels(selectedCategory);
 
             if (selectedCategory === 'SF1-SF2') {
                 sf2Name.style.display = '';
