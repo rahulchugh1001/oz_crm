@@ -343,70 +343,53 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">Machine Status Grid</h2>
-                    <p class="text-sm text-slate-500">15 Machines | Real-time monitoring</p>
+                    <p class="text-sm text-slate-500">{{ $allMachines->count() }} Machines | Real-time monitoring</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full">
                     <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span class="text-sm font-medium text-emerald-700">Running: 12</span>
+                    <span class="text-sm font-medium text-emerald-700">Running: {{ $runningMachinesCount }}</span>
                 </div>
                 <div class="flex items-center gap-2 bg-rose-50 px-3 py-1.5 rounded-full">
                     <div class="w-2 h-2 bg-rose-500 rounded-full"></div>
-                    <span class="text-sm font-medium text-rose-700">Stopped: 3</span>
+                    <span class="text-sm font-medium text-rose-700">Stopped: {{ $stoppedMachinesCount }}</span>
                 </div>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            @php
-                $machines = [
-                    ['id' => 'M-01', 'stage' => 'SF1', 'status' => 'running', 'coil' => 'C-2456', 'weight' => '125 Kg', 'time' => '7.2 hrs'],
-                    ['id' => 'M-02', 'stage' => 'SF1', 'status' => 'running', 'coil' => 'C-2457', 'weight' => '87 Kg', 'time' => '6.8 hrs'],
-                    ['id' => 'M-03', 'stage' => 'SF1', 'status' => 'running', 'coil' => 'C-2458', 'weight' => '210 Kg', 'time' => '5.5 hrs'],
-                    ['id' => 'M-04', 'stage' => 'SF1', 'status' => 'running', 'coil' => 'C-2459', 'weight' => '95 Kg', 'time' => '8.1 hrs'],
-                    ['id' => 'M-05', 'stage' => 'SF1', 'status' => 'running', 'coil' => 'C-2460', 'weight' => '0 Kg', 'time' => '0.5 hrs'],
-                    ['id' => 'M-06', 'stage' => 'SF2', 'status' => 'running', 'coil' => 'C-2448', 'weight' => '165 Kg', 'time' => '4.2 hrs'],
-                    ['id' => 'M-07', 'stage' => 'SF2', 'status' => 'stopped', 'coil' => 'C-2449', 'weight' => '0 Kg', 'time' => '2.5 hrs'],
-                    ['id' => 'M-08', 'stage' => 'SF2', 'status' => 'running', 'coil' => 'C-2450', 'weight' => '72 Kg', 'time' => '6.3 hrs'],
-                    ['id' => 'M-09', 'stage' => 'SF2', 'status' => 'stopped', 'coil' => 'C-2451', 'weight' => '0 Kg', 'time' => '4.2 hrs'],
-                    ['id' => 'M-10', 'stage' => 'SF2', 'status' => 'running', 'coil' => 'C-2452', 'weight' => '188 Kg', 'time' => '5.9 hrs'],
-                    ['id' => 'M-11', 'stage' => 'SF3', 'status' => 'running', 'coil' => 'C-2442', 'weight' => '110 Kg', 'time' => '7.8 hrs'],
-                    ['id' => 'M-12', 'stage' => 'SF3', 'status' => 'stopped', 'coil' => 'C-2443', 'weight' => '0 Kg', 'time' => '1.8 hrs'],
-                    ['id' => 'M-13', 'stage' => 'SF3', 'status' => 'running', 'coil' => 'C-2444', 'weight' => '95 Kg', 'time' => '6.5 hrs'],
-                    ['id' => 'M-14', 'stage' => 'SF3', 'status' => 'running', 'coil' => 'C-2445', 'weight' => '205 Kg', 'time' => '4.9 hrs'],
-                    ['id' => 'M-15', 'stage' => 'SF3', 'status' => 'running', 'coil' => 'C-2446', 'weight' => '0 Kg', 'time' => '0.2 hrs']
-                ];
-            @endphp
-            @foreach($machines as $machine)
-            <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border {{ $machine['status'] === 'running' ? 'border-l-4 border-emerald-500' : 'border-l-4 border-rose-500' }} p-4 hover:shadow-subtle transition-all hover-lift">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            @forelse($allMachines as $machine)
+            <div class="bg-gradient-to-b from-white to-slate-50 rounded-xl border {{ $machine->coil_id ? 'border-l-4 border-emerald-500' : 'border-l-4 border-rose-500' }} p-4 hover:shadow-subtle transition-all hover-lift">
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <div class="text-lg font-bold text-slate-900">{{ $machine['id'] }}</div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="text-xs px-2 py-1 rounded-full {{ $machine['stage'] === 'SF1' ? 'bg-blue-100 text-blue-700' : ($machine['stage'] === 'SF2' ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700') }} font-medium">{{ $machine['stage'] }}</span>
-                        </div>
+                        <div class="text-base font-bold text-slate-900">{{ $machine->machine_code ?: 'No Code' }}</div>
+                        <div class="text-xs text-slate-500 mt-1">ID: #{{ $machine->id }}</div>
                     </div>
-                    <div class="flex items-center gap-1 px-2 py-1 rounded-full {{ $machine['status'] === 'running' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
-                        <div class="w-1.5 h-1.5 rounded-full {{ $machine['status'] === 'running' ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
-                        <span class="text-xs font-medium">{{ ucfirst($machine['status']) }}</span>
+                    <div class="flex items-center gap-1 px-2 py-1 rounded-full {{ $machine->coil_id ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700' }}">
+                        <div class="w-1.5 h-1.5 rounded-full {{ $machine->coil_id ? 'bg-emerald-500' : 'bg-rose-500' }}"></div>
+                        <span class="text-xs font-medium">{{ $machine->coil_id ? 'Running' : 'Stopped' }}</span>
                     </div>
                 </div>
-                <div class="space-y-3 pt-3 border-t border-slate-100">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Coil</span>
-                        <span class="text-sm font-medium text-slate-900">{{ $machine['coil'] }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Remaining</span>
-                        <span class="text-sm font-semibold {{ $machine['weight'] === '0 Kg' ? 'text-amber-600' : 'text-slate-900' }}">{{ $machine['weight'] }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-slate-500">Runtime</span>
-                        <span class="text-xs font-medium text-slate-700">{{ $machine['time'] }}</span>
+                <div class="pt-3 border-t border-slate-100">
+                    <div class="text-sm font-semibold text-slate-800 truncate" title="{{ $machine->name }}">{{ $machine->name }}</div>
+                    <div class="text-xs {{ $machine->coil_id ? 'text-emerald-600' : 'text-rose-600' }} mt-1">
+                        @if($machine->coil_id)
+                            <div>Loaded Coil: {{ $machine->coil->coil_no ?? 'N/A' }}</div>
+                            <div class="mt-1">Load Weight: {{ number_format((float) ($machine->loaded_weight_kg ?? 0), 0) }} KG</div>
+                            @if($machine->load_time)
+                                <div class="mt-1">Loaded At: {{ $machine->load_time->format('M d, Y h:i A') }}</div>
+                            @endif
+                        @else
+                            No Coil Loaded
+                        @endif
                     </div>
                 </div>
             </div>
-            @endforeach
+            @empty
+            <div class="col-span-full rounded-xl border border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                No machine records found.
+            </div>
+            @endforelse
         </div>
     </div>
 </div>

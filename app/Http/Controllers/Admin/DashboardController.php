@@ -42,6 +42,16 @@ class DashboardController extends Controller
             ->whereNotNull('coil_id')
             ->count();
 
+        $runningMachinesCount = Machine::query()
+            ->where('is_deleted', false)
+            ->whereNotNull('coil_id')
+            ->count();
+
+        $stoppedMachinesCount = Machine::query()
+            ->where('is_deleted', false)
+            ->whereNull('coil_id')
+            ->count();
+
         $totalSuppliersCount = CoilManufacture::query()
             ->where('is_deleted', false)
             ->count();
@@ -85,11 +95,54 @@ class DashboardController extends Controller
             })
             ->sum('load_weight');
 
+        $allMachines = Machine::query()
+            ->with(['coil:id,coil_no'])
+            ->where('is_deleted', false)
+            ->orderBy('name')
+            ->get(['id', 'name', 'machine_code', 'status', 'coil_id']);
+
+        $machineLoadedWeights = CoilMachineTrack::query()
+            ->select('machine_id', DB::raw('SUM(load_weight) as loaded_weight_kg'))
+            ->where('type', CoilMachineTrack::ACTION_LOAD)
+            ->where('is_deleted', false)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('coil_machine_track as unload_tracks')
+                    ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
+                    ->where('unload_tracks.type', CoilMachineTrack::ACTION_UNLOAD)
+                    ->where('unload_tracks.is_deleted', 0);
+            })
+            ->groupBy('machine_id')
+            ->pluck('loaded_weight_kg', 'machine_id');
+
+        $machineLoadTimes = CoilMachineTrack::query()
+            ->select('machine_id', DB::raw('MAX(event_at) as load_time'))
+            ->where('type', CoilMachineTrack::ACTION_LOAD)
+            ->where('is_deleted', false)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('coil_machine_track as unload_tracks')
+                    ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
+                    ->where('unload_tracks.type', CoilMachineTrack::ACTION_UNLOAD)
+                    ->where('unload_tracks.is_deleted', 0);
+            })
+            ->groupBy('machine_id')
+            ->pluck('load_time', 'machine_id');
+
+        $allMachines->transform(function ($machine) use ($machineLoadedWeights, $machineLoadTimes) {
+            $machine->loaded_weight_kg = (float) ($machineLoadedWeights[$machine->id] ?? 0);
+            $loadTimeString = $machineLoadTimes[$machine->id] ?? null;
+            $machine->load_time = $loadTimeString ? \Carbon\Carbon::parse($loadTimeString) : null;
+            return $machine;
+        });
+
         return view('backend.dashboard', [
             'todayProductionTotal' => number_format((int) $todayProductionTotal),
             'activeMachinesCount' => $activeMachinesCount,
             'notActiveMachinesCount' => $notActiveMachinesCount,
             'machineInUseCount' => $machineInUseCount,
+            'runningMachinesCount' => $runningMachinesCount,
+            'stoppedMachinesCount' => $stoppedMachinesCount,
             'totalSuppliersCount' => $totalSuppliersCount,
             'inactiveSuppliersCount' => $inactiveSuppliersCount,
             'totalManpowerWorking' => $totalManpowerWorking,
@@ -99,6 +152,7 @@ class DashboardController extends Controller
             'totalCoilWeightKg' => number_format($totalCoilWeightKg, 0),
             'inUseCoilsCount' => $inUseCoilsCount,
             'loadedCoilWeightKg' => number_format($loadedCoilWeightKg, 0),
+            'allMachines' => $allMachines,
         ]);
     }
 }
