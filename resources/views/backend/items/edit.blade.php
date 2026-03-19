@@ -61,6 +61,12 @@
                         <label for="category" class="block text-sm font-semibold text-slate-700 mb-2">
                             Category <span class="text-rose-500">*</span>
                         </label>
+                        @if(in_array(auth()->user()->role, ['Stock', 'Store']))
+                            <input type="hidden" name="category" value="Store">
+                            <div class="w-full px-4 py-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 text-sm cursor-not-allowed">
+                                Store
+                            </div>
+                        @else
                         <select
                             id="category"
                             name="category"
@@ -78,6 +84,7 @@
                                 {{ $message }}
                             </p>
                         @enderror
+                        @endif
                     </div>
 
                     <!-- Weight -->
