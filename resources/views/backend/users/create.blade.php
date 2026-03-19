@@ -91,6 +91,7 @@
                         <option value="SF001" {{ old('role') === 'SF001' ? 'selected' : '' }}>SF1</option>
                         <option value="SF002" {{ old('role') === 'SF002' ? 'selected' : '' }}>SF2</option>
                         <option value="SF003" {{ old('role') === 'SF003' ? 'selected' : '' }}>SF3</option>
+                        <option value="Stock" {{ old('role') === 'Stock' ? 'selected' : '' }}>Stock</option>
                     </select>
                     @error('role')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
