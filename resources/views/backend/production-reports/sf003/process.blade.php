@@ -5,10 +5,7 @@
     $activeTab = in_array($activeTab, ['stock', 'production'], true) ? $activeTab : 'production';
     $lineBadgeLabel = $lineLabel . ' Production';
     $stockCount = $acceptedTransfers->count();
-    $firstAcceptedTransfer = $acceptedTransfers->first();
-    $addProductionUrl = $firstAcceptedTransfer
-        ? route('admin.production-reports.sf003.production-report', ['transferId' => $firstAcceptedTransfer->id, 'line' => $requestedLine])
-        : route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'stock']);
+    $addProductionUrl = route('admin.production-reports.sf003.production-report', ['line' => $requestedLine]);
 @endphp
 
 @section('title', 'Assemble SF3 ' . $lineLabel . ' Process')

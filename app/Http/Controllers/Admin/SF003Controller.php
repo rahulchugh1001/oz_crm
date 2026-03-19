@@ -212,11 +212,10 @@ class SF003Controller extends Controller
     }
 
     /**
-     * Display production report form for a specific accepted transfer in SF3 line process.
+     * Display production report form for SF3 line process.
      */
-    public function productionReport(Request $request, int $transferId): View
+    public function productionReport(Request $request, ?int $transferId = null): View
     {
-       
         if (!Schema::hasTable('sf3_production_reports')) {
             abort(500, 'SF3 production reports table is missing. Please run migrations.');
         }
@@ -249,105 +248,35 @@ class SF003Controller extends Controller
             }
 
             $existingReport = $existingQuery->first();
-            if ($existingReport) {
-                $transferId = (int) $existingReport->transfered_id;
-            }
         }
 
-        $query = DB::table('sf002_stock_transfers as transfers')
-            ->select(
-                'transfers.id',
-                'transfers.item_id',
-                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as quantity'),
-                'transfers.date',
-                'transfers.time',
-                'transfers.is_accept',
-                'transfers.sf3_process',
-                'items.code as item_code',
-                'items.name as item_name',
-                'items.size as item_size',
-                'items.category'
-            )
-            ->join('items', 'transfers.item_id', '=', 'items.id')
-            ->where('transfers.is_deleted', false)
-            ->where('transfers.is_accept', 1)
-            ->where('transfers.sf3_process', $lineCode)
-            ->orderByDesc('transfers.date')
-            ->orderByDesc('transfers.time')
-            ->orderByDesc('transfers.created_at');
-
-        if (Auth::user()?->role !== 'Admin') {
-            $role = $this->currentAssignableRole();
-
-            if (!$role) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->where('transfers.assign_role', $role)
-                    ->where('transfers.assign_to', Auth::id());
-            }
-        }
-
-        $availableTransfers = $query->get();
-
-        $usedByTransfer = DB::table('sf3_production_reports')
-            ->select('transfered_id', DB::raw('COALESCE(SUM(actual_set_shift), 0) as used_quantity'))
-            ->where('sf3_process', $lineCode)
-            ->where('is_deleted', 0)
-            ->groupBy('transfered_id')
-            ->pluck('used_quantity', 'transfered_id');
-
-        $currentReportActualSet = (float) ($existingReport->actual_set_shift ?? 0);
-
-        $availableTransfers = $availableTransfers
-            ->map(function ($row) use ($usedByTransfer, $existingReport, $currentReportActualSet) {
-                $baseQuantity = max((float) ($row->quantity ?? 0), 0);
-                $usedQuantity = (float) ($usedByTransfer[$row->id] ?? 0);
-
-                if ($existingReport && (int) $existingReport->transfered_id === (int) $row->id) {
-                    $usedQuantity = max($usedQuantity - $currentReportActualSet, 0);
-                }
-
-                $row->total_quantity = $baseQuantity;
-                $row->used_quantity = $usedQuantity;
-                $row->pending_quantity = max($baseQuantity - $usedQuantity, 0);
-
-                return $row;
-            })
-            ->filter(function ($row) use ($transferId) {
-                return (float) ($row->pending_quantity ?? 0) > 0 || (int) $row->id === (int) $transferId;
-            })
-            ->values();
-
-        $transfer = $availableTransfers->firstWhere('id', $transferId) ?? $availableTransfers->first();
-
-        if (!$transfer) {
-            abort(404, 'No accepted transfer found for selected SF3 process line.');
-        }
-
-        // Fetch all SF3 items for the dropdown
         $sf3Items = DB::table('items')
-            ->where('category', 'SF3')
             ->where('is_deleted', false)
+            ->where('category', 'SF3')
             ->orderBy('code')
             ->orderBy('name')
             ->get();
 
+        $selectedItem = null;
+        if ($existingReport && $existingReport->item_id) {
+            $selectedItem = $sf3Items->firstWhere('id', (int) $existingReport->item_id);
+        }
+
         return view('backend.production-reports.sf003.production-report', compact(
-            'transfer',
-            'availableTransfers',
             'existingReport',
             'requestedLine',
             'lineCode',
             'lineLabel',
             'lineTitle',
-            'sf3Items'
+            'sf3Items',
+            'selectedItem'
         ));
     }
 
     /**
      * Store SF3 production report data.
      */
-    public function storeProductionReport(Request $request, int $transferId): RedirectResponse|JsonResponse
+    public function storeProductionReport(Request $request, ?int $transferId = null): RedirectResponse|JsonResponse
     {
         if (!Schema::hasTable('sf3_production_reports')) {
             $message = 'SF3 production reports table is missing. Please run migrations.';
@@ -373,7 +302,7 @@ class SF003Controller extends Controller
         }
 
         $validated = $request->validate([
-            'selected_transfer_id' => 'required|integer|min:1',
+            'item_id' => 'required|integer|min:1',
             'sf3_report_date' => 'required|date',
             'sf3_shift' => 'required|in:morning,night',
             'sf3_set_per_hour' => 'required|numeric|min:0',
@@ -395,30 +324,21 @@ class SF003Controller extends Controller
             'sf3_hour_7_8' => 'required|numeric|min:0',
         ]);
 
-        $selectedTransferId = (int) ($validated['selected_transfer_id'] ?? $transferId);
+        $itemId = (int) $validated['item_id'];
+        $item = DB::table('items')
+            ->select('id')
+            ->where('id', $itemId)
+            ->where('category', 'SF3')
+            ->where('is_deleted', false)
+            ->first();
 
-        $query = DB::table('sf002_stock_transfers as transfers')
-            ->join('items', 'transfers.item_id', '=', 'items.id')
-            ->select('transfers.*')
-            ->where('transfers.id', $selectedTransferId)
-            ->where('transfers.is_deleted', false)
-            ->where('transfers.is_accept', 1)
-            ->where('transfers.sf3_process', $lineCode);
-
-        if (Auth::user()?->role !== 'Admin') {
-            $role = $this->currentAssignableRole();
-
-            if (!$role) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->where('transfers.assign_role', $role)
-                    ->where('transfers.assign_to', Auth::id());
+        if (!$item) {
+            $message = 'Selected SF3 item was not found.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 422);
             }
-        }
 
-        $transfer = $query->first();
-        if (!$transfer) {
-            return back()->with('error', 'Transfer record not found or not assigned to you.');
+            return back()->with('error', $message);
         }
 
         $hourlyTotal =
@@ -436,23 +356,10 @@ class SF003Controller extends Controller
             (float) ($request->input('sf3_hour_7_8') ?? 0);
 
         $actualSetShift = round($hourlyTotal);
-        $baseAvailableQuantity = max((float) $transfer->quantity - (float) ($transfer->reject_quantity ?? 0), 0);
-
-        $alreadyUsedQuantityQuery = DB::table('sf3_production_reports')
-            ->where('sf3_process', $lineCode)
-            ->where('transfered_id', $selectedTransferId)
-            ->where('is_deleted', 0);
-
-        if ($reportId > 0) {
-            $alreadyUsedQuantityQuery->where('id', '!=', $reportId);
-        }
-
-        $alreadyUsedQuantity = (float) ($alreadyUsedQuantityQuery->sum('actual_set_shift') ?? 0);
-        $availableQuantity = max($baseAvailableQuantity - $alreadyUsedQuantity, 0);
         $totalSetShift = (float) ($request->input('sf3_total_set_shift') ?? 0);
 
-        if ($actualSetShift > $availableQuantity) {
-            $message = 'Actual / Set / Shift must not be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
+        if ($actualSetShift > $totalSetShift) {
+            $message = 'Actual / Set / Shift must not be greater than Total Set / Shift (' . number_format($totalSetShift, 0, '.', '') . ').';
             if ($request->expectsJson()) {
                 return response()->json(['message' => $message], 422);
             }
@@ -465,8 +372,8 @@ class SF003Controller extends Controller
             'report_date' => (string) $request->input('sf3_report_date'),
             'shift' => (string) $request->input('sf3_shift'),
             'sf3_process' => $lineCode,
-            'transfered_id' => $selectedTransferId,
-            'item_id' => $transfer->item_id,
+            'transfered_id' => null,
+            'item_id' => $itemId,
             'set_per_hour' => (float) ($request->input('sf3_set_per_hour') ?? 0),
             'total_set_shift' => $totalSetShift,
             'hour_8_9' => (float) ($request->input('sf3_hour_8_9') ?? 0),

@@ -28,9 +28,9 @@
                 <div>
                     <h2 class="text-lg font-bold text-slate-900">{{ $lineTitle }} Production Report - Hourly</h2>
                     <p class="text-sm text-slate-500 mt-1">
-                        Item: <span id="selectedItemCode" class="font-medium text-slate-700">{{ $transfer->item_code }}</span> -
-                        <span id="selectedItemName" class="font-medium text-slate-700">{{ $transfer->item_name }}</span>
-                        (<span id="selectedItemSize" class="font-medium text-slate-700">{{ $transfer->item_size }}</span>)
+                        Item: <span id="selectedItemCode" class="font-medium text-slate-700">{{ $selectedItem->code ?? '-' }}</span> -
+                        <span id="selectedItemName" class="font-medium text-slate-700">{{ $selectedItem->name ?? '-' }}</span>
+                        (<span id="selectedItemSize" class="font-medium text-slate-700">{{ $selectedItem->size ?? '-' }}</span>)
                     </p>
                 </div>
                 <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
@@ -41,16 +41,15 @@
         </div>
 
         <div class="p-6 space-y-6">
-            <form id="productionReportForm" method="POST" action="{{ route('admin.production-reports.sf003.production-report.store', ['transferId' => $transfer->id, 'line' => $requestedLine]) }}">
+            <form id="productionReportForm" method="POST" action="{{ route('admin.production-reports.sf003.production-report.store', ['line' => $requestedLine]) }}">
                 @csrf
-                <input type="hidden" id="selected_transfer_id" name="selected_transfer_id" value="{{ $transfer->id }}">
                 <input type="hidden" id="report_id" name="report_id" value="{{ isset($existingReport) && $existingReport ? \Illuminate\Support\Facades\Crypt::encryptString((string) $existingReport->id) : '' }}">
 
                 <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label for="item_selector" class="block text-sm font-medium text-slate-700 mb-2">Select Item</label>
-                        <select id="item_selector" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="" disabled selected>-- Select Item --</option>
+                        <select id="item_selector" name="item_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled {{ old('item_id', $existingReport->item_id ?? '') === '' ? 'selected' : '' }}>-- Select Item --</option>
                             @foreach($sf3Items as $item)
                                 <option
                                     value="{{ $item->id }}"
@@ -58,20 +57,16 @@
                                     data-item-code="{{ $item->code }}"
                                     data-item-name="{{ $item->name }}"
                                     data-item-size="{{ $item->size }}"
+                                    {{ (string) old('item_id', $existingReport->item_id ?? '') === (string) $item->id ? 'selected' : '' }}
                                 >
                                     {{ $item->code }} - {{ $item->name }} ({{ $item->size }})
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <input type="hidden" id="selected_item_quantity" value="{{ number_format((float) ($transfer->pending_quantity ?? 0), 0, '.', '') }}">
-                    {{-- <div>
-                        <label for="selected_item_quantity" class="block text-sm font-medium text-slate-700 mb-2">Pending Quantity</label>
-                        <input type="text" id="selected_item_quantity" value="{{ number_format((float) ($transfer->pending_quantity ?? 0), 0, '.', '') }}" readonly class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50">
-                    </div> --}}
                     <div>
                         <label for="sf3_report_date" class="block text-sm font-medium text-slate-700 mb-2">Report Date</label>
-                        <input type="date" id="sf3_report_date" name="sf3_report_date" value="{{ old('sf3_report_date', $existingReport->report_date ?? ($transfer->date ?? date('Y-m-d'))) }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="date" id="sf3_report_date" name="sf3_report_date" value="{{ old('sf3_report_date', $existingReport->report_date ?? date('Y-m-d')) }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label for="sf3_shift" class="block text-sm font-medium text-slate-700 mb-2">Shift</label>
@@ -132,74 +127,33 @@
                 </div>
 
                 <div class="mt-6">
-                    <div class="flex gap-2 border-b border-slate-200 mb-4">
-                        <button id="requiredStockTab" type="button" class="px-4 py-2 font-medium text-slate-700 border-b-2 border-blue-600 text-blue-600 tab-button" data-tab="required-stock">
-                            Required Stock
-                        </button>
-                        <button id="inStockTab" type="button" class="px-4 py-2 font-medium text-slate-600 border-b-2 border-transparent hover:text-slate-900 tab-button" data-tab="in-stock">
-                            In Stock
-                        </button>
-                    </div>
-
-                    <div id="required-stock" class="tab-content">
-                        <div class="overflow-x-auto rounded-xl border border-slate-200">
-                            <table id="productTable" class="w-full border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-100">
-                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Code</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Name</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity Required</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="productTableBody">
-                                    <tr class="text-center text-slate-500">
-                                        <td colspan="4" class="py-4">Select an item to view required stock</td>
-                                    </tr>
-                                </tbody>
-                                <tbody id="productTableLoader" style="display: none;">
-                                    <tr class="text-center">
-                                        <td colspan="4" class="py-6">
-                                            <div class="flex items-center justify-center gap-2">
-                                                <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                                                <span class="text-slate-600 font-medium">Loading required stock...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="in-stock" class="tab-content" style="display: none;">
-                        <div class="overflow-x-auto rounded-xl border border-slate-200">
-                            <table id="stockTable" class="w-full border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-100">
-                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Date</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Code</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Name</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
-                                        <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="stockTableBody">
-                                    <tr class="text-center text-slate-500">
-                                        <td colspan="5" class="py-4">Select an item to view in-stock transfers</td>
-                                    </tr>
-                                </tbody>
-                                <tbody id="stockTableLoader" style="display: none;">
-                                    <tr class="text-center">
-                                        <td colspan="5" class="py-6">
-                                            <div class="flex items-center justify-center gap-2">
-                                                <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
-                                                <span class="text-slate-600 font-medium">Loading in-stock transfers...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table id="mergedStockTable" class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Code</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Product Name</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity Required</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Stock Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mergedTableBody">
+                                <tr class="text-center text-slate-500">
+                                    <td colspan="5" class="py-4">Select an item to view stock details</td>
+                                </tr>
+                            </tbody>
+                            <tbody id="mergedTableLoader" style="display: none;">
+                                <tr class="text-center">
+                                    <td colspan="5" class="py-6">
+                                        <div class="flex items-center justify-center gap-2">
+                                            <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
+                                            <span class="text-slate-600 font-medium">Loading stock details...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
 
                     <div id="stockCapacityNote" class="hidden mt-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
@@ -241,8 +195,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const shiftSelect = document.getElementById('sf3_shift');
     const hourLabels = document.querySelectorAll('.hour-label');
     const itemSelector = document.getElementById('item_selector');
-    const selectedTransferInput = document.getElementById('selected_transfer_id');
-    const selectedQuantityInput = document.getElementById('selected_item_quantity');
     const selectedItemCode = document.getElementById('selectedItemCode');
     const selectedItemName = document.getElementById('selectedItemName');
     const selectedItemSize = document.getElementById('selectedItemSize');
@@ -259,20 +211,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }).filter(Boolean);
     let limitWarningTimeout;
     let isSaving = false;
-    let stockInsufficient = false;
     let requiredProductsData = [];
     let stockRowsData = [];
 
     if (!form) return;
 
-    function getSelectedQuantity() {
-        return Math.max(parseFloat(selectedQuantityInput ? selectedQuantityInput.value : '0') || 0, 0);
-    }
-
     function applySaveButtonState() {
         if (!saveButton) return;
 
-        const mustDisable = isSaving || stockInsufficient;
+        const mustDisable = isSaving;
         saveButton.disabled = mustDisable;
 
         if (mustDisable) {
@@ -300,7 +247,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
 
         if (!selectedValue || totalSetShift <= 0 || requiredProductsData.length === 0) {
-            stockInsufficient = false;
             updateStockCapabilityNote('');
             applySaveButtonState();
             return;
@@ -333,13 +279,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         if (shortProducts.length === 0) {
-            stockInsufficient = false;
             updateStockCapabilityNote('');
             applySaveButtonState();
             return;
         }
 
-        stockInsufficient = true;
         const summary = shortProducts
             .slice(0, 3)
             .map(function (row) {
@@ -347,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .join(', ');
 
-        updateStockCapabilityNote('In Stock quantity is not capable to create this item in this quantity (Total Set/Shift) which you have set. ' + summary);
+        updateStockCapabilityNote('Stock preview: required quantity is higher than current stock for ' + summary + '.');
         applySaveButtonState();
     }
 
@@ -370,16 +314,49 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 2200);
     }
 
+    function validateActualSetShift() {
+        if (!actualSetShiftInput) return;
+
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
+        const actualSetShift = Math.max(parseFloat(actualSetShiftInput.value || '0') || 0, 0);
+
+        if (actualSetShift > totalSetShift) {
+            showLimitWarning('Value cannot be greater than Total Set/Shift (' + totalSetShift + ').');
+        }
+    }
+
     function clampToSelectedQuantity(input) {
         if (!input) return;
 
-        const selectedQuantity = getSelectedQuantity();
-        input.max = String(selectedQuantity);
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
+        input.max = String(totalSetShift);
 
         const currentValue = parseFloat(input.value || '0');
-        if (!Number.isNaN(currentValue) && currentValue > selectedQuantity) {
-            input.value = String(selectedQuantity);
-            showLimitWarning('Value cannot be greater than pending quantity (' + selectedQuantity + ').');
+        if (!Number.isNaN(currentValue) && currentValue > totalSetShift) {
+            input.value = String(totalSetShift);
+            showLimitWarning('Value cannot be greater than Total Set/Shift (' + totalSetShift + ').');
+        }
+    }
+
+    function validateHourlyInputs() {
+        // Calculate sum of all hourly inputs
+        let hourlySum = 0;
+        hourlyInputs.forEach(function (input) {
+            if (input) {
+                hourlySum += Math.max(parseFloat(input.value || '0') || 0, 0);
+            }
+        });
+
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
+
+        // Update actual_set_shift with the sum
+        if (actualSetShiftInput) {
+            actualSetShiftInput.value = String(Math.round(hourlySum));
+        }
+
+        // Check if hourly sum exceeds Total Set/Shift
+        if (hourlySum > totalSetShift) {
+            showLimitWarning('Hourly total (' + Math.round(hourlySum) + ') cannot exceed Total Set/Shift (' + totalSetShift + ').');
         }
     }
 
@@ -410,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         actualSetShiftInput.value = String(Math.round(totalHours));
-        clampToSelectedQuantity(actualSetShiftInput);
+        validateActualSetShift();
     }
 
     function updateSelectedItemMeta() {
@@ -425,26 +402,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedItemCode) selectedItemCode.textContent = '-';
             if (selectedItemName) selectedItemName.textContent = '-';
             if (selectedItemSize) selectedItemSize.textContent = '-';
-            if (selectedQuantityInput) selectedQuantityInput.value = '0';
-            const requiredTbody = document.getElementById('productTableBody');
-            const stockTbody = document.getElementById('stockTableBody');
-            if (requiredTbody) {
-                requiredTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">Select an item to view required stock</td></tr>';
-            }
-            if (stockTbody) {
-                stockTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">Select an item to view in-stock transfers</td></tr>';
+            const mergedTbody = document.getElementById('mergedTableBody');
+            if (mergedTbody) {
+                mergedTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">Select an item to view stock details</td></tr>';
             }
             requiredProductsData = [];
             stockRowsData = [];
             evaluateStockCapability();
             return;
-        }
-
-        if (selectedTransferInput) {
-            selectedTransferInput.value = selectedValue || '';
-        }
-        if (selectedQuantityInput) {
-            selectedQuantityInput.value = selectedOption.getAttribute('data-quantity') || '0';
         }
         if (selectedItemCode) {
             selectedItemCode.textContent = selectedOption.getAttribute('data-item-code') || '-';
@@ -473,8 +438,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchItemProducts(itemId) {
         const url = '{{ route("admin.production-reports.sf003.item-products") }}?item_id=' + itemId;
-        const tbody = document.getElementById('productTableBody');
-        const loader = document.getElementById('productTableLoader');
+        const tbody = document.getElementById('mergedTableBody');
+        const loader = document.getElementById('mergedTableLoader');
 
         // Show loader
         if (tbody) tbody.style.display = 'none';
@@ -495,20 +460,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 tbody.style.display = '';
 
                 if (products.length === 0) {
-                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="4" class="py-4">No required stock found for this item</td></tr>';
+                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No required stock found for this item</td></tr>';
                     evaluateStockCapability();
                     return;
                 }
 
-                tbody.innerHTML = products.map(function (product) {
-                    return '<tr class="hover:bg-slate-50">' +
-                        '<td class="border border-slate-300 px-3 py-2">' + (product.product_code || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2">' + (product.product_name || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2 text-center">' + (product.product_category || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(product.quantity || 0) + '</td>' +
-                        '</tr>';
-                }).join('');
-
+                // Render merged table with both required and stock data
+                renderMergedTable();
                 evaluateStockCapability();
             })
             .catch(function (error) {
@@ -519,11 +477,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (loader) loader.style.display = 'none';
                 if (tbody) {
                     tbody.style.display = '';
-                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="4" class="py-4">Error loading required stock</td></tr>';
+                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading required stock</td></tr>';
                 }
 
                 evaluateStockCapability();
             });
+    }
+
+    function renderMergedTable() {
+        const tbody = document.getElementById('mergedTableBody');
+        if (!tbody) return;
+
+        // Build a map of stock quantities by product (item_id)
+        const stockByProduct = {};
+        stockRowsData.forEach(function (row) {
+            const productId = parseInt(row.item_id || 0, 10);
+            const quantity = Math.max(parseFloat(row.quantity || 0) || 0, 0);
+
+            if (productId > 0) {
+                stockByProduct[productId] = (stockByProduct[productId] || 0) + quantity;
+            }
+        });
+
+        if (requiredProductsData.length === 0) {
+            tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No required stock found for this item</td></tr>';
+            return;
+        }
+
+        // Render merged table
+        tbody.innerHTML = requiredProductsData.map(function (product) {
+            const productId = parseInt(product.product || 0, 10);
+            const stockQuantity = stockByProduct[productId] || 0;
+            return '<tr class="hover:bg-slate-50">' +
+                '<td class="border border-slate-300 px-3 py-2">' + (product.product_code || '-') + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2">' + (product.product_name || '-') + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2 text-center">' + (product.product_category || '-') + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(product.quantity || 0) + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(stockQuantity) + '</td>' +
+                '</tr>';
+        }).join('');
     }
 
     function updateShiftLabels(shift) {
@@ -598,35 +590,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (itemSelector) {
         itemSelector.addEventListener('change', updateSelectedItemMeta);
-        // Tab switching functionality
-        const tabButtons = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
-
-        tabButtons.forEach(function (button) {
-            button.addEventListener('click', function () {
-                const tabName = this.getAttribute('data-tab');
-
-                // Hide all tabs
-                tabContents.forEach(function (tab) {
-                    tab.style.display = 'none';
-                });
-
-                // Show selected tab
-                const selectedTab = document.getElementById(tabName);
-                if (selectedTab) {
-                    selectedTab.style.display = 'block';
-                }
-
-                // Update button styles
-                tabButtons.forEach(function (btn) {
-                    btn.classList.remove('border-b-2', 'border-blue-600', 'text-blue-600');
-                    btn.classList.add('border-b-2', 'border-transparent', 'text-slate-600');
-                });
-                this.classList.remove('border-b-2', 'border-transparent', 'text-slate-600');
-                this.classList.add('border-b-2', 'border-blue-600', 'text-blue-600');
-            });
-        });
-
     }
 
     if (totalSetShiftInput) {
@@ -646,12 +609,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (actualSetShiftInput) {
         actualSetShiftInput.addEventListener('input', function () {
             normalizeWholeNumber(actualSetShiftInput);
-            clampToSelectedQuantity(actualSetShiftInput);
+            validateActualSetShift();
         });
 
         actualSetShiftInput.addEventListener('blur', function () {
             normalizeWholeNumber(actualSetShiftInput);
-            clampToSelectedQuantity(actualSetShiftInput);
+            validateActualSetShift();
         });
     }
 
@@ -661,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function () {
         input.addEventListener('blur', function () {
             normalizeWholeNumber(input);
             if (input === actualSetShiftInput) {
-                clampToSelectedQuantity(input);
+                validateActualSetShift();
             }
         });
     });
@@ -669,16 +632,16 @@ document.addEventListener('DOMContentLoaded', function () {
     hourlyInputs.forEach(function (input) {
         input.addEventListener('input', function () {
             normalizeWholeNumber(input);
-            updateActualSetShiftFromHours();
+            validateHourlyInputs();
         });
 
         input.addEventListener('blur', function () {
             normalizeWholeNumber(input);
-            updateActualSetShiftFromHours();
+            validateHourlyInputs();
         });
     });
 
-    updateActualSetShiftFromHours();
+    validateHourlyInputs();
 
     function showSubmitError(message) {
         if (typeof Swal !== 'undefined') {
@@ -709,8 +672,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function fetchItemProductsStock(itemId) {
         const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId + '&line_code={{ $lineCode }}';
-        const tbody = document.getElementById('stockTableBody');
-        const loader = document.getElementById('stockTableLoader');
+        const tbody = document.getElementById('mergedTableBody');
+        const loader = document.getElementById('mergedTableLoader');
 
         if (tbody) tbody.style.display = 'none';
         if (loader) loader.style.display = '';
@@ -751,21 +714,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 tbody.style.display = '';
 
                 if (rows.length === 0) {
-                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No in-stock transfer data found</td></tr>';
+                    // Still show required stock even if no stock transfers
+                    if (requiredProductsData.length === 0) {
+                        tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No data found</td></tr>';
+                    } else {
+                        renderMergedTable();
+                    }
                     evaluateStockCapability();
                     return;
                 }
 
-                tbody.innerHTML = rows.map(function (row) {
-                    return '<tr class="hover:bg-slate-50">' +
-                        '<td class="border border-slate-300 px-3 py-2">' + ((row.date || '-') + (row.time ? ' ' + row.time : '')) + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2">' + (row.item_code || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2">' + (row.item_name || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2 text-center">' + (row.item_category || '-') + '</td>' +
-                        '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(row.quantity || 0) + '</td>' +
-                        '</tr>';
-                }).join('');
-
+                // Render merged table with stock data included
+                renderMergedTable();
                 evaluateStockCapability();
             })
             .catch(function (error) {
@@ -774,7 +734,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (loader) loader.style.display = 'none';
                 if (tbody) {
                     tbody.style.display = '';
-                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading in-stock transfer data</td></tr>';
+                    if (requiredProductsData.length === 0) {
+                        tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading data</td></tr>';
+                    } else {
+                        renderMergedTable();
+                    }
                 }
 
                 evaluateStockCapability();
@@ -782,21 +746,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', async function (event) {
-        const selectedQuantity = getSelectedQuantity();
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
         const actualSetShiftValue = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
 
         evaluateStockCapability();
 
-        if (stockInsufficient) {
+        if (actualSetShiftValue > totalSetShift) {
             event.preventDefault();
-            showSubmitError('In Stock quantity is not capable to create this item in this quantity (Total Set/Shift) which you have set.');
-            if (totalSetShiftInput) totalSetShiftInput.focus();
-            return;
-        }
-
-        if (actualSetShiftValue > selectedQuantity) {
-            event.preventDefault();
-            showSubmitError('Actual Set/Shift cannot be greater than pending quantity.');
+            showSubmitError('Actual Set/Shift (' + Math.round(actualSetShiftValue) + ') cannot be greater than Total Set/Shift (' + totalSetShift + ').');
             if (actualSetShiftInput) actualSetShiftInput.focus();
             return;
         }
@@ -848,6 +805,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    if (itemSelector && itemSelector.value) {
+        updateSelectedItemMeta();
+    }
 
     applySaveButtonState();
 });
