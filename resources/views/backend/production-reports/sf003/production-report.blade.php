@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }).filter(Boolean);
     let limitWarningTimeout;
     let isSaving = false;
+    let stockInsufficient = false;
     let requiredProductsData = [];
     let stockRowsData = [];
 
@@ -219,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function applySaveButtonState() {
         if (!saveButton) return;
 
-        const mustDisable = isSaving;
+        const mustDisable = isSaving || stockInsufficient;
         saveButton.disabled = mustDisable;
 
         if (mustDisable) {
@@ -246,7 +247,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedValue = itemSelector ? itemSelector.value : '';
         const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
 
-        if (!selectedValue || totalSetShift <= 0 || requiredProductsData.length === 0) {
+        if (!selectedValue) {
+            stockInsufficient = false;
+            updateStockCapabilityNote('');
+            applySaveButtonState();
+            return;
+        }
+
+        if (requiredProductsData.length === 0) {
+            stockInsufficient = true;
+            updateStockCapabilityNote('No product mapping found for the selected item. Please configure item products before saving this report.');
+            applySaveButtonState();
+            return;
+        }
+
+        if (totalSetShift <= 0) {
+            stockInsufficient = false;
             updateStockCapabilityNote('');
             applySaveButtonState();
             return;
@@ -279,10 +295,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
         if (shortProducts.length === 0) {
+            stockInsufficient = false;
             updateStockCapabilityNote('');
             applySaveButtonState();
             return;
         }
+
+        stockInsufficient = true;
 
         const summary = shortProducts
             .slice(0, 3)
@@ -750,6 +769,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const actualSetShiftValue = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
 
         evaluateStockCapability();
+
+        if (stockInsufficient) {
+            event.preventDefault();
+            showSubmitError('In Stock quantity is not capable to create this item in this quantity (Total Set/Shift) which you have set.');
+            if (totalSetShiftInput) totalSetShiftInput.focus();
+            return;
+        }
 
         if (actualSetShiftValue > totalSetShift) {
             event.preventDefault();

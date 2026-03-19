@@ -727,7 +727,7 @@ class SF003Controller extends Controller
                 'items.code as item_code',
                 'items.name as item_name',
                 'items.category as item_category',
-                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as quantity')
+                DB::raw('GREATEST(COALESCE(transfers.quantity, 0) - COALESCE(transfers.used_quantity, 0), 0) as quantity')
             )
             ->where('transfers.is_deleted', false)
             ->where('transfers.is_accept', 1)
