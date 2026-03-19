@@ -8,32 +8,8 @@
     <span class="font-medium text-slate-900">Dashboard</span>
 @endsection
 
-@push('styles')
-<style>
-    .dashboard-zoom-out {
-        zoom: 0.9;
-    }
-
-    @supports not (zoom: 1) {
-        .dashboard-zoom-out {
-            transform: scale(0.9);
-            transform-origin: top left;
-            width: 111.12%;
-        }
-    }
-
-    @media (max-width: 1024px) {
-        .dashboard-zoom-out {
-            zoom: 1;
-            transform: none;
-            width: 100%;
-        }
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="p-6 space-y-6 dashboard-zoom-out">
+<div class="p-6 space-y-6">
     <!-- 1. Plant Health Overview -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
         <div class="flex items-center justify-between mb-6">
@@ -54,17 +30,18 @@
         <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             @php
                 $stats = [
-                    ['label' => 'Total Production Today', 'value' => $todayProductionTotal, 'detail' => 'SF001 Actual Set Shift Today', 'color' => 'blue', 'icon' => 'package'],
-                    ['label' => 'Active Machines', 'value' => $activeMachinesCount, 'detail' => 'Inactive Machines: ' . $notActiveMachinesCount . ' | Machines In Use: ' . $machineInUseCount, 'color' => 'emerald', 'icon' => 'cog'],
-                    ['label' => 'Total Suppliers', 'value' => $totalSuppliersCount, 'detail' => 'Inactive Suppliers: ' . $inactiveSuppliersCount, 'color' => 'rose', 'icon' => 'truck'],
-                    ['label' => 'Manpower Working', 'value' => $totalManpowerWorking, 'detail' => 'Staff Working: ' . $totalStaffWorkingSf001 . ' | Worker Working Count: ' . $totalWorkerWorkingSf001, 'color' => 'indigo', 'icon' => 'users'],
-                    ['label' => 'Total Coil', 'value' => $totalCoilsCount, 'detail' => 'Total Weight: ' . $totalCoilWeightKg . ' KG', 'color' => 'amber', 'icon' => 'circle-dot'],
-                    ['label' => 'In Use Coil', 'value' => $inUseCoilsCount, 'detail' => 'Loaded Coil Weight: ' . $loadedCoilWeightKg . ' KG', 'color' => 'teal', 'icon' => 'truck'],
+                    ['label' => 'Total Production Today', 'value' => '18,750', 'detail' => '3,125 Units | 6,850 Kg in SF1', 'trend' => '+4.2%', 'color' => 'blue', 'icon' => 'package'],
+                    ['label' => 'Active Machines', 'value' => '12', 'detail' => '80% Operational | 3 Down', 'trend' => '+1', 'color' => 'emerald', 'icon' => 'cog'],
+                    ['label' => 'Stopped Machines', 'value' => '3', 'detail' => 'M-07, M-09, M-12', 'trend' => '-2', 'color' => 'rose', 'icon' => 'alert-circle'],
+                    ['label' => 'Manpower Working', 'value' => '84', 'detail' => '91% Attendance | 8 Absent', 'trend' => '-8', 'color' => 'indigo', 'icon' => 'users'],
+                    ['label' => 'Scrap + Rejection', 'value' => '1,240', 'detail' => '6.6% Rate | Above Target', 'trend' => '+12%', 'color' => 'amber', 'icon' => 'alert-triangle'],
+                    ['label' => 'Plant Efficiency', 'value' => '86.4%', 'detail' => 'Target: 90% | -3.6% Variance', 'trend' => '-0.3%', 'color' => 'teal', 'icon' => 'trending-up'],
                 ];
             @endphp
             @foreach($stats as $stat)
             <div class="bg-gradient-to-br from-white to-slate-50 rounded-xl border border-slate-200 p-5 hover:shadow-elevated transition-all hover-lift">
-                <div>
+                <div class="flex items-start justify-between">
+                    <div>
                         <div class="flex items-center gap-2 mb-3">
                             <div class="w-8 h-8 rounded-lg bg-{{ $stat['color'] }}-50 flex items-center justify-center">
                                 <i data-lucide="{{ $stat['icon'] }}" class="w-4 h-4 text-{{ $stat['color'] }}-600"></i>
@@ -75,6 +52,10 @@
                             <p class="text-2xl font-bold text-slate-900">{{ $stat['value'] }}</p>
                         </div>
                         <p class="text-xs text-slate-500 mt-2">{{ $stat['detail'] }}</p>
+                    </div>
+                    <div class="text-sm font-semibold {{ str_starts_with($stat['trend'], '+') ? 'text-emerald-600' : (str_starts_with($stat['trend'], '-') ? 'text-rose-600' : 'text-slate-600') }}">
+                        {{ $stat['trend'] }}
+                    </div>
                 </div>
             </div>
             @endforeach
