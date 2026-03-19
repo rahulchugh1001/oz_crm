@@ -136,16 +136,17 @@
                                     <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Category</th>
                                     <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Quantity Required</th>
                                     <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Stock Quantity</th>
+                                    <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Stock Status</th>
                                 </tr>
                             </thead>
                             <tbody id="mergedTableBody">
                                 <tr class="text-center text-slate-500">
-                                    <td colspan="5" class="py-4">Select an item to view stock details</td>
+                                    <td colspan="6" class="py-4">Select an item to view stock details</td>
                                 </tr>
                             </tbody>
                             <tbody id="mergedTableLoader" style="display: none;">
                                 <tr class="text-center">
-                                    <td colspan="5" class="py-6">
+                                    <td colspan="6" class="py-6">
                                         <div class="flex items-center justify-center gap-2">
                                             <div class="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
                                             <span class="text-slate-600 font-medium">Loading stock details...</span>
@@ -423,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedItemSize) selectedItemSize.textContent = '-';
             const mergedTbody = document.getElementById('mergedTableBody');
             if (mergedTbody) {
-                mergedTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">Select an item to view stock details</td></tr>';
+                mergedTbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="6" class="py-4">Select an item to view stock details</td></tr>';
             }
             requiredProductsData = [];
             stockRowsData = [];
@@ -479,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 tbody.style.display = '';
 
                 if (products.length === 0) {
-                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No required stock found for this item</td></tr>';
+                    tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="6" class="py-4">No required stock found for this item</td></tr>';
                     evaluateStockCapability();
                     return;
                 }
@@ -496,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (loader) loader.style.display = 'none';
                 if (tbody) {
                     tbody.style.display = '';
-                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading required stock</td></tr>';
+                    tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="6" class="py-4">Error loading required stock</td></tr>';
                 }
 
                 evaluateStockCapability();
@@ -519,20 +520,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (requiredProductsData.length === 0) {
-            tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No required stock found for this item</td></tr>';
+            tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="6" class="py-4">No required stock found for this item</td></tr>';
             return;
         }
+
+        const totalSetShift = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
 
         // Render merged table
         tbody.innerHTML = requiredProductsData.map(function (product) {
             const productId = parseInt(product.product || 0, 10);
+            const requiredPerSet = Math.max(parseFloat(product.quantity || 0) || 0, 0);
+            const requiredQuantity = totalSetShift > 0 ? requiredPerSet * totalSetShift : requiredPerSet;
             const stockQuantity = stockByProduct[productId] || 0;
+            const isInStock = stockQuantity >= requiredQuantity;
+            const statusBadge = isInStock
+                ? '<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700"><span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>In Stock</span>'
+                : '<span class="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700"><span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span>Out of Stock</span>';
+
             return '<tr class="hover:bg-slate-50">' +
                 '<td class="border border-slate-300 px-3 py-2">' + (product.product_code || '-') + '</td>' +
                 '<td class="border border-slate-300 px-3 py-2">' + (product.product_name || '-') + '</td>' +
                 '<td class="border border-slate-300 px-3 py-2 text-center">' + (product.product_category || '-') + '</td>' +
-                '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(product.quantity || 0) + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(requiredQuantity) + '</td>' +
                 '<td class="border border-slate-300 px-3 py-2 text-center">' + Math.round(stockQuantity) + '</td>' +
+                '<td class="border border-slate-300 px-3 py-2 text-center">' + statusBadge + '</td>' +
                 '</tr>';
         }).join('');
     }
@@ -735,7 +746,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (rows.length === 0) {
                     // Still show required stock even if no stock transfers
                     if (requiredProductsData.length === 0) {
-                        tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="5" class="py-4">No data found</td></tr>';
+                        tbody.innerHTML = '<tr class="text-center text-slate-500"><td colspan="6" class="py-4">No data found</td></tr>';
                     } else {
                         renderMergedTable();
                     }
@@ -754,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (tbody) {
                     tbody.style.display = '';
                     if (requiredProductsData.length === 0) {
-                        tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="5" class="py-4">Error loading data</td></tr>';
+                        tbody.innerHTML = '<tr class="text-center text-red-500"><td colspan="6" class="py-4">Error loading data</td></tr>';
                     } else {
                         renderMergedTable();
                     }
