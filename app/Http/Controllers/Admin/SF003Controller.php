@@ -14,6 +14,139 @@ use Illuminate\View\View;
 
 class SF003Controller extends Controller
 {
+    protected function syncProductionReportProducts(int $reportId, int $itemId, string $lineCode, float $actualSetShift): void
+    {
+        $previousTransferIds = DB::table('sf3_production_report_products')
+            ->where('mst_item_id', $reportId)
+            ->whereNotNull('transfered_id')
+            ->pluck('transfered_id')
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        $products = DB::table('item_sf3_products')
+            ->select('product', 'quantity')
+            ->where('item_id', $itemId)
+            ->orderBy('product')
+            ->get();
+
+        DB::table('sf3_production_report_products')
+            ->where('mst_item_id', $reportId)
+            ->delete();
+
+        if ($products->isEmpty()) {
+            if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
+                $previousTransferIds->each(function ($transferId) {
+                    $usedQuantity = (float) (DB::table('sf3_production_report_products')
+                        ->where('transfered_id', $transferId)
+                        ->where('is_deleted', 0)
+                        ->sum('quantity_used') ?? 0);
+
+                    DB::table('sf002_stock_transfers')
+                        ->where('id', $transferId)
+                        ->update([
+                            'used_quantity' => round($usedQuantity, 2),
+                            'updated_at' => now(),
+                        ]);
+                });
+            }
+
+            return;
+        }
+
+        $productIds = $products->pluck('product')
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        $transferByProduct = collect();
+        if ($productIds->isNotEmpty()) {
+            $transferByProduct = DB::table('sf002_stock_transfers')
+                ->select('id', 'item_id')
+                ->where('is_deleted', false)
+                ->where('is_accept', 1)
+                ->where('sf3_process', $lineCode)
+                ->whereIn('item_id', $productIds->all())
+                ->orderByDesc('date')
+                ->orderByDesc('time')
+                ->orderByDesc('created_at')
+                ->get()
+                ->groupBy('item_id')
+                ->map(function ($rows) {
+                    return (int) $rows->first()->id;
+                });
+        }
+
+        $timestamp = now();
+        $rows = $products->map(function ($product) use ($reportId, $actualSetShift, $timestamp, $transferByProduct) {
+            $baseQuantity = (float) ($product->quantity ?? 0);
+            $productId = (int) ($product->product ?? 0);
+            $matchedTransferId = $productId > 0 && $transferByProduct->has($productId)
+                ? (int) $transferByProduct->get($productId)
+                : null;
+
+            return [
+                'mst_item_id' => $reportId,
+                'transfered_id' => $matchedTransferId,
+                'product_id' => $productId,
+                'quantity_required' => round($baseQuantity, 2),
+                'quantity_used' => round($baseQuantity * $actualSetShift, 2),
+                'status' => 1,
+                'is_deleted' => 0,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
+        })->filter(function (array $row) {
+            return $row['product_id'] > 0;
+        })->values()->all();
+
+        if ($rows !== []) {
+            DB::table('sf3_production_report_products')->insert($rows);
+        }
+
+        if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
+            $currentTransferIds = collect($rows)
+                ->pluck('transfered_id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->filter(function ($id) {
+                    return $id > 0;
+                })
+                ->unique()
+                ->values();
+
+            $impactedTransferIds = $previousTransferIds
+                ->merge($currentTransferIds)
+                ->unique()
+                ->values();
+
+            $impactedTransferIds->each(function ($transferId) {
+                $usedQuantity = (float) (DB::table('sf3_production_report_products')
+                    ->where('transfered_id', $transferId)
+                    ->where('is_deleted', 0)
+                    ->sum('quantity_used') ?? 0);
+
+                DB::table('sf002_stock_transfers')
+                    ->where('id', $transferId)
+                    ->update([
+                        'used_quantity' => round($usedQuantity, 2),
+                        'updated_at' => now(),
+                    ]);
+            });
+        }
+    }
+
     protected function resolveLineContext(string $requestedLine): array
     {
         $lineMap = [
@@ -397,6 +530,8 @@ class SF003Controller extends Controller
             'updated_at' => now(),
         ];
 
+        $savedReportId = $reportId;
+
         if ($reportId > 0) {
             $editableQuery = DB::table('sf3_production_reports')
                 ->where('id', $reportId)
@@ -418,7 +553,11 @@ class SF003Controller extends Controller
 
             $editableQuery->update($payload);
         } else {
-            DB::table('sf3_production_reports')->insert($payload);
+            $savedReportId = (int) DB::table('sf3_production_reports')->insertGetId($payload);
+        }
+
+        if ($savedReportId > 0 && Schema::hasTable('sf3_production_report_products')) {
+            $this->syncProductionReportProducts($savedReportId, $itemId, $lineCode, $actualSetShift);
         }
 
         $successMessage = $reportId > 0 ? 'Production report updated successfully.' : 'Production report saved successfully.';
