@@ -58,6 +58,7 @@
         || request()->routeIs('admin.production-reports.sf003.production-report*')
         || request()->is('admin/production-reports/sf003/production-report/*')
     ) && $sf003Line === 'l3';
+    $isSf003FinalStockMenuActive = request()->routeIs('admin.production-reports.sf003.final-stock*');
 
     $isMasterDataContext = $isAdmin && (
         request()->routeIs('admin.items.*')
@@ -214,6 +215,10 @@
                     <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l3', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L3ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">L3 Production</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf003.final-stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003FinalStockMenuActive ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Final Stock</span>
                     </a>
                 </div>
             </div>

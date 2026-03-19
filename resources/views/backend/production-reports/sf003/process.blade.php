@@ -83,6 +83,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Size</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF3 Line</th>
                         <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted Quantity</th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Used Quantity</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transfer By</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Accepted By</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">SF2 Remark</th>
@@ -116,6 +117,11 @@
                                 {{ number_format((float) ($transfer->accepted_quantity ?? $transfer->quantity), 0) }}
                             </span>
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-lg bg-amber-50 text-amber-700 text-xs font-semibold">
+                                {{ number_format((float) ($transfer->used_quantity ?? 0), 0) }}
+                            </span>
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->transfer_by_name ?? 'N/A' }}</td>
                         <td class="px-4 py-3 text-slate-700">
                             @if($transfer->assign_to === auth()->id())
@@ -131,7 +137,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="px-4 py-10 text-center">
+                        <td colspan="12" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>

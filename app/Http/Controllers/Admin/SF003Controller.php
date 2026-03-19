@@ -185,6 +185,7 @@ class SF003Controller extends Controller
                 'transfers.id',
                 'transfers.item_id',
                 'transfers.quantity',
+                'transfers.used_quantity',
                 'transfers.reject_quantity',
                 'transfers.reject_reason_id',
                 'transfers.created_at',
@@ -277,6 +278,7 @@ class SF003Controller extends Controller
                     'transfers.id',
                     'transfers.item_id',
                     'transfers.quantity',
+                    'transfers.used_quantity',
                     'transfers.date',
                     'transfers.time',
                     'transfers.is_accept',
@@ -342,6 +344,102 @@ class SF003Controller extends Controller
             'lineCode',
             'lineLabel'
         ));
+    }
+
+    /**
+     * Display final stock list from SF3 production reports.
+     */
+    public function finalStock(Request $request): View
+    {
+        $selectedLine = strtolower((string) $request->query('line', 'all'));
+        $allowedLines = ['all', 'l1', 'l2', 'l3'];
+        if (!in_array($selectedLine, $allowedLines, true)) {
+            $selectedLine = 'all';
+        }
+
+        if (Schema::hasTable('sf3_production_reports')) {
+            $finalStockQuery = DB::table('sf3_production_reports as reports')
+                ->select(
+                    'reports.*',
+                    'items.code as item_code',
+                    'items.name as item_name',
+                    'items.size as item_size',
+                    'users.name as created_by_name'
+                )
+                ->leftJoin('items', 'reports.item_id', '=', 'items.id')
+                ->leftJoin('users', 'reports.created_by', '=', 'users.id')
+                ->where('reports.is_deleted', 0)
+                ->when($selectedLine !== 'all', function ($query) use ($selectedLine) {
+                    $lineContext = $this->resolveLineContext($selectedLine);
+                    $query->where('reports.sf3_process', $lineContext['lineCode']);
+                })
+                ->orderByDesc('reports.report_date')
+                ->orderByDesc('reports.created_at');
+
+            if (Auth::user()?->role !== 'Admin') {
+                $finalStockQuery->where('reports.created_by', Auth::id());
+            }
+
+            $finalStockReports = $finalStockQuery->get();
+        } else {
+            $finalStockReports = collect();
+        }
+
+        return view('backend.production-reports.sf003.final-stock', compact('finalStockReports', 'selectedLine'));
+    }
+
+    /**
+     * Display final stock details from sf3_production_reports and sf3_production_report_products.
+     */
+    public function finalStockShow(int $reportId): View
+    {
+        if (!Schema::hasTable('sf3_production_reports')) {
+            abort(500, 'SF3 production reports table is missing. Please run migrations.');
+        }
+
+        $reportQuery = DB::table('sf3_production_reports as reports')
+            ->select(
+                'reports.*',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.size as item_size',
+                'users.name as created_by_name'
+            )
+            ->leftJoin('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoin('users', 'reports.created_by', '=', 'users.id')
+            ->where('reports.id', $reportId)
+            ->where('reports.is_deleted', 0);
+
+        if (Auth::user()?->role !== 'Admin') {
+            $reportQuery->where('reports.created_by', Auth::id());
+        }
+
+        $report = $reportQuery->first();
+        if (!$report) {
+            abort(404, 'Final stock record not found.');
+        }
+
+        $productRows = collect();
+        if (Schema::hasTable('sf3_production_report_products')) {
+            $productRows = DB::table('sf3_production_report_products as details')
+                ->select(
+                    'details.*',
+                    'product_items.code as product_code',
+                    'product_items.name as product_name',
+                    'product_items.category as product_category',
+                    'transfers.quantity as transfer_quantity',
+                    'transfers.used_quantity as transfer_used_quantity',
+                    DB::raw('GREATEST(COALESCE(transfers.quantity, 0) - COALESCE(transfers.used_quantity, 0), 0) as transfer_available_quantity')
+                )
+                ->leftJoin('items as product_items', 'details.product_id', '=', 'product_items.id')
+                ->leftJoin('sf002_stock_transfers as transfers', 'details.transfered_id', '=', 'transfers.id')
+                ->where('details.mst_item_id', $reportId)
+                ->where('details.is_deleted', 0)
+                ->orderBy('details.id')
+                ->get();
+        }
+
+        return view('backend.production-reports.sf003.final-stock-show', compact('report', 'productRows'));
     }
 
     /**
