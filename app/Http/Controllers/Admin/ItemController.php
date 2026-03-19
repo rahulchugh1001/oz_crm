@@ -11,6 +11,7 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ItemController extends Controller
 {
@@ -21,8 +22,14 @@ class ItemController extends Controller
     {
         $mode = $request->query('mode', 'active');
         $search = trim((string) $request->query('search', ''));
+        $userRole = (string) optional(Auth::user())->role;
+        $isStoreRoleUser = in_array($userRole, ['Stock', 'Store'], true);
 
         $query = Item::query();
+
+        if ($isStoreRoleUser) {
+            $query->where('category', 'Store');
+        }
 
         if ($mode === 'deleted') {
             $query->where('is_deleted', true);

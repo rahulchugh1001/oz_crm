@@ -26,10 +26,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.active.user'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
-    // Admin Only Routes
-    Route::middleware(['check.admin.role'])->group(function () {
-        // Items Routes
+
+    // Item master routes for Admin and Stock roles
+    Route::middleware(['check.admin.or.stock.role'])->group(function () {
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::post('/items', [ItemController::class, 'store'])->name('items.store');
@@ -37,7 +36,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
         Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
         Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
-
+    });
+    
+    // Admin Only Routes
+    Route::middleware(['check.admin.role'])->group(function () {
         // Machines Routes
         Route::get('/machines', [MachineController::class, 'index'])->name('machines.index');
         Route::get('/machines/create', [MachineController::class, 'create'])->name('machines.create');

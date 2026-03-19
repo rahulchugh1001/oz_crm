@@ -86,6 +86,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Name</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Code</th>
+                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Category</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Size</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Weight</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Production Count</th>
@@ -99,6 +100,7 @@
                         <td class="px-4 py-3 text-xs text-slate-900 font-medium">#{{ $item->id }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900 font-semibold">{{ $item->name }}</td>
                         <td class="px-4 py-3 text-xs text-slate-600">{{ $item->code }}</td>
+                        <td class="px-4 py-3 text-xs text-slate-900">{{ $item->category }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900">{{ $item->size ?: '-' }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ (int) $item->weight }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900 font-medium">{{ (int) ($item->total_production_count ?? 0) }}</td>

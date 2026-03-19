@@ -1,6 +1,7 @@
 @php
     $userRole = auth()->user()->role;
     $isAdmin = $userRole === 'Admin';
+    $isStock = $userRole === 'Stock';
     $canViewSf001 = $isAdmin || $userRole === 'SF001';
     $canViewSf002 = $isAdmin || $userRole === 'SF002';
     $canViewSf003 = $isAdmin || $userRole === 'SF003';
@@ -60,11 +61,12 @@
     ) && $sf003Line === 'l3';
     $isSf003FinalStockMenuActive = request()->routeIs('admin.production-reports.sf003.final-stock*');
 
-    $isMasterDataContext = $isAdmin && (
+    $canViewMasterData = $isAdmin || $isStock;
+    $isMasterDataContext = $canViewMasterData && (
         request()->routeIs('admin.items.*')
-        || request()->routeIs('admin.machines.*')
-        || request()->routeIs('admin.reject-reasons.*')
-        || request()->routeIs('admin.weight-capacities.*')
+        || ($isAdmin && request()->routeIs('admin.machines.*'))
+        || ($isAdmin && request()->routeIs('admin.reject-reasons.*'))
+        || ($isAdmin && request()->routeIs('admin.weight-capacities.*'))
         || $isMasterSupplierContext
     );
 @endphp
@@ -88,7 +90,14 @@
                 <span class="font-medium">Dashboard</span>
             </a>
 
-            @if($isAdmin)
+            @if($isStock)
+            <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-3 p-3 rounded-lg transition-all hover-lift {{ request()->routeIs('admin.items.*') ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                <div class="w-8 h-8 rounded-lg {{ request()->routeIs('admin.items.*') ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                    <i data-lucide="package" class="w-4 h-4 {{ request()->routeIs('admin.items.*') ? 'text-white' : 'text-gray-400' }}"></i>
+                </div>
+                <span class="font-medium">Store Items</span>
+            </a>
+            @elseif($isAdmin)
             <div class="mt-2">
                 <button onclick="toggleMasterDataDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isMasterDataContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
                     <div class="flex items-center gap-3">
@@ -101,13 +110,14 @@
                 </button>
 
                 <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isMasterDataContext ? '' : 'hidden' }}" id="masterdata-dropdown">
-                    <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.machines.*') ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">Machines</span>
-                    </a>
                     <a href="{{ route('admin.items.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.items.*') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Items</span>
+                    </a>
+                    @if($isAdmin)
+                    <a href="{{ route('admin.machines.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.machines.*') ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Machines</span>
                     </a>
                     <a href="{{ route('admin.reject-reasons.index') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.reject-reasons.*') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
@@ -121,6 +131,7 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Supplier</span>
                     </a>
+                    @endif
                 </div>
             </div>
             @endif
