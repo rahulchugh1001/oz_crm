@@ -40,8 +40,25 @@
 
             <!-- Content -->
             <div class="p-6 space-y-6">
+                @if (in_array($item->category, ['Store', 'Stock']))
+                    @php
+                        $historyCount = (int) (($stockUsageHistory ?? collect())->count());
+                    @endphp
+                    <div class="flex items-center gap-2 pb-4 border-b border-slate-200">
+                        <button type="button" data-item-tab="overview" class="js-item-tab-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border border-blue-200 bg-blue-50 text-blue-700">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            <span>Overview</span>
+                        </button>
+                        <button type="button" data-item-tab="history" class="js-item-tab-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border border-slate-200 bg-white text-slate-600">
+                            <i data-lucide="history" class="w-4 h-4"></i>
+                            <span>History</span>
+                            <span class="inline-flex items-center justify-center min-w-6 h-6 px-1.5 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">{{ $historyCount }}</span>
+                        </button>
+                    </div>
+                @endif
+
                 <!-- ID & Status -->
-                <div class="flex items-center justify-between pb-6 border-b border-slate-200">
+                <div class="js-overview-section flex items-center justify-between pb-6 border-b border-slate-200">
                     <div>
                         <p class="text-sm text-slate-500 mb-1">Item ID</p>
                         <p class="text-2xl font-bold text-slate-900">#{{ $item->id }}</p>
@@ -53,7 +70,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="js-overview-section grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Name -->
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Item Name</label>
@@ -88,7 +105,7 @@
                 </div>
 
                 <!-- Size & Weight Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 {{ $item->category === 'Store' ? 'lg:grid-cols-3' : '' }} gap-6">
+                <div class="js-overview-section grid grid-cols-1 md:grid-cols-2 {{ $item->category === 'Store' ? 'lg:grid-cols-3' : '' }} gap-6">
                     <!-- Size -->
                     <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <div class="flex items-center gap-3">
@@ -131,7 +148,7 @@
                 </div>
 
                 @if ($item->category === 'SF3')
-                    <div class="pt-6 border-t border-slate-200">
+                    <div class="js-overview-section pt-6 border-t border-slate-200">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                                 <i data-lucide="boxes" class="w-5 h-5 text-blue-600"></i>
@@ -175,8 +192,66 @@
                     </div>
                 @endif
 
+                @if (in_array($item->category, ['Store', 'Stock']))
+                    <div class="js-history-section pt-6 border-t border-slate-200 hidden">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                                <i data-lucide="history" class="w-5 h-5 text-amber-600"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">Stock Consumption History</p>
+                                <p class="text-sm text-slate-500">Track where this stock item was consumed in SF3 production</p>
+                            </div>
+                        </div>
+
+                        @if (($stockUsageHistory ?? collect())->count() === 0)
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+                                <p class="text-sm text-slate-600">No stock consumption history found.</p>
+                            </div>
+                        @else
+                            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                                <table class="min-w-full divide-y divide-slate-200 bg-white">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Used In Item</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Report Date</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Line</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Shift</th>
+                                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Used Stock</th>
+                                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">In Stock</th>
+                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tracked At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200">
+                                        @foreach (($stockUsageHistory ?? collect()) as $usage)
+                                            <tr>
+                                                <td class="px-4 py-3 text-sm text-slate-800">
+                                                    <span class="font-medium">{{ $usage->sf3_item_name ?: '-' }}</span>
+                                                    @if (!empty($usage->sf3_item_code))
+                                                        <span class="text-slate-500">({{ $usage->sf3_item_code }})</span>
+                                                    @endif
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">
+                                                    {{ !empty($usage->report_date) ? \Carbon\Carbon::parse($usage->report_date)->format('d M Y') : '-' }}
+                                                </td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">{{ $usage->sf3_process ?: '-' }}</td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">{{ !empty($usage->shift) ? ucfirst($usage->shift) : '-' }}</td>
+                                                <td class="px-4 py-3 text-sm text-right font-semibold text-rose-700">{{ number_format((float) $usage->used_stock, 2) }}</td>
+                                                <td class="px-4 py-3 text-sm text-right font-semibold text-emerald-700">{{ number_format((float) $usage->in_stock, 2) }}</td>
+                                                <td class="px-4 py-3 text-sm text-slate-700">
+                                                    {{ !empty($usage->created_at) ? \Carbon\Carbon::parse($usage->created_at)->format('d M Y H:i') : '-' }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 <!-- Machines -->
-                <div class="pt-6 border-t border-slate-200">
+                <div class="js-overview-section pt-6 border-t border-slate-200">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
                             <i data-lucide="cpu" class="w-5 h-5 text-slate-600"></i>
@@ -210,7 +285,7 @@
                 </div>
 
                 <!-- Timestamps -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
+                <div class="js-overview-section grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-200">
                     <div>
                         <label class="block text-sm font-semibold text-slate-500 mb-2">Created At</label>
                         <p class="text-slate-700">{{ $item->created_at->format('F d, Y H:i') }}</p>
@@ -247,6 +322,44 @@
 @push('scripts')
 <script>
     lucide.createIcons();
+
+    (() => {
+        const tabButtons = document.querySelectorAll('.js-item-tab-btn');
+        if (!tabButtons.length) return;
+
+        const overviewSections = document.querySelectorAll('.js-overview-section');
+        const historySections = document.querySelectorAll('.js-history-section');
+
+        const setActiveTab = (tabName) => {
+            const showHistory = tabName === 'history';
+
+            overviewSections.forEach((section) => {
+                section.classList.toggle('hidden', showHistory);
+            });
+
+            historySections.forEach((section) => {
+                section.classList.toggle('hidden', !showHistory);
+            });
+
+            tabButtons.forEach((button) => {
+                const isActive = button.getAttribute('data-item-tab') === tabName;
+                button.classList.toggle('border-blue-200', isActive);
+                button.classList.toggle('bg-blue-50', isActive);
+                button.classList.toggle('text-blue-700', isActive);
+                button.classList.toggle('border-slate-200', !isActive);
+                button.classList.toggle('bg-white', !isActive);
+                button.classList.toggle('text-slate-600', !isActive);
+            });
+        };
+
+        tabButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                setActiveTab(button.getAttribute('data-item-tab') || 'overview');
+            });
+        });
+
+        setActiveTab('overview');
+    })();
 
     (() => {
         const deleteForms = document.querySelectorAll('.js-swal-delete-form');

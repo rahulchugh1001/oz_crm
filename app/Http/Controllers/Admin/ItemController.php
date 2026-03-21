@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class ItemController extends Controller
 {
@@ -163,7 +164,33 @@ class ItemController extends Controller
             },
         ]);
 
-        return view('backend.items.show', compact('item'));
+        $stockUsageHistory = collect();
+        if (in_array((string) $item->category, ['Store', 'Stock'], true) && Schema::hasTable('sf3_stock_usages')) {
+            $stockUsageHistory = DB::table('sf3_stock_usages as usage')
+                ->select(
+                    'usage.id',
+                    'usage.report_id',
+                    'usage.item_id as sf3_item_id',
+                    'usage.stock_id',
+                    'usage.in_stock',
+                    'usage.used_stock',
+                    'usage.created_at',
+                    'sf3_items.name as sf3_item_name',
+                    'sf3_items.code as sf3_item_code',
+                    'sf3_reports.report_date',
+                    'sf3_reports.sf3_process',
+                    'sf3_reports.shift'
+                )
+                ->leftJoin('items as sf3_items', 'usage.item_id', '=', 'sf3_items.id')
+                ->leftJoin('sf3_production_reports as sf3_reports', 'usage.report_id', '=', 'sf3_reports.id')
+                ->where('usage.stock_id', $item->id)
+                ->where('usage.is_deleted', 0)
+                ->where('usage.status', 1)
+                ->orderByDesc('usage.created_at')
+                ->get();
+        }
+
+        return view('backend.items.show', compact('item', 'stockUsageHistory'));
     }
 
     /**
