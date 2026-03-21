@@ -44,6 +44,7 @@ class ItemController extends Controller
             $query->where(function ($builder) use ($search) {
                 $builder->where('name', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('category', 'like', "%{$search}%")
                     ->orWhere('size', 'like', "%{$search}%")
                     ->orWhere('weight', 'like', "%{$search}%");
             });

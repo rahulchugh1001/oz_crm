@@ -61,7 +61,7 @@
                                 type="text"
                                 name="search"
                                 value="{{ $search ?? '' }}"
-                                placeholder="Search name, code, size, weight..."
+                                placeholder="Search name, code, category, size, weight..."
                                 class="w-full pl-10 pr-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
