@@ -14,6 +14,53 @@ use Illuminate\View\View;
 
 class SF003Controller extends Controller
 {
+    protected function syncStoreItemQuantities($previousUsageByProduct, $newUsageByProduct): void
+    {
+        $previous = collect($previousUsageByProduct)
+            ->mapWithKeys(function ($value, $key) {
+                return [(int) $key => (float) $value];
+            });
+
+        $current = collect($newUsageByProduct)
+            ->mapWithKeys(function ($value, $key) {
+                return [(int) $key => (float) $value];
+            });
+
+        $impactedProductIds = $previous->keys()
+            ->merge($current->keys())
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        if ($impactedProductIds->isEmpty()) {
+            return;
+        }
+
+        foreach ($impactedProductIds as $productId) {
+            $oldUsed = (float) ($previous->get($productId) ?? 0);
+            $newUsed = (float) ($current->get($productId) ?? 0);
+
+            if (abs($oldUsed - $newUsed) < 0.00001) {
+                continue;
+            }
+
+            $currentQuantity = (float) (DB::table('items')->where('id', $productId)->value('quantity') ?? 0);
+            $updatedQuantity = max($currentQuantity + $oldUsed - $newUsed, 0);
+
+            DB::table('items')
+                ->where('id', $productId)
+                ->update([
+                    'quantity' => round($updatedQuantity, 2),
+                    'updated_at' => now(),
+                ]);
+        }
+    }
+
     protected function syncProductionReportProducts(int $reportId, int $itemId, string $lineCode, float $actualSetShift): void
     {
         $previousTransferIds = DB::table('sf3_production_report_products')
@@ -29,17 +76,54 @@ class SF003Controller extends Controller
             ->unique()
             ->values();
 
+        $previousStoreUsageByProduct = DB::table('sf3_production_report_products as details')
+            ->join('items', 'details.product_id', '=', 'items.id')
+            ->where('details.mst_item_id', $reportId)
+            ->where('details.is_deleted', 0)
+            ->where('items.category', 'Store')
+            ->select('details.product_id', DB::raw('COALESCE(SUM(details.quantity_used), 0) as total_used'))
+            ->groupBy('details.product_id')
+            ->pluck('total_used', 'details.product_id');
+
         $products = DB::table('item_sf3_products')
             ->select('product', 'quantity')
             ->where('item_id', $itemId)
             ->orderBy('product')
             ->get();
 
+        $storeProductIds = collect();
+        $productIds = $products->pluck('product')
+            ->map(function ($id) {
+                return (int) $id;
+            })
+            ->filter(function ($id) {
+                return $id > 0;
+            })
+            ->unique()
+            ->values();
+
+        if ($productIds->isNotEmpty()) {
+            $storeProductIds = DB::table('items')
+                ->whereIn('id', $productIds->all())
+                ->where('category', 'Store')
+                ->pluck('id')
+                ->map(function ($id) {
+                    return (int) $id;
+                })
+                ->filter(function ($id) {
+                    return $id > 0;
+                })
+                ->unique()
+                ->values();
+        }
+
         DB::table('sf3_production_report_products')
             ->where('mst_item_id', $reportId)
             ->delete();
 
         if ($products->isEmpty()) {
+            $this->syncStoreItemQuantities($previousStoreUsageByProduct, collect());
+
             if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
                 $previousTransferIds->each(function ($transferId) {
                     $usedQuantity = (float) (DB::table('sf3_production_report_products')
@@ -58,16 +142,6 @@ class SF003Controller extends Controller
 
             return;
         }
-
-        $productIds = $products->pluck('product')
-            ->map(function ($id) {
-                return (int) $id;
-            })
-            ->filter(function ($id) {
-                return $id > 0;
-            })
-            ->unique()
-            ->values();
 
         $transferByProduct = collect();
         if ($productIds->isNotEmpty()) {
@@ -113,6 +187,19 @@ class SF003Controller extends Controller
         if ($rows !== []) {
             DB::table('sf3_production_report_products')->insert($rows);
         }
+
+        $newStoreUsageByProduct = collect($rows)
+            ->filter(function (array $row) use ($storeProductIds) {
+                return $storeProductIds->contains((int) ($row['product_id'] ?? 0));
+            })
+            ->groupBy(function (array $row) {
+                return (int) ($row['product_id'] ?? 0);
+            })
+            ->map(function ($group) {
+                return (float) collect($group)->sum('quantity_used');
+            });
+
+        $this->syncStoreItemQuantities($previousStoreUsageByProduct, $newStoreUsageByProduct);
 
         if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
             $currentTransferIds = collect($rows)
