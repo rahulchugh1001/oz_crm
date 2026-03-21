@@ -83,20 +83,42 @@
                     <!-- Weight -->
                     <div>
                         <label for="weight" class="block text-sm font-semibold text-slate-700 mb-2">
-                            Weight <span class="text-rose-500">*</span>
+                            Weight
                         </label>
                         <input
                             type="number"
                             id="weight"
                             name="weight"
                             value="{{ old('weight') }}"
-                            required
                             step="0.01"
                             min="0"
                             class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('weight') border-rose-500 @enderror"
                             placeholder="Enter weight"
                         >
                         @error('weight')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+
+                    <!-- Store Quantity -->
+                    <div id="store-quantity-field" style="display: none;">
+                        <label for="quantity" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Quantity
+                        </label>
+                        <input
+                            type="number"
+                            id="quantity"
+                            name="quantity"
+                            value="{{ old('quantity') }}"
+                            step="1"
+                            min="0"
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('quantity') border-rose-500 @enderror"
+                            placeholder="Enter quantity"
+                        >
+                        @error('quantity')
                             <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
                                 <i data-lucide="alert-circle" class="w-4 h-4"></i>
                                 {{ $message }}
@@ -385,13 +407,15 @@
     lucide.createIcons();
 
     (() => {
-        const category = document.getElementById('category');
+        const category = document.getElementById('category') || document.querySelector('[name="category"]');
         const nameLabel = document.getElementById('name-label');
         const codeLabel = document.getElementById('code-label');
         const nameInput = document.getElementById('name');
         const codeInput = document.getElementById('code');
         const sf2Name = document.getElementById('sf2-fields-name');
         const sf2Code = document.getElementById('sf2-fields-code');
+        const storeQuantityField = document.getElementById('store-quantity-field');
+        const quantityInput = document.getElementById('quantity');
         const sf3Section = document.getElementById('sf3-products-section');
         const sf3Rows = document.getElementById('sf3-product-rows');
         const addSf3RowBtn = document.getElementById('add-sf3-row');
@@ -533,6 +557,11 @@
                     setSf3RequiredState(false);
                 }
             }
+
+            if (storeQuantityField && quantityInput) {
+                const isStoreCategory = selectedCategory === 'Store';
+                storeQuantityField.style.display = isStoreCategory ? '' : 'none';
+            }
         };
 
         if (addSf3RowBtn) {
@@ -556,7 +585,9 @@
             });
         }
 
-        category.addEventListener('change', toggleCategoryFields);
+        if (category.tagName === 'SELECT') {
+            category.addEventListener('change', toggleCategoryFields);
+        }
         toggleCategoryFields();
     })();
 

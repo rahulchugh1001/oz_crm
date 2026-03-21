@@ -88,7 +88,7 @@
                 </div>
 
                 <!-- Size & Weight Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 {{ $item->category === 'Store' ? 'lg:grid-cols-3' : '' }} gap-6">
                     <!-- Size -->
                     <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
                         <div class="flex items-center gap-3">
@@ -110,10 +110,24 @@
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-emerald-600">Weight</p>
-                                <p class="text-2xl font-bold text-emerald-900">{{ (int) $item->weight }}</p>
+                                <p class="text-2xl font-bold text-emerald-900">{{ $item->weight !== null ? (int) $item->weight : '-' }}</p>
                             </div>
                         </div>
                     </div>
+
+                    @if ($item->category === 'Store')
+                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                                    <i data-lucide="hash" class="w-6 h-6 text-amber-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-amber-600">Quantity</p>
+                                    <p class="text-2xl font-bold text-amber-900">{{ $item->quantity !== null ? (int) $item->quantity : '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 @if ($item->category === 'SF3')

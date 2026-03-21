@@ -17,12 +17,14 @@ class Item extends Model
         'code_sf2',
         'size',
         'weight',
+        'quantity',
         'status',
         'is_deleted'
     ];
 
     protected $casts = [
         'weight' => 'decimal:2',
+        'quantity' => 'integer',
         'status' => 'boolean',
         'is_deleted' => 'boolean',
     ];

@@ -95,7 +95,8 @@ class ItemController extends Controller
             'name_sf2' => 'nullable|string|max:255',
             'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')],
             'size' => 'nullable|string|max:255',
-            'weight' => 'required|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'quantity' => 'nullable|integer|min:0',
             'status' => 'required|boolean',
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
@@ -111,6 +112,10 @@ class ItemController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        if (($validated['category'] ?? null) !== 'Store') {
+            $validated['quantity'] = null;
+        }
 
         $machineIds = $validated['machine_ids'] ?? [];
         $sf3Products = $validated['sf3_products'] ?? [];
@@ -198,7 +203,8 @@ class ItemController extends Controller
             'name_sf2' => 'nullable|string|max:255',
             'code_sf2' => ['nullable', 'string', 'max:255', Rule::unique('items', 'code_sf2')->ignore($item->id)],
             'size' => 'nullable|string|max:255',
-            'weight' => 'required|numeric|min:0',
+            'weight' => 'nullable|numeric|min:0',
+            'quantity' => 'nullable|integer|min:0',
             'status' => 'required|boolean',
             'machine_ids' => ['nullable', 'array'],
             'machine_ids.*' => ['integer', Rule::exists('machines', 'id')->where('is_deleted', false)],
@@ -214,6 +220,10 @@ class ItemController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        if (($validated['category'] ?? null) !== 'Store') {
+            $validated['quantity'] = null;
+        }
 
         $machineIds = $validated['machine_ids'] ?? [];
         $sf3Products = $validated['sf3_products'] ?? [];
