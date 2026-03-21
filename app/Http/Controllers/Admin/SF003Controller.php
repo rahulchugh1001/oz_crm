@@ -14,6 +14,74 @@ use Illuminate\View\View;
 
 class SF003Controller extends Controller
 {
+    protected function syncSf3StockUsageTracking(int $reportId, int $sf3ItemId, array $rows): void
+    {
+        if (!Schema::hasTable('sf3_stock_usages')) {
+            return;
+        }
+
+        DB::table('sf3_stock_usages')
+            ->where('report_id', $reportId)
+            ->delete();
+
+        if ($rows === []) {
+            return;
+        }
+
+        $usageByStock = collect($rows)
+            ->groupBy(function (array $row) {
+                return (int) ($row['product_id'] ?? 0);
+            })
+            ->map(function ($group) {
+                return (float) collect($group)->sum('quantity_used');
+            })
+            ->filter(function ($usedStock, $stockId) {
+                return (int) $stockId > 0 && (float) $usedStock > 0;
+            });
+
+        if ($usageByStock->isEmpty()) {
+            return;
+        }
+
+        $stockItems = DB::table('items')
+            ->select('id', 'quantity', 'category')
+            ->whereIn('id', $usageByStock->keys()->all())
+            ->whereIn('category', ['Store', 'Stock'])
+            ->get()
+            ->keyBy('id');
+
+        if ($stockItems->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+        $trackingRows = [];
+
+        foreach ($usageByStock as $stockId => $usedStock) {
+            $sid = (int) $stockId;
+            if (!$stockItems->has($sid)) {
+                continue;
+            }
+
+            $stockItem = $stockItems->get($sid);
+            $trackingRows[] = [
+                'report_id' => $reportId,
+                'item_id' => $sf3ItemId,
+                'stock_id' => $sid,
+                'in_stock' => round(max((float) ($stockItem->quantity ?? 0), 0), 2),
+                'used_stock' => round((float) $usedStock, 2),
+                'status' => 1,
+                'is_deleted' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if ($trackingRows !== []) {
+            DB::table('sf3_stock_usages')->insert($trackingRows);
+        }
+    }
+
     protected function syncStoreItemQuantities($previousUsageByProduct, $newUsageByProduct): void
     {
         $previous = collect($previousUsageByProduct)
@@ -131,6 +199,7 @@ class SF003Controller extends Controller
 
         if ($products->isEmpty()) {
             $this->syncStoreItemQuantities($previousStoreUsageByProduct, collect());
+            $this->syncSf3StockUsageTracking($reportId, $itemId, []);
 
             if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
                 $previousTransferIds->each(function ($transferId) {
@@ -284,6 +353,7 @@ class SF003Controller extends Controller
             });
 
         $this->syncStoreItemQuantities($previousStoreUsageByProduct, $newStoreUsageByProduct);
+        $this->syncSf3StockUsageTracking($reportId, $itemId, $rows);
 
         if (Schema::hasTable('sf002_stock_transfers') && Schema::hasColumn('sf002_stock_transfers', 'used_quantity')) {
             $currentTransferIds = collect($rows)
