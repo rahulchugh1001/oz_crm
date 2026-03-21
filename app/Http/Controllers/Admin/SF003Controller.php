@@ -777,7 +777,8 @@ class SF003Controller extends Controller
                 'sf3p.quantity',
                 DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as product_code"),
                 DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as product_name"),
-                'items.category as product_category'
+                'items.category as product_category',
+                DB::raw('COALESCE(items.quantity, 0) as product_store_quantity')
             )
             ->where('sf3p.item_id', $itemId)
             ->orderBy('sf3p.product')

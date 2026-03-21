@@ -283,7 +283,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const productId = parseInt(product.product || 0, 10);
                 const requiredPerSet = Math.max(parseFloat(product.quantity || 0) || 0, 0);
                 const requiredTotal = requiredPerSet * totalSetShift;
-                const inStock = stockByProduct[productId] || 0;
+                const category = String(product.product_category || '').toLowerCase();
+                const inStock = category === 'store'
+                    ? Math.max(parseFloat(product.product_store_quantity || 0) || 0, 0)
+                    : (stockByProduct[productId] || 0);
 
                 return {
                     name: product.product_code || product.product_name || 'Product',
@@ -531,7 +534,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const productId = parseInt(product.product || 0, 10);
             const requiredPerSet = Math.max(parseFloat(product.quantity || 0) || 0, 0);
             const requiredQuantity = totalSetShift > 0 ? requiredPerSet * totalSetShift : requiredPerSet;
-            const stockQuantity = stockByProduct[productId] || 0;
+            const category = String(product.product_category || '').toLowerCase();
+            const stockQuantity = category === 'store'
+                ? Math.max(parseFloat(product.product_store_quantity || 0) || 0, 0)
+                : (stockByProduct[productId] || 0);
             const isInStock = stockQuantity >= requiredQuantity;
             const statusBadge = isInStock
                 ? '<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700"><span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>In Stock</span>'
