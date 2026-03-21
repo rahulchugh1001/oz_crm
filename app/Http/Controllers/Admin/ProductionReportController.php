@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 
@@ -112,7 +113,10 @@ class ProductionReportController extends Controller
             ->where('is_deleted', false)
             ->where('status', true)
             ->get();
-        $slideSizes = Item::where('is_deleted', false)->where('status', true)->get();
+        $slideSizes = Item::where('is_deleted', false)
+            ->where('status', true)
+            ->where('category', 'SF1-SF2')
+            ->get();
 
         return view('backend.production-reports.create', compact('machines', 'slideSizes'));
     }
@@ -156,7 +160,14 @@ class ProductionReportController extends Controller
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
             'slide_size_id' => 'required|array',
-            'slide_size_id.*' => 'required|exists:items,id',
+            'slide_size_id.*' => [
+                'required',
+                Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)
+                        ->where('status', true)
+                        ->where('category', 'SF1-SF2');
+                }),
+            ],
             'report_date' => 'required|array',
             'report_date.*' => 'required|date',
             'shift' => 'required|array',
@@ -280,7 +291,10 @@ class ProductionReportController extends Controller
     public function edit(ProductionReport $productionReport): View
     {
         $machines = Machine::where('is_deleted', false)->where('status', true)->get();
-        $slideSizes = Item::where('is_deleted', false)->where('status', true)->get();
+        $slideSizes = Item::where('is_deleted', false)
+            ->where('status', true)
+            ->where('category', 'SF1-SF2')
+            ->get();
 
         return view('backend.production-reports.edit', compact('productionReport', 'machines', 'slideSizes'));
     }
@@ -299,7 +313,14 @@ class ProductionReportController extends Controller
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
             'slide_size_id' => 'required|array',
-            'slide_size_id.*' => 'required|exists:items,id',
+            'slide_size_id.*' => [
+                'required',
+                Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)
+                        ->where('status', true)
+                        ->where('category', 'SF1-SF2');
+                }),
+            ],
             'report_date' => 'required|array',
             'report_date.*' => 'required|date',
             'shift' => 'required|array',
