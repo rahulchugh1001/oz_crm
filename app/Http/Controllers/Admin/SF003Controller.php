@@ -85,6 +85,14 @@ class SF003Controller extends Controller
             ->groupBy('details.product_id')
             ->pluck('total_used', 'details.product_id');
 
+        $previousUsageByTransfer = DB::table('sf3_production_report_products')
+            ->where('mst_item_id', $reportId)
+            ->where('is_deleted', 0)
+            ->whereNotNull('transfered_id')
+            ->select('transfered_id', DB::raw('COALESCE(SUM(quantity_used), 0) as total_used'))
+            ->groupBy('transfered_id')
+            ->pluck('total_used', 'transfered_id');
+
         $products = DB::table('item_sf3_products')
             ->select('product', 'quantity')
             ->where('item_id', $itemId)
@@ -143,10 +151,10 @@ class SF003Controller extends Controller
             return;
         }
 
-        $transferByProduct = collect();
+        $transferPoolsByProduct = collect();
         if ($productIds->isNotEmpty()) {
-            $transferByProduct = DB::table('sf002_stock_transfers')
-                ->select('id', 'item_id')
+            $transferPoolsByProduct = DB::table('sf002_stock_transfers')
+                ->select('id', 'item_id', 'quantity', 'reject_quantity', 'used_quantity')
                 ->where('is_deleted', false)
                 ->where('is_accept', 1)
                 ->where('sf3_process', $lineCode)
@@ -157,29 +165,105 @@ class SF003Controller extends Controller
                 ->get()
                 ->groupBy('item_id')
                 ->map(function ($rows) {
-                    return (int) $rows->first()->id;
+                    return $rows->map(function ($transfer) {
+                        $approvedQuantity = max((float) ($transfer->quantity ?? 0) - (float) ($transfer->reject_quantity ?? 0), 0);
+                        $alreadyUsed = max((float) ($transfer->used_quantity ?? 0), 0);
+                        $effectiveAvailable = max($approvedQuantity - $alreadyUsed, 0);
+
+                        return [
+                            'id' => (int) $transfer->id,
+                            'available' => $effectiveAvailable,
+                        ];
+                    })->values();
                 });
+
+            $previousUsageByTransfer->each(function ($usedQty, $transferId) use (&$transferPoolsByProduct) {
+                $tid = (int) $transferId;
+                if ($tid <= 0) {
+                    return;
+                }
+
+                $restoredQty = max((float) $usedQty, 0);
+                if ($restoredQty <= 0) {
+                    return;
+                }
+
+                $transferPoolsByProduct = $transferPoolsByProduct->map(function ($pool) use ($tid, $restoredQty) {
+                    return collect($pool)->map(function ($entry) use ($tid, $restoredQty) {
+                        if ((int) ($entry['id'] ?? 0) === $tid) {
+                            $entry['available'] = max((float) ($entry['available'] ?? 0) + $restoredQty, 0);
+                        }
+
+                        return $entry;
+                    })->values();
+                });
+            });
         }
 
         $timestamp = now();
-        $rows = $products->map(function ($product) use ($reportId, $actualSetShift, $timestamp, $transferByProduct) {
+        $rows = $products->flatMap(function ($product) use ($reportId, $actualSetShift, $timestamp, &$transferPoolsByProduct) {
             $baseQuantity = (float) ($product->quantity ?? 0);
             $productId = (int) ($product->product ?? 0);
-            $matchedTransferId = $productId > 0 && $transferByProduct->has($productId)
-                ? (int) $transferByProduct->get($productId)
-                : null;
+            $requiredQuantity = round($baseQuantity, 2);
+            $usageToAllocate = round($baseQuantity * $actualSetShift, 2);
 
-            return [
-                'mst_item_id' => $reportId,
-                'transfered_id' => $matchedTransferId,
-                'product_id' => $productId,
-                'quantity_required' => round($baseQuantity, 2),
-                'quantity_used' => round($baseQuantity * $actualSetShift, 2),
-                'status' => 1,
-                'is_deleted' => 0,
-                'created_at' => $timestamp,
-                'updated_at' => $timestamp,
-            ];
+            if ($productId <= 0) {
+                return [];
+            }
+
+            $allocatedRows = [];
+            $remainingUsage = max($usageToAllocate, 0);
+            $isFirstChunk = true;
+
+            if ($transferPoolsByProduct->has($productId)) {
+                $pool = collect($transferPoolsByProduct->get($productId));
+
+                $pool = $pool->map(function ($entry) use (&$remainingUsage, &$allocatedRows, $reportId, $productId, $requiredQuantity, $timestamp, &$isFirstChunk) {
+                    $available = max((float) ($entry['available'] ?? 0), 0);
+                    if ($remainingUsage <= 0 || $available <= 0) {
+                        return $entry;
+                    }
+
+                    $consume = min($available, $remainingUsage);
+                    if ($consume > 0) {
+                        $allocatedRows[] = [
+                            'mst_item_id' => $reportId,
+                            'transfered_id' => (int) ($entry['id'] ?? 0),
+                            'product_id' => $productId,
+                            'quantity_required' => $isFirstChunk ? $requiredQuantity : 0,
+                            'quantity_used' => round($consume, 2),
+                            'status' => 1,
+                            'is_deleted' => 0,
+                            'created_at' => $timestamp,
+                            'updated_at' => $timestamp,
+                        ];
+
+                        $remainingUsage = max($remainingUsage - $consume, 0);
+                        $entry['available'] = max($available - $consume, 0);
+                        $isFirstChunk = false;
+                    }
+
+                    return $entry;
+                })->values();
+
+                $transferPoolsByProduct->put($productId, $pool);
+            }
+
+            if ($remainingUsage > 0 || empty($allocatedRows)) {
+                $allocatedRows[] = [
+                    'mst_item_id' => $reportId,
+                    'transfered_id' => null,
+                    'product_id' => $productId,
+                    'quantity_required' => $isFirstChunk ? $requiredQuantity : 0,
+                    'quantity_used' => round($remainingUsage, 2),
+                    'status' => 1,
+                    'is_deleted' => 0,
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ];
+            }
+
+            return $allocatedRows;
         })->filter(function (array $row) {
             return $row['product_id'] > 0;
         })->values()->all();
