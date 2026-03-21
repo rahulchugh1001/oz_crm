@@ -568,6 +568,8 @@ class SF002Controller extends Controller
                 'items.id',
                 'items.code',
                 'items.name',
+                'items.code_sf2',
+                'items.name_sf2',
                 'items.size',
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(ced_transfers.transferred_quantity), 0) as transferred_quantity'),
@@ -582,7 +584,7 @@ class SF002Controller extends Controller
             })
             ->where('reports.is_deleted', 0)
             ->where('reports.type', 'ced')
-            ->groupBy('items.id', 'items.code', 'items.name', 'items.size')
+            ->groupBy('items.id', 'items.code', 'items.name', 'items.code_sf2', 'items.name_sf2', 'items.size')
             ->orderBy('items.name')
             ->get();
 
@@ -610,6 +612,8 @@ class SF002Controller extends Controller
                 'items.id',
                 'items.code',
                 'items.name',
+                'items.code_sf2',
+                'items.name_sf2',
                 'items.size',
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(zinc_transfers.transferred_quantity), 0) as transferred_quantity'),
@@ -624,7 +628,7 @@ class SF002Controller extends Controller
             })
             ->where('reports.is_deleted', 0)
             ->where('reports.type', 'zinc')
-            ->groupBy('items.id', 'items.code', 'items.name', 'items.size')
+            ->groupBy('items.id', 'items.code', 'items.name', 'items.code_sf2', 'items.name_sf2', 'items.size')
             ->orderBy('items.name')
             ->get();
 

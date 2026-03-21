@@ -259,7 +259,8 @@
         
         let sizeOptions = '<option value="">Select Size</option>';
         slideSizes.forEach(size => {
-            sizeOptions += `<option value="${size.id}">${size.name} (${size.size})</option>`;
+            const sizeLabel = `${size.name} (${size.size || '-'})`;
+            sizeOptions += `<option value="${size.id}">${sizeLabel}</option>`;
         });
 
         const hourFields = [
@@ -320,7 +321,6 @@
 
         tableBody.appendChild(row);
 
-        // Update lucide icons for the new row
         if (typeof feather !== 'undefined') {
             feather.replace();
         }

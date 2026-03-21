@@ -34,12 +34,12 @@
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-3 py-2.5 text-slate-700">{{ $index + 1 }}</td>
                     <td class="px-3 py-2.5">
-                        <span class="font-medium text-slate-900">{{ $item->code }}</span>
+                        <span class="font-medium text-slate-900">{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->code_sf2 : $item->code }}</span>
                     </td>
                     <td class="px-3 py-2.5">
                         <div class="flex items-center gap-2">
                             <i data-lucide="box" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span class="font-medium text-slate-900">{{ $item->name }}</span>
+                            <span class="font-medium text-slate-900">{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->name_sf2 : $item->name }}</span>
                         </div>
                     </td>
                     <td class="px-3 py-2.5">
@@ -98,8 +98,8 @@
                                 type="button"
                                 onclick="openTransferModal(this)"
                                 data-item-id="{{ $item->id }}"
-                                data-item-code="{{ $item->code }}"
-                                data-item-name="{{ $item->name }}"
+                                data-item-code="{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->code_sf2 : $item->code }}"
+                                data-item-name="{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->name_sf2 : $item->name }}"
                                 data-item-size="{{ $item->size }}"
                                 data-type="{{ $tabType }}"
                                 data-available-stock="{{ (int) $item->pending_quantity }}"

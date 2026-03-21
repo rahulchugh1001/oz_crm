@@ -23,8 +23,8 @@
                         <i data-lucide="history" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
-                        <h2 class="text-base font-semibold text-slate-900">SF2 Stock History - {{ $item->name }}</h2>
-                        <p class="text-xs text-slate-500">Item Code: <span class="font-medium">{{ $item->code }}</span> | Size: <span class="font-medium">{{ $item->size }}</span></p>
+                        <h2 class="text-base font-semibold text-slate-900">SF2 Stock History - {{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->name_sf2 : $item->name }}</h2>
+                        <p class="text-xs text-slate-500">Item Code: <span class="font-medium">{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->code_sf2 : $item->code }}</span> | Size: <span class="font-medium">{{ $item->size }}</span></p>
                     </div>
                 </div>
                 <a href="{{ route('admin.production-reports.sf002.sf2-stock') }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
