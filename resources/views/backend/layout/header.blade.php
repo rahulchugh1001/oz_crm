@@ -11,6 +11,63 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('admin/css/custom.css') }}">
+    <style>
+        .status-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .status-toggle input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+        }
+
+        .status-toggle-track {
+            position: relative;
+            width: 52px;
+            height: 30px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: background-color 180ms ease;
+        }
+
+        .status-toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+            transition: transform 180ms ease;
+        }
+
+        .status-toggle input[type="checkbox"]:checked + .status-toggle-track {
+            background: #10b981;
+        }
+
+        .status-toggle input[type="checkbox"]:checked + .status-toggle-track .status-toggle-thumb {
+            transform: translateX(22px);
+        }
+
+        .status-toggle input[type="checkbox"]:focus-visible + .status-toggle-track {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .status-toggle-text {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+    </style>
     @stack('styles')
 </head>
 <body class="bg-gray-50 min-h-screen">

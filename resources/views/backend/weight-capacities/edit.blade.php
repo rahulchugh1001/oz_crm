@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <form action="{{ route('admin.weight-capacities.update', $weightCapacity) }}" method="POST" class="p-4">
+        <form id="weight-capacity-edit-form" action="{{ route('admin.weight-capacities.update', $weightCapacity) }}" method="POST" class="p-4">
             @csrf
             @method('PUT')
 
@@ -52,14 +52,29 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Status</label>
-                    <select
-                        name="status"
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="1" {{ old('status', (string) $weightCapacity->status) == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status', (string) $weightCapacity->status) == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <label for="status-toggle-edit" class="block text-xs font-medium text-slate-700 mb-1">Status</label>
+                    <div class="px-3 py-2 rounded-lg">
+                        <input
+                            type="hidden"
+                            name="status"
+                            value="0"
+                        >
+                        <label class="status-toggle" for="status-toggle-edit">
+                            <input
+                                type="checkbox"
+                                id="status-toggle-edit"
+                                name="status"
+                                value="1"
+                                data-status-toggle
+                                data-status-text-id="status-toggle-text-edit"
+                                {{ old('status', (string) $weightCapacity->status) == '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="status-toggle-text-edit" class="status-toggle-text">Active</span>
+                        </label>
+                    </div>
                     @error('status')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
@@ -68,7 +83,7 @@
 
             <div class="flex items-center justify-end gap-2 mt-6">
                 <a href="{{ route('admin.weight-capacities.index') }}" class="px-4 py-2 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">Cancel</a>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Update</button>
+                <button id="weight-capacity-edit-submit" type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Update</button>
             </div>
         </form>
     </div>
@@ -78,6 +93,19 @@
 @push('scripts')
 <script>
     lucide.createIcons();
+
+    (() => {
+        const form = document.getElementById('weight-capacity-edit-form');
+        const submitButton = document.getElementById('weight-capacity-edit-submit');
+        if (!form || !submitButton) return;
+
+        form.addEventListener('submit', () => {
+            form.classList.add('opacity-70', 'pointer-events-none');
+            submitButton.disabled = true;
+            submitButton.classList.add('cursor-not-allowed');
+            submitButton.textContent = 'Updating...';
+        });
+    })();
 </script>
 @endpush
 

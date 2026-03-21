@@ -192,6 +192,89 @@
         function toggleProfileDropdown() {
             toggleSidebarDropdown('profile-dropdown');
         }
+
+        function findStatusToggleTarget(toggle, targetKey) {
+            if (!targetKey) {
+                return null;
+            }
+
+            const form = toggle.closest('form');
+            if (form) {
+                const scopedMatch = form.querySelector(`[id="${targetKey}"], [name="${targetKey}"]`);
+                if (scopedMatch) {
+                    return scopedMatch;
+                }
+            }
+
+            return document.getElementById(targetKey) || document.querySelector(`[name="${targetKey}"]`);
+        }
+
+        function syncStatusToggle(toggle) {
+            if (!(toggle instanceof HTMLInputElement)) {
+                return;
+            }
+
+            const hiddenInputId = toggle.dataset.statusTarget;
+            const statusTextId = toggle.dataset.statusTextId;
+            const hiddenInput = findStatusToggleTarget(toggle, hiddenInputId);
+            const statusText = findStatusToggleTarget(toggle, statusTextId);
+            const isActive = toggle.checked;
+            const nextValue = isActive ? '1' : '0';
+
+            if (hiddenInput) {
+                hiddenInput.value = nextValue;
+                hiddenInput.setAttribute('value', nextValue);
+            }
+
+            if (statusText) {
+                statusText.textContent = isActive ? 'Active' : 'Inactive';
+            }
+        }
+
+        function initStatusToggles(root) {
+            const scope = root instanceof ParentNode ? root : document;
+            const toggles = scope.querySelectorAll('[data-status-toggle]');
+            const forms = new Set();
+
+            toggles.forEach(function(toggle) {
+                const form = toggle.closest('form');
+                if (form) {
+                    forms.add(form);
+                }
+
+                if (toggle.dataset.statusToggleInitialized === '1') {
+                    syncStatusToggle(toggle);
+                    return;
+                }
+
+                toggle.addEventListener('change', function() {
+                    syncStatusToggle(toggle);
+                });
+
+                toggle.dataset.statusToggleInitialized = '1';
+                syncStatusToggle(toggle);
+            });
+
+            forms.forEach(function(form) {
+                if (form.dataset.statusToggleSubmitInitialized === '1') {
+                    return;
+                }
+
+                form.addEventListener('submit', function() {
+                    form.querySelectorAll('[data-status-toggle]').forEach(function(toggle) {
+                        syncStatusToggle(toggle);
+                    });
+                }, true);
+
+                form.dataset.statusToggleSubmitInitialized = '1';
+            });
+        }
+
+        window.initStatusToggles = initStatusToggles;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initStatusToggles(document);
+        });
     </script>
 
     @stack('scripts')

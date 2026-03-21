@@ -137,18 +137,31 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
+                    <label for="status-toggle-edit" class="block text-sm font-semibold text-slate-700 mb-2">
                         Status <span class="text-rose-500">*</span>
                     </label>
-                    <select
-                        id="status"
-                        name="status"
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
-                    >
-                        <option value="1" {{ (string) old('status', (int) $machine->status) === '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ (string) old('status', (int) $machine->status) === '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <div class="px-4 py-3 rounded-lg">
+                        <input
+                            type="hidden"
+                            name="status"
+                            value="0"
+                        >
+                        <label class="status-toggle" for="status-toggle-edit">
+                            <input
+                                type="checkbox"
+                                id="status-toggle-edit"
+                                name="status"
+                                value="1"
+                                data-status-toggle
+                                data-status-text-id="status-toggle-text-edit"
+                                {{ (string) old('status', (int) $machine->status) === '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="status-toggle-text-edit" class="status-toggle-text">Active</span>
+                        </label>
+                    </div>
                     @error('status')
                         <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
                             <i data-lucide="alert-circle" class="w-4 h-4"></i>
@@ -229,13 +242,19 @@
             setLoading(true);
 
             try {
+                const formData = new FormData(form);
+                const statusToggle = form.querySelector('[data-status-toggle]');
+                if (statusToggle instanceof HTMLInputElement) {
+                    formData.set('status', statusToggle.checked ? '1' : '0');
+                }
+
                 const response = await fetch(form.action, {
                     method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json',
                     },
-                    body: new FormData(form),
+                    body: formData,
                 });
 
                 const data = await response.json().catch(() => ({}));

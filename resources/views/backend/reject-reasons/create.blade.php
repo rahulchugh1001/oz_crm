@@ -59,14 +59,29 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-slate-700 mb-1">Status</label>
-                    <select
-                        name="status"
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <label for="status-toggle-create" class="block text-xs font-medium text-slate-700 mb-1">Status</label>
+                    <div class="px-3 py-2 rounded-lg">
+                        <input
+                            type="hidden"
+                            name="status"
+                            value="0"
+                        >
+                        <label class="status-toggle" for="status-toggle-create">
+                            <input
+                                type="checkbox"
+                                id="status-toggle-create"
+                                name="status"
+                                value="1"
+                                data-status-toggle
+                                data-status-text-id="status-toggle-text-create"
+                                {{ old('status', '1') == '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="status-toggle-text-create" class="status-toggle-text">Active</span>
+                        </label>
+                    </div>
                     @error('status')
                         <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
