@@ -66,6 +66,7 @@
                         <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Net Weight (KG)</th>
                         <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Loaded Machine</th>
                         <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Created At</th>
+                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Process</th>
                         <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Status</th>
                         <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Action</th>
                     </tr>
@@ -142,6 +143,21 @@
                                 @endif
                             </div>
                         </td>
+                        <td class="px-4 py-3">
+                            <div class="min-w-[120px]">
+                                @if((int) $coil->status === 1)
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
+                                        <i data-lucide="badge-check" class="w-3.5 h-3.5"></i>
+                                        Active
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                                        <i data-lucide="circle-off" class="w-3.5 h-3.5"></i>
+                                        Inactive
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
                         <td class="px-4 py-3 text-slate-500">
                             <div class="flex flex-nowrap items-center gap-2 whitespace-nowrap">
                                 <a
@@ -197,7 +213,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-10 text-center text-slate-500 text-xs">No coil stock found.</td>
+                        <td colspan="9" class="px-4 py-10 text-center text-slate-500 text-xs">No coil stock found.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -420,11 +436,25 @@
                 </div>
 
                 <div>
-                    <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">Status <span class="text-rose-500">*</span></label>
-                    <select id="status" name="status" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-rose-500 @enderror">
-                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <label for="status-toggle-create" class="block text-sm font-semibold text-slate-700 mb-2">Status <span class="text-rose-500">*</span></label>
+                    <div class="px-3 py-2.5 rounded-lg @error('status') border border-rose-500 @enderror">
+                        <input type="hidden" name="status" value="0">
+                        <label class="status-toggle" for="status-toggle-create">
+                            <input
+                                type="checkbox"
+                                id="status-toggle-create"
+                                name="status"
+                                value="1"
+                                data-status-toggle
+                                data-status-text-id="status-toggle-text-create"
+                                {{ old('status', '1') == '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="status-toggle-text-create" class="status-toggle-text">Active</span>
+                        </label>
+                    </div>
                     @error('status')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
             </div>
@@ -525,11 +555,26 @@
                 </div>
 
                 <div>
-                    <label for="edit_status" class="block text-sm font-semibold text-slate-700 mb-2">Status <span class="text-rose-500">*</span></label>
-                    <select id="edit_status" name="status" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    <label for="status-toggle-edit" class="block text-sm font-semibold text-slate-700 mb-2">Status <span class="text-rose-500">*</span></label>
+                    <div class="px-3 py-2.5 rounded-lg @error('status') border border-rose-500 @enderror">
+                        <input type="hidden" name="status" value="0">
+                        <label class="status-toggle" for="status-toggle-edit">
+                            <input
+                                type="checkbox"
+                                id="status-toggle-edit"
+                                name="status"
+                                value="1"
+                                data-status-toggle
+                                data-status-text-id="status-toggle-text-edit"
+                                {{ old('status', '1') == '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="status-toggle-text-edit" class="status-toggle-text">Active</span>
+                        </label>
+                    </div>
+                    @error('status')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
             </div>
 
@@ -1318,7 +1363,13 @@
         document.getElementById('edit_thickness').value = button.getAttribute('data-thickness') || '';
         document.getElementById('edit_net_weight_kg').value = button.getAttribute('data-net-weight') || '';
         document.getElementById('edit_process').value = button.getAttribute('data-process') || 'available';
-        document.getElementById('edit_status').value = button.getAttribute('data-status') || '1';
+        const editStatusToggle = document.getElementById('status-toggle-edit');
+        if (editStatusToggle) {
+            editStatusToggle.checked = (button.getAttribute('data-status') || '1') === '1';
+            if (typeof window.initStatusToggles === 'function') {
+                window.initStatusToggles(form || document);
+            }
+        }
 
         let editMachineIds = [];
         try {

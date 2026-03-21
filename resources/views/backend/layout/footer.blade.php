@@ -232,7 +232,7 @@
         }
 
         function initStatusToggles(root) {
-            const scope = root instanceof ParentNode ? root : document;
+            const scope = root && typeof root.querySelectorAll === 'function' ? root : document;
             const toggles = scope.querySelectorAll('[data-status-toggle]');
             const forms = new Set();
 
