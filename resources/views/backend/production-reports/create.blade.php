@@ -356,6 +356,7 @@
 
         updateSelectAllCheckbox();
         updateTotals();
+        evaluateActualSetConstraint(false);
     }
 
     function updateTotals() {
@@ -416,6 +417,8 @@
                 confirmButtonText: 'OK',
             });
         }
+
+        evaluateActualSetConstraint(false);
     }
 
     function updateSelectAllCheckbox() {
@@ -440,6 +443,8 @@
         if (setPerHourInput) {
             setPerHourInput.value = Math.round(setPerHour);
         }
+
+        evaluateActualSetConstraint(false);
     }
 
     function calculateActualSet(input) {
@@ -456,6 +461,71 @@
         if (actualSetInput) {
             actualSetInput.value = Math.round(total);
         }
+
+        evaluateActualSetConstraint(false);
+    }
+
+    function getCheckedMachineRows() {
+        return Array.from(document.querySelectorAll('tr.machine-row')).filter(row => {
+            const checkbox = row.querySelector('.machine-checkbox');
+            return !!(checkbox && checkbox.checked);
+        });
+    }
+
+    function showAlertMessage(options) {
+        if (typeof Swal !== 'undefined' && Swal && typeof Swal.fire === 'function') {
+            return Swal.fire(options);
+        }
+
+        const fallbackText = options?.text || options?.title || 'Action required.';
+        window.alert(fallbackText);
+        return Promise.resolve();
+    }
+
+    function evaluateActualSetConstraint(showAlert = false) {
+        const checkedRows = getCheckedMachineRows();
+        const submitBtn = document.getElementById('createSubmitBtn');
+        let invalidRowInfo = null;
+
+        document.querySelectorAll('tr.machine-row.actual-set-invalid').forEach(row => {
+            row.classList.remove('actual-set-invalid', 'bg-rose-50');
+        });
+
+        checkedRows.forEach(row => {
+            const totalSetInput = row.querySelector('input[name="total_set_shift[]"]');
+            const actualSetInput = row.querySelector('input[name="actual_set_shift[]"]');
+            const machineName = row.querySelector('td:nth-child(2) div > div')?.textContent?.trim() || 'Selected machine';
+
+            const totalSet = Math.max(parseFloat(totalSetInput?.value) || 0, 0);
+            const actualSet = Math.max(parseFloat(actualSetInput?.value) || 0, 0);
+
+            if (actualSet > totalSet) {
+                row.classList.add('actual-set-invalid', 'bg-rose-50');
+
+                if (!invalidRowInfo) {
+                    invalidRowInfo = { machineName, totalSet, actualSet };
+                }
+            }
+        });
+
+        const hasInvalidRow = !!invalidRowInfo;
+        if (submitBtn) {
+            submitBtn.disabled = hasInvalidRow;
+            submitBtn.classList.toggle('opacity-60', hasInvalidRow);
+            submitBtn.classList.toggle('cursor-not-allowed', hasInvalidRow);
+        }
+
+        if (showAlert && hasInvalidRow) {
+            showAlertMessage({
+                title: 'Invalid Actual Set',
+                text: `${invalidRowInfo.machineName}: Actual Set (${Math.round(invalidRowInfo.actualSet)}) cannot be greater than Total Set/Shift (${Math.round(invalidRowInfo.totalSet)}).`,
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        return !hasInvalidRow;
     }
 
     let previousShiftValue = '';
@@ -675,6 +745,10 @@
                 if (event.target && event.target.matches('input[type="number"]')) {
                     enforceNonNegative(event.target);
                 }
+
+                if (event.target && (event.target.matches('input[name="total_set_shift[]"]') || event.target.matches('input[name^="hour_"]'))) {
+                    evaluateActualSetConstraint(false);
+                }
             });
 
             productionForm.addEventListener('blur', function (event) {
@@ -686,6 +760,7 @@
         }
 
         initializeTopScroll();
+        evaluateActualSetConstraint(false);
         if (typeof feather !== 'undefined') {
             feather.replace();
         }
@@ -710,6 +785,10 @@
 
         if (!slideSizeSelected) {
             return { valid: false, message: 'Please select slide size for all selected machines.' };
+        }
+
+        if (!evaluateActualSetConstraint(false)) {
+            return { valid: false, message: 'Actual Set cannot be greater than Total Set/Shift for selected machines.' };
         }
 
         return { valid: true, message: '' };
@@ -746,7 +825,7 @@
 
     function recalculateAllFields() {
         // Get all checked machines (only those will be submitted)
-        const checkedRows = document.querySelectorAll('tr.machine-row:has(.machine-checkbox:checked)');
+        const checkedRows = getCheckedMachineRows();
         
         checkedRows.forEach(row => {
             // Get total_set_shift value
@@ -781,11 +860,15 @@
         // Recalculate all fields before submission
         recalculateAllFields();
 
+        if (!evaluateActualSetConstraint(true)) {
+            return;
+        }
+
         clearValidationErrors();
 
         const validation = validateFormSubmission();
         if (!validation.valid) {
-            Swal.fire({
+            showAlertMessage({
                 title: 'Invalid Form',
                 text: validation.message,
                 icon: 'error',
