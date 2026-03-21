@@ -775,8 +775,8 @@ class SF003Controller extends Controller
                 'sf3p.item_id',
                 'sf3p.product',
                 'sf3p.quantity',
-                'items.code as product_code',
-                'items.name as product_name',
+                DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as product_code"),
+                DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as product_name"),
                 'items.category as product_category'
             )
             ->where('sf3p.item_id', $itemId)
@@ -822,8 +822,8 @@ class SF003Controller extends Controller
                 'transfers.item_id',
                 'transfers.date',
                 'transfers.time',
-                'items.code as item_code',
-                'items.name as item_name',
+                DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as item_code"),
+                DB::raw("CASE WHEN items.category = 'SF1-SF2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as item_name"),
                 'items.category as item_category',
                 DB::raw('GREATEST(COALESCE(transfers.quantity, 0) - COALESCE(transfers.used_quantity, 0), 0) as quantity')
             )
