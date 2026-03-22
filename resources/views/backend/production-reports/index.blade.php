@@ -151,13 +151,24 @@
                                     <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                 </a>
                                 @if(!$report->is_deleted)
-                                    <form action="{{ route('admin.production-reports.destroy', $report) }}" method="POST" class="inline js-swal-delete-form" data-item-name="Report #{{ $report->id }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                    @if((int) ($report->is_transfered ?? 0) === 1)
+                                        <button
+                                            type="button"
+                                            class="p-1.5 text-slate-400 bg-slate-100 rounded-lg cursor-not-allowed"
+                                            title="The stock is transfered"
+                                            disabled
+                                        >
                                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('admin.production-reports.destroy', $report) }}" method="POST" class="inline js-swal-delete-form" data-item-name="Report #{{ $report->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </td>

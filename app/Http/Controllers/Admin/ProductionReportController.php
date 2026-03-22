@@ -463,6 +463,11 @@ class ProductionReportController extends Controller
      */
     public function destroy(ProductionReport $productionReport): RedirectResponse
     {
+        if ((int) ($productionReport->is_transfered ?? 0) === 1) {
+            return redirect()->route('admin.production-reports.index')
+                ->with('error', 'The stock is transfered, so this report cannot be deleted.');
+        }
+
         $productionReport->update(['is_deleted' => true]);
 
         return redirect()->route('admin.production-reports.index')
