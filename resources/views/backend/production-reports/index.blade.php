@@ -101,7 +101,8 @@
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Achieved Set</th>
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Workman</th>
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Staff</th>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
+                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Goal</th>
                         <th class="px-3 py-2.5 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -116,13 +117,30 @@
                         <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">{{ ($report->actual_set_shift ?? '-') }}/{{ ($report->total_set_shift ?? '-') }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->workman_count ?? '-' }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->staff_count ?? '-' }}</td>
-                        <td class="px-3 py-2.5">
+                        <td class="px-3 py-2.5 text-center">
+                            @if((int) ($report->is_transfered ?? 0) === 1)
+                                <span class="inline-flex items-center justify-center text-emerald-600" title="Transfered">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center justify-center text-rose-600" title="Not Yet">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-3 py-2.5 text-center">
                             @php
                                 $isAchieved = ($report->total_set_shift ?? 0) > 0 && ($report->actual_set_shift ?? 0) >= ($report->total_set_shift ?? 0);
                             @endphp
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $isAchieved ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                {{ $isAchieved ? 'Achieved' : 'Not Achieved' }}
-                            </span>
+                            @if($isAchieved)
+                                <span class="inline-flex items-center justify-center text-emerald-600" title="Achieved">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center justify-center text-rose-600" title="Not Achived">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </span>
+                            @endif
                         </td>
                         <td class="px-3 py-2.5 text-right">
                             <div class="flex items-center justify-end gap-2">
@@ -146,7 +164,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="px-3 py-8 text-center">
+                        <td colspan="11" class="px-3 py-8 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <i data-lucide="inbox" class="w-12 h-12 text-slate-300"></i>
                                 <p class="text-slate-500">No production reports found</p>
