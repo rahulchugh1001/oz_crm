@@ -7,6 +7,7 @@ use App\Models\RejectReason;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -58,8 +59,15 @@ class RejectReasonController extends Controller
         return view('backend.reject-reasons.index', compact('rejectReasons', 'mode', 'search'));
     }
 
-    public function show(RejectReason $rejectReason): View
+    public function show(string $encryptedId): View
     {
+        try {
+            $rejectReasonId = (int) Crypt::decryptString($encryptedId);
+            $rejectReason = RejectReason::findOrFail($rejectReasonId);
+        } catch (\Exception $e) {
+            abort(404, 'Reject reason not found.');
+        }
+
         $to = Carbon::today();
         $from = (clone $to)->subDays(29);
 
@@ -194,13 +202,27 @@ class RejectReasonController extends Controller
             ->with('success', 'Reject reason created successfully.');
     }
 
-    public function edit(RejectReason $rejectReason): View
+    public function edit(string $encryptedId): View
     {
+        try {
+            $rejectReasonId = (int) Crypt::decryptString($encryptedId);
+            $rejectReason = RejectReason::findOrFail($rejectReasonId);
+        } catch (\Exception $e) {
+            abort(404, 'Reject reason not found.');
+        }
+
         return view('backend.reject-reasons.edit', compact('rejectReason'));
     }
 
-    public function update(Request $request, RejectReason $rejectReason): RedirectResponse
+    public function update(Request $request, string $encryptedId): RedirectResponse
     {
+        try {
+            $rejectReasonId = (int) Crypt::decryptString($encryptedId);
+            $rejectReason = RejectReason::findOrFail($rejectReasonId);
+        } catch (\Exception $e) {
+            abort(404, 'Reject reason not found.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('reject_reasons', 'name')->ignore($rejectReason->id)],
             'category' => ['required', Rule::in(['SF1', 'SF2', 'Both'])],
@@ -215,8 +237,15 @@ class RejectReasonController extends Controller
             ->with('success', 'Reject reason updated successfully.');
     }
 
-    public function destroy(RejectReason $rejectReason): RedirectResponse
+    public function destroy(string $encryptedId): RedirectResponse
     {
+        try {
+            $rejectReasonId = (int) Crypt::decryptString($encryptedId);
+            $rejectReason = RejectReason::findOrFail($rejectReasonId);
+        } catch (\Exception $e) {
+            abort(404, 'Reject reason not found.');
+        }
+
         $rejectReason->update(['is_deleted' => true]);
 
         return redirect()->route('admin.reject-reasons.index')

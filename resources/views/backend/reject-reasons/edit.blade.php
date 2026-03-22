@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <form id="reject-reason-edit-form" action="{{ route('admin.reject-reasons.update', $rejectReason) }}" method="POST" class="p-4">
+        <form id="reject-reason-edit-form" action="{{ route('admin.reject-reasons.update', ['encryptedId' => Crypt::encryptString((string) $rejectReason->id)]) }}" method="POST" class="p-4">
             @csrf
             @method('PUT')
 

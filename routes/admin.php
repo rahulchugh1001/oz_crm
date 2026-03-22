@@ -53,18 +53,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/reject-reasons', [RejectReasonController::class, 'index'])->name('reject-reasons.index');
         Route::get('/reject-reasons/create', [RejectReasonController::class, 'create'])->name('reject-reasons.create');
         Route::post('/reject-reasons', [RejectReasonController::class, 'store'])->name('reject-reasons.store');
-        Route::get('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'show'])->name('reject-reasons.show');
-        Route::get('/reject-reasons/{rejectReason}/edit', [RejectReasonController::class, 'edit'])->name('reject-reasons.edit');
-        Route::put('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'update'])->name('reject-reasons.update');
-        Route::delete('/reject-reasons/{rejectReason}', [RejectReasonController::class, 'destroy'])->name('reject-reasons.destroy');
+        Route::get('/reject-reasons/{encryptedId}', [RejectReasonController::class, 'show'])->name('reject-reasons.show');
+        Route::get('/reject-reasons/{encryptedId}/edit', [RejectReasonController::class, 'edit'])->name('reject-reasons.edit');
+        Route::put('/reject-reasons/{encryptedId}', [RejectReasonController::class, 'update'])->name('reject-reasons.update');
+        Route::delete('/reject-reasons/{encryptedId}', [RejectReasonController::class, 'destroy'])->name('reject-reasons.destroy');
 
         // Weight Capacities Routes
         Route::get('/weight-capacities', [WeightCapacityController::class, 'index'])->name('weight-capacities.index');
         Route::get('/weight-capacities/create', [WeightCapacityController::class, 'create'])->name('weight-capacities.create');
         Route::post('/weight-capacities', [WeightCapacityController::class, 'store'])->name('weight-capacities.store');
-        Route::get('/weight-capacities/{weightCapacity}/edit', [WeightCapacityController::class, 'edit'])->name('weight-capacities.edit');
-        Route::put('/weight-capacities/{weightCapacity}', [WeightCapacityController::class, 'update'])->name('weight-capacities.update');
-        Route::delete('/weight-capacities/{weightCapacity}', [WeightCapacityController::class, 'destroy'])->name('weight-capacities.destroy');
+        Route::get('/weight-capacities/{encryptedId}/edit', [WeightCapacityController::class, 'edit'])->name('weight-capacities.edit');
+        Route::put('/weight-capacities/{encryptedId}', [WeightCapacityController::class, 'update'])->name('weight-capacities.update');
+        Route::delete('/weight-capacities/{encryptedId}', [WeightCapacityController::class, 'destroy'])->name('weight-capacities.destroy');
 
         // Users Routes
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -110,7 +110,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/stock', [SF003Controller::class, 'index'])->name('stock');
         Route::get('/process', [SF003Controller::class, 'process'])->name('process');
         Route::get('/final-stock', [SF003Controller::class, 'finalStock'])->name('final-stock');
-        Route::get('/final-stock/{reportId}', [SF003Controller::class, 'finalStockShow'])->name('final-stock.show');
+        Route::get('/final-stock/{encryptedId}', [SF003Controller::class, 'finalStockShow'])->name('final-stock.show');
         Route::get('/production-report/{transferId?}', [SF003Controller::class, 'productionReport'])->name('production-report');
         Route::post('/production-report/{transferId?}', [SF003Controller::class, 'storeProductionReport'])->name('production-report.store');
         Route::post('/stock/{transferId}/status', [SF003Controller::class, 'updateStatus'])->name('stock.status');

@@ -632,8 +632,14 @@ class SF003Controller extends Controller
     /**
      * Display final stock details from sf3_production_reports and sf3_production_report_products.
      */
-    public function finalStockShow(int $reportId): View
+    public function finalStockShow(string $encryptedId): View
     {
+        try {
+            $reportId = (int) Crypt::decryptString($encryptedId);
+        } catch (\Exception $e) {
+            abort(404, 'Final stock record not found.');
+        }
+
         if (!Schema::hasTable('sf3_production_reports')) {
             abort(500, 'SF3 production reports table is missing. Please run migrations.');
         }

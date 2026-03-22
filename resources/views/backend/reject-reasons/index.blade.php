@@ -106,14 +106,14 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.reject-reasons.show', $reason) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View Usage">
+                                    <a href="{{ route('admin.reject-reasons.show', ['encryptedId' => Crypt::encryptString((string) $reason->id)]) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="View Usage">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                     </a>
-                                    <a href="{{ route('admin.reject-reasons.edit', $reason) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
+                                    <a href="{{ route('admin.reject-reasons.edit', ['encryptedId' => Crypt::encryptString((string) $reason->id)]) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                         <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                     </a>
                                     @if(!$reason->is_deleted)
-                                        <form action="{{ route('admin.reject-reasons.destroy', $reason) }}" method="POST" class="inline js-swal-delete-form" data-item-name="{{ $reason->name }}">
+                                        <form action="{{ route('admin.reject-reasons.destroy', ['encryptedId' => Crypt::encryptString((string) $reason->id)]) }}" method="POST" class="inline js-swal-delete-form" data-item-name="{{ $reason->name }}">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">

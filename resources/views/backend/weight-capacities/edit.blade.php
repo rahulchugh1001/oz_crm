@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <form id="weight-capacity-edit-form" action="{{ route('admin.weight-capacities.update', $weightCapacity) }}" method="POST" class="p-4">
+        <form id="weight-capacity-edit-form" action="{{ route('admin.weight-capacities.update', ['encryptedId' => Crypt::encryptString((string) $weightCapacity->id)]) }}" method="POST" class="p-4">
             @csrf
             @method('PUT')
 

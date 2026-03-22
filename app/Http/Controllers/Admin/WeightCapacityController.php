@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WeightCapacity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -59,13 +60,27 @@ class WeightCapacityController extends Controller
             ->with('success', 'Weight capacity created successfully.');
     }
 
-    public function edit(WeightCapacity $weightCapacity): View
+    public function edit(string $encryptedId): View
     {
+        try {
+            $weightCapacityId = (int) Crypt::decryptString($encryptedId);
+            $weightCapacity = WeightCapacity::findOrFail($weightCapacityId);
+        } catch (\Exception $e) {
+            abort(404, 'Weight capacity not found.');
+        }
+
         return view('backend.weight-capacities.edit', compact('weightCapacity'));
     }
 
-    public function update(Request $request, WeightCapacity $weightCapacity): RedirectResponse
+    public function update(Request $request, string $encryptedId): RedirectResponse
     {
+        try {
+            $weightCapacityId = (int) Crypt::decryptString($encryptedId);
+            $weightCapacity = WeightCapacity::findOrFail($weightCapacityId);
+        } catch (\Exception $e) {
+            abort(404, 'Weight capacity not found.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50', Rule::unique('weight_capacities', 'name')->ignore($weightCapacity->id)],
             'status' => ['required', 'boolean'],
@@ -77,8 +92,15 @@ class WeightCapacityController extends Controller
             ->with('success', 'Weight capacity updated successfully.');
     }
 
-    public function destroy(WeightCapacity $weightCapacity): RedirectResponse
+    public function destroy(string $encryptedId): RedirectResponse
     {
+        try {
+            $weightCapacityId = (int) Crypt::decryptString($encryptedId);
+            $weightCapacity = WeightCapacity::findOrFail($weightCapacityId);
+        } catch (\Exception $e) {
+            abort(404, 'Weight capacity not found.');
+        }
+
         $weightCapacity->update(['is_deleted' => true]);
 
         return redirect()->route('admin.weight-capacities.index')

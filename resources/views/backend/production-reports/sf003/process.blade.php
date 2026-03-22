@@ -164,6 +164,7 @@
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Shift</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actual/Total</th>
                         <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Created By</th>
+                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -175,10 +176,19 @@
                         <td class="px-4 py-3 text-slate-700">{{ ucfirst($report->shift ?? '-') }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) ($report->actual_set_shift ?? 0), 0) }}/{{ number_format((float) ($report->total_set_shift ?? 0), 0) }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $report->created_by_name ?? 'N/A' }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <a
+                                href="{{ route('admin.production-reports.sf003.final-stock.show', ['encryptedId' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
+                                class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                title="View"
+                            >
+                                <i data-lucide="eye" class="w-4 h-4 text-slate-600"></i>
+                            </a>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-4 py-10 text-center">
+                        <td colspan="7" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="clipboard-list" class="w-8 h-8 text-slate-400"></i>

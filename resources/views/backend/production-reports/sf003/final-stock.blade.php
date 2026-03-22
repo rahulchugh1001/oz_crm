@@ -75,7 +75,7 @@
                         <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) ($report->total_set_shift ?? 0), 0) }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $report->created_by_name ?? 'N/A' }}</td>
                         <td class="px-4 py-3 text-center">
-                            <a href="{{ route('admin.production-reports.sf003.final-stock.show', ['reportId' => $report->id]) }}" class="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 p-2 text-blue-700 transition-all hover:bg-blue-100" title="View Details">
+                            <a href="{{ route('admin.production-reports.sf003.final-stock.show', ['encryptedId' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}" class="inline-flex items-center justify-center rounded-lg border border-blue-200 bg-blue-50 p-2 text-blue-700 transition-all hover:bg-blue-100" title="View Details">
                                 <i data-lucide="eye" class="w-4 h-4"></i>
                             </a>
                         </td>

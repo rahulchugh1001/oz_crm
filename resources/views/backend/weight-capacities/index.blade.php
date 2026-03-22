@@ -94,11 +94,11 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.weight-capacities.edit', $capacity) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
+                                    <a href="{{ route('admin.weight-capacities.edit', ['encryptedId' => Crypt::encryptString((string) $capacity->id)]) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                         <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                     </a>
                                     @if(!$capacity->is_deleted)
-                                        <form action="{{ route('admin.weight-capacities.destroy', $capacity) }}" method="POST" class="inline js-swal-delete-form" data-item-name="{{ $capacity->name }}">
+                                        <form action="{{ route('admin.weight-capacities.destroy', ['encryptedId' => Crypt::encryptString((string) $capacity->id)]) }}" method="POST" class="inline js-swal-delete-form" data-item-name="{{ $capacity->name }}">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
