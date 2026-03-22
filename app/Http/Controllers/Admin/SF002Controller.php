@@ -490,6 +490,10 @@ class SF002Controller extends Controller
             return back()->with('error', 'Production report not found or not allowed.');
         }
 
+        if ((int) ($record->is_transfered ?? 0) === 1) {
+            return back()->with('error', 'sf2 is transfered');
+        }
+
         DB::table('sf2_production_reports')
             ->where('id', $id)
             ->update([
@@ -691,6 +695,15 @@ class SF002Controller extends Controller
             'created_at'   => now(),
             'updated_at'   => now(),
         ]);
+
+        DB::table('sf2_production_reports')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['type'])
+            ->where('is_deleted', 0)
+            ->update([
+                'is_transfered' => 1,
+                'updated_at' => now(),
+            ]);
 
         return back()->with('success', 'Stock transferred successfully.');
     }

@@ -216,6 +216,7 @@
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total/Actual</th>
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Workman</th>
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Staff</th>
+                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
                         <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Created By</th>
                         <th class="px-3 py-2.5 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
                     </tr>
@@ -238,6 +239,17 @@
                         <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">{{ $actualSetShift }}/{{ $totalSetShift }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ $manpowerWorkman }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ $staffCount }}</td>
+                        <td class="px-3 py-2.5 text-center">
+                            @if((int) ($report->is_transfered ?? 0) === 1)
+                                <span class="inline-flex items-center justify-center text-emerald-600" title="Transfered">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center justify-center text-rose-600" title="Not Yet">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-3 py-2.5 text-xs text-slate-700">{{ $report->created_by_name ?? 'N/A' }}</td>
                         <td class="px-3 py-2.5 text-right">
                             <div class="flex items-center justify-end gap-2">
@@ -251,19 +263,30 @@
                                 <a href="{{ route('admin.production-reports.sf002.production-report', ['transferId' => $report->transfered_id, 'type' => $sf2Type, 'report_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                     <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                 </a>
-                                <form action="{{ route('admin.production-reports.sf002.production.destroy', $report->id) }}" method="POST" class="inline js-sf2-delete-form" data-item-name="Report #{{ $report->id }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                @if((int) ($report->is_transfered ?? 0) === 1)
+                                    <button
+                                        type="button"
+                                        class="p-1.5 text-slate-400 bg-slate-100 rounded-lg cursor-not-allowed"
+                                        title="sf2 is transfered"
+                                        disabled
+                                    >
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
-                                </form>
+                                @else
+                                    <form action="{{ route('admin.production-reports.sf002.production.destroy', $report->id) }}" method="POST" class="inline js-sf2-delete-form" data-item-name="Report #{{ $report->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-all" title="Delete">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-10 text-center">
+                        <td colspan="10" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
