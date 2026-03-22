@@ -775,6 +775,14 @@ class SF001Controller extends Controller
             'updated_at' => now(),
         ]);
 
+        ProductionReport::query()
+            ->where('slide_size_id', $validated['item_id'])
+            ->where('is_deleted', false)
+            ->update([
+                'is_transfered' => 1,
+                'updated_at' => now(),
+            ]);
+
         return back()->with('success', 'Stock transferred successfully.');
     }
 
