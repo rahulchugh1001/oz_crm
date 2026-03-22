@@ -256,6 +256,7 @@
         row.className = 'hover:bg-slate-50 border-b border-slate-200 machine-row';
         row.id = `row-${machine.id}`;
         row.dataset.machineId = machine.id;
+        row.dataset.hasCoil = machine.coil && machine.coil.id ? '1' : '0';
         
         let sizeOptions = '<option value="">Select Size</option>';
         slideSizes.forEach(size => {
@@ -331,6 +332,33 @@
         if (!row) return;
 
         if (checkbox.checked) {
+            if (row.dataset.hasCoil !== '1') {
+                const machineName = (row.querySelector('td:nth-child(2)')?.textContent || '').trim() || 'this machine';
+                let proceedWithoutCoil = false;
+
+                if (typeof Swal !== 'undefined' && Swal && typeof Swal.fire === 'function') {
+                    const result = await Swal.fire({
+                        title: 'Machine Has No Loaded Coil',
+                        text: 'Are you sure you want to run this machine without loaded coil?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3b82f6',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'No',
+                    });
+                    proceedWithoutCoil = !!result.isConfirmed;
+                } else {
+                    proceedWithoutCoil = window.confirm(`Are you sure you want to run ${machineName} without loaded coil?`);
+                }
+
+                if (!proceedWithoutCoil) {
+                    checkbox.checked = false;
+                    updateSelectAllCheckbox();
+                    return;
+                }
+            }
+
             checkbox.disabled = true;
             const selectionCheck = await canSelectMachineForCurrentFilters(row, true);
             checkbox.disabled = false;
@@ -399,13 +427,13 @@
             const selectionCheck = await canSelectMachineForCurrentFilters(row, false);
             if (!selectionCheck.allowed) {
                 checkbox.checked = false;
-                toggleRowInputs(checkbox);
+                await toggleRowInputs(checkbox);
                 skippedCount++;
                 continue;
             }
 
             checkbox.checked = true;
-            toggleRowInputs(checkbox);
+            await toggleRowInputs(checkbox);
         }
 
         if (skippedCount > 0) {
