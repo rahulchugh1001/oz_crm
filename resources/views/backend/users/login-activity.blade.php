@@ -16,7 +16,7 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="history" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="flex items-end gap-2">
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Filter</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded-lg hover:opacity-90 transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">Filter</button>
                     <a href="{{ route('admin.users.login-activity') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">Reset</a>
                 </div>
             </form>
@@ -62,15 +62,15 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-[13px]">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">User</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Role</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Login Time</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Logout Time</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Duration</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">IP Address</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">#</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">User</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Role</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Login Time</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Logout Time</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Duration</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">IP Address</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">

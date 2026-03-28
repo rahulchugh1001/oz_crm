@@ -33,7 +33,7 @@
         <div class="p-4 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="users" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
@@ -46,7 +46,7 @@
                         <i data-lucide="history" class="w-3.5 h-3.5"></i>
                         <span>Login Activity</span>
                     </a>
-                    <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all">
+                    <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs text-white font-semibold rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         <span>Add New User</span>
                     </a>
@@ -55,13 +55,13 @@
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-4">
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.users.index', ['mode' => 'active']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'active' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.users.index', ['mode' => 'active']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'active' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'active') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         Active
                     </a>
-                    <a href="{{ route('admin.users.index', ['mode' => 'deleted']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'deleted' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.users.index', ['mode' => 'deleted']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'deleted' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'deleted') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         Deleted
                     </a>
-                    <a href="{{ route('admin.users.index', ['mode' => 'all']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'all' ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.users.index', ['mode' => 'all']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'all' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'all') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         All
                     </a>
                 </div>
@@ -79,7 +79,7 @@
                                 class="w-full pl-10 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
-                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">
+                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white rounded-lg hover:opacity-90 transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                             Search
                         </button>
                         @if(!empty($search))
@@ -112,7 +112,7 @@
                         <td class="px-4 py-3 text-slate-900 font-medium">#{{ $user->id }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full gradient-primary flex items-center justify-center">
+                                <div class="w-9 h-9 rounded-full flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                                     <span class="text-white font-semibold text-xs">{{ strtoupper(substr($user->name, 0, 2)) }}</span>
                                 </div>
                                 <div>

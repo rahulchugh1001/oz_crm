@@ -31,7 +31,7 @@
             </div>
             <div class="flex items-center gap-2 flex-wrap">
                 @foreach($lineFilterOptions as $lineKey => $lineLabel)
-                    <a href="{{ route('admin.production-reports.sf003.final-stock', ['line' => $lineKey]) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $selectedLine === $lineKey ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
+                    <a href="{{ route('admin.production-reports.sf003.final-stock', ['line' => $lineKey]) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $selectedLine === $lineKey ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($selectedLine === $lineKey) style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         {{ $lineLabel }}
                     </a>
                 @endforeach
@@ -40,17 +40,17 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-[13px]">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Line</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Report Date</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Shift</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actual / Set / Shift</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total / Set / Shift</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Created By</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Action</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">ID</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Line</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Report Date</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Shift</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Actual / Set / Shift</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Total / Set / Shift</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Created By</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
