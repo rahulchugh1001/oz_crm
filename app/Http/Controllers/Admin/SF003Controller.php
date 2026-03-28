@@ -442,8 +442,8 @@ class SF003Controller extends Controller
                 'transfers.remark',
                 'transfers.sf003_remark',
                 'reject_reasons.name as reject_reason_name',
-                'items.code as item_code',
-                'items.name as item_name',
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as item_code"),
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as item_name"),
                 'items.size as item_size',
                 'transfer_by_user.name as transfer_by_name',
                 'assigned_to_user.name as assigned_to_name'
