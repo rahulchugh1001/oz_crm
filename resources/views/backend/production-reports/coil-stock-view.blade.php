@@ -93,11 +93,11 @@
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-slate-100 text-slate-700">
+                <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left">Machine</th>
-                        <th class="px-4 py-3 text-left">Code</th>
-                        <th class="px-4 py-3 text-left">Assigned At</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Code</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Assigned At</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -125,14 +125,14 @@
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-slate-100 text-slate-700">
+                <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left">Date</th>
-                        <th class="px-4 py-3 text-left">Machine</th>
-                        <th class="px-4 py-3 text-left">Shift</th>
-                        <th class="px-4 py-3 text-left">Slide Size</th>
-                        <th class="px-4 py-3 text-right">Actual Set</th>
-                        <th class="px-4 py-3 text-left">Report</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Date</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Shift</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Slide Size</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Actual Set</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Report</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -176,15 +176,15 @@
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-slate-100 text-slate-700">
+                <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left">Event Time</th>
-                        <th class="px-4 py-3 text-left">Action</th>
-                        <th class="px-4 py-3 text-left">Machine</th>
-                        <th class="px-4 py-3 text-right">Load Wt</th>
-                        <th class="px-4 py-3 text-right">Pending/Unload Wt</th>
-                        <th class="px-4 py-3 text-left">Remark</th>
-                        <th class="px-4 py-3 text-left">By</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Event Time</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Action</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Load Wt</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Pending/Unload Wt</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Remark</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">By</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -218,16 +218,16 @@
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
-                <thead class="bg-slate-100 text-slate-700">
+                <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left">Created At</th>
-                        <th class="px-4 py-3 text-left">Action</th>
-                        <th class="px-4 py-3 text-left">Machine</th>
-                        <th class="px-4 py-3 text-right">Load Wt</th>
-                        <th class="px-4 py-3 text-right">Unload Wt</th>
-                        <th class="px-4 py-3 text-right">Total Wt</th>
-                        <th class="px-4 py-3 text-left">Message</th>
-                        <th class="px-4 py-3 text-left">By</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Created At</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Action</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Load Wt</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Unload Wt</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Total Wt</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Message</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">By</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">

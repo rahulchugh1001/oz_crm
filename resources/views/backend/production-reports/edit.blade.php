@@ -17,7 +17,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <i data-lucide="edit" class="w-5 h-5 text-white"></i>
                 </div>
                 <div>
@@ -82,28 +82,28 @@
                     </p>
                 </div>
                 <table class="w-full border-collapse" id="productionTable">
-                    <thead class="bg-slate-100">
+                    <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <tr>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-44">Machine</th>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 min-w-40">Slide Size</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">Total Set/Shift</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">Set/Hour</th>
+                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-44 whitespace-nowrap">Machine</th>
+                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-40 whitespace-nowrap">Slide Size</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">Total Set/Shift</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">Set/Hour</th>
                             <!-- Hourly Columns -->
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="8-9">8AM-9AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="9-10">9AM-10AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="10-11">10AM-11AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="11-12">11AM-12PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="12-1">12PM-1PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="1-2">1PM-2PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="2-3">2PM-3PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="3-4">3PM-4PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="4-5">4PM-5PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="5-6">5PM-6PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="6-7">6PM-7PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 min-w-20 hour-label" data-hour="7-8">7PM-8PM</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Actual Set</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Workman</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 min-w-20">Staff</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="8-9">8AM-9AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="9-10">9AM-10AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="10-11">10AM-11AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="11-12">11AM-12PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="12-1">12PM-1PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="1-2">1PM-2PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="2-3">2PM-3PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="3-4">3PM-4PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="4-5">4PM-5PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="5-6">5PM-6PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="6-7">6PM-7PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="7-8">7PM-8PM</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Actual Set</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Workman</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Staff</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -117,7 +117,7 @@
                 <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
-                <button type="submit" id="editSubmitBtn" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
+                <button type="submit" id="editSubmitBtn" class="px-6 py-2 text-sm font-medium text-white rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     Update Production Report
                 </button>
             </div>

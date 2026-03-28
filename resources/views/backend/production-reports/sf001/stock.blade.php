@@ -17,7 +17,7 @@
         <div class="p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="package" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
@@ -43,36 +43,36 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             #
                         </th>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Item Code
                         </th>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Item Name
                         </th>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Size
                         </th>
-                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Total Production
                         </th>
-                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             In Stock
                         </th>
-                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Transferred
                         </th>
-                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Rejected
                         </th>
-                        <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Last Stock Update
                         </th>
-                        <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                        <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">
                             Actions
                         </th>
                     </tr>
@@ -135,7 +135,8 @@
                                     data-item-name="{{ $item->name }}"
                                     data-item-size="{{ $item->size }}"
                                     data-available-stock="{{ round((float) $item->total_stock) }}"
-                                    class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white rounded-lg transition-all"
+                                    style="background: linear-gradient(to right, #141d30, #2d3a52);"
                                 >
                                     <i data-lucide="arrow-right-left" class="w-3 h-3"></i>
                                     Transfer
@@ -284,7 +285,7 @@
 
                 <!-- Modal Footer -->
                 <div class="mt-6 flex items-center gap-3">
-                    <button type="submit" id="transfer_submit_button" class="flex-1 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                    <button type="submit" id="transfer_submit_button" class="flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         Save Transfer
                     </button>
                     <button type="button" onclick="closeTransferModal()" class="flex-1 px-4 py-2.5 bg-slate-600 text-white text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors">

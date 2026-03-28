@@ -49,7 +49,7 @@
                     <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
                     Suppliers
                 </button>
-                <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800 transition-colors">
+                <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium text-white transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     Add Coil
                 </button>
@@ -58,17 +58,17 @@
 
         <div class="overflow-x-auto">
             <table class="min-w-full text-left text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Coil No</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Supplier</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Thickness</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Net Weight (KG)</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Loaded Machine</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Created At</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Process</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Status</th>
-                        <th class="px-4 py-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">Action</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Coil No</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Supplier</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Thickness</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Net Weight (KG)</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Loaded Machine</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Created At</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Process</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Status</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">

@@ -17,7 +17,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="px-4 py-3 border-b border-slate-200">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <i data-lucide="plus" class="w-5 h-5 text-white"></i>
                 </div>
                 <div>
@@ -110,9 +110,9 @@
                 </div>
                 <div id="tableScrollContainer" class="overflow-x-auto overflow-y-auto max-h-[65vh]">
                 <table class="w-full border-collapse" id="productionTable">
-                    <thead class="bg-slate-100">
+                    <thead style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <tr>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-50 min-w-20 sticky top-0 z-20">
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #141d30;">
                                 <div class="flex flex-col items-center gap-1">
                                     <span>Select</span>
                                     <label class="inline-flex items-center cursor-pointer" title="Select All Machines">
@@ -128,26 +128,26 @@
                                     </label>
                                 </div>
                             </th>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 bg-slate-100 min-w-44 sticky top-0 z-20">Machine</th>
-                            <th class="border border-slate-300 px-3 py-3 text-left text-xs font-semibold text-slate-700 bg-slate-100 min-w-40 sticky top-0 z-20">Slide Size</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-24 sticky top-0 z-20">Total Set/Shift</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-24 sticky top-0 z-20">Set/Hour</th>
+                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-44 sticky top-0 z-20 whitespace-nowrap" style="background: #1a2538;">Machine</th>
+                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-40 sticky top-0 z-20 whitespace-nowrap" style="background: #1e2d42;">Slide Size</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 sticky top-0 z-20 whitespace-nowrap" style="background: #22334a;">Total Set/Shift</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 sticky top-0 z-20 whitespace-nowrap" style="background: #263950;">Set/Hour</th>
                             <!-- Hourly Columns -->
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="8-9">8AM-9AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="9-10">9AM-10AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="10-11">10AM-11AM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="11-12">11AM-12PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="12-1">12PM-1PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="1-2">1PM-2PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="2-3">2PM-3PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="3-4">3PM-4PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="4-5">4PM-5PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="5-6">5PM-6PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="6-7">6PM-7PM</th>
-                            <th class="border border-slate-300 px-2 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 hour-label sticky top-0 z-20" data-hour="7-8">7PM-8PM</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Actual Set</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Workman</th>
-                            <th class="border border-slate-300 px-3 py-3 text-center text-xs font-semibold text-slate-700 bg-slate-100 min-w-20 sticky top-0 z-20">Staff</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="8-9">8AM-9AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="9-10">9AM-10AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="10-11">10AM-11AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="11-12">11AM-12PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="12-1">12PM-1PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="1-2">1PM-2PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="2-3">2PM-3PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="3-4">3PM-4PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="4-5">4PM-5PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="5-6">5PM-6PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="6-7">6PM-7PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="7-8">7PM-8PM</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Actual Set</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Workman</th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Staff</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -163,7 +163,7 @@
                 <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
-                <button type="submit" id="createSubmitBtn" class="px-6 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all">
+                <button type="submit" id="createSubmitBtn" class="px-6 py-2 text-sm font-medium text-white rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     Create Selected Reports
                 </button>
             </div>

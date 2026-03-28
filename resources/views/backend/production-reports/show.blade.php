@@ -18,7 +18,7 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="eye" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
@@ -31,7 +31,7 @@
                         <i data-lucide="edit" class="w-4 h-4"></i>
                         Edit
                     </a>
-                    <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-white gradient-primary rounded-lg hover:shadow-lg transition-all flex items-center gap-2">
+                    <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-white rounded-lg hover:shadow-lg transition-all flex items-center gap-2" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="arrow-left" class="w-4 h-4"></i>
                         Back to List
                     </a>
@@ -230,7 +230,7 @@
                 </h3>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse">
-                        <thead class="bg-slate-100">
+                        <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                             <tr>
                                 @php
                                     $timeLabels = $productionReport->shift == 'Night' 
@@ -240,7 +240,7 @@
                                     $hourFields = ['hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12', 'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4', 'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'];
                                 @endphp
                                 @foreach($timeLabels as $label)
-                                    <th class="border border-slate-300 px-4 py-3 text-center text-xs font-semibold text-slate-700 min-w-24">{{ $label }}</th>
+                                    <th class="border border-slate-300 px-4 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">{{ $label }}</th>
                                 @endforeach
                             </tr>
                         </thead>
