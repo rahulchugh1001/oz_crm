@@ -14,19 +14,19 @@
 
     <div class="overflow-x-auto">
         <table class="w-full text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200">
+            <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                 <tr>
-                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">#</th>
-                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Code</th>
-                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Item Name</th>
-                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Size</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Total Production</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">In Stock</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Transferred</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Rejected</th>
-                    <th class="px-3 py-2.5 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Last Stock Update</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Assembly Lines</th>
-                    <th class="px-3 py-2.5 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">#</th>
+                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Code</th>
+                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Name</th>
+                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Size</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Total Production</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">In Stock</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Transferred</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Rejected</th>
+                    <th class="px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Last Stock Update</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Assembly Lines</th>
+                    <th class="px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -103,7 +103,8 @@
                                 data-item-size="{{ $item->size }}"
                                 data-type="{{ $tabType }}"
                                 data-available-stock="{{ (int) $item->pending_quantity }}"
-                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all"
+                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white rounded-lg hover:opacity-90 transition-all"
+                                style="background: linear-gradient(to right, #141d30, #2d3a52);"
                             >
                                 <i data-lucide="arrow-right-left" class="w-3 h-3"></i>
                                 Transfer

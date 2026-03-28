@@ -31,7 +31,7 @@
         <div class="p-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="package" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
