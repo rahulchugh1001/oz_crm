@@ -77,7 +77,18 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <div class="mb-2 flex items-center justify-end gap-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="scrollTableHorizontal('left')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Left
+                        </button>
+                        <button type="button" onclick="scrollTableHorizontal('right')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                            Right <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="tableScrollContainer" class="overflow-x-auto rounded-xl border border-slate-200">
                     <table class="min-w-[1500px] w-full border-collapse text-sm">
                         <thead>
                             <tr class="bg-slate-100">
@@ -162,7 +173,7 @@
 
                 <div class="mt-6 flex items-center justify-end gap-3">
                     <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">Cancel</a>
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">
+                    <button type="submit" class="px-4 py-2 rounded-lg text-white hover:opacity-90 font-medium" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         {{ isset($existingReport) && $existingReport ? 'Update Report' : 'Save Report' }}
                     </button>
                 </div>
@@ -855,6 +866,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     applySaveButtonState();
 });
+
+function scrollTableHorizontal(direction) {
+    const tableScrollContainer = document.getElementById('tableScrollContainer');
+    if (!tableScrollContainer) return;
+    const amount = 450;
+    const delta = direction === 'left' ? -amount : amount;
+    tableScrollContainer.scrollBy({ left: delta, behavior: 'auto' });
+}
 
 </script>
 @endpush

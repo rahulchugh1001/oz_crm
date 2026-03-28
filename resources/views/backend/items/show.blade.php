@@ -18,7 +18,7 @@
             <div class="p-6 border-b border-slate-200">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                             <i data-lucide="eye" class="w-5 h-5 text-white"></i>
                         </div>
                         <div>
@@ -166,10 +166,10 @@
                         @else
                             <div class="overflow-x-auto rounded-xl border border-slate-200">
                                 <table class="min-w-full divide-y divide-slate-200 bg-white">
-                                    <thead class="bg-slate-50">
+                                    <thead style="background: linear-gradient(to right, #141d30, #2d3a52);">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Product</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Quantity</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Product</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Quantity</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-200">
@@ -211,15 +211,15 @@
                         @else
                             <div class="overflow-x-auto rounded-xl border border-slate-200">
                                 <table class="min-w-full divide-y divide-slate-200 bg-white">
-                                    <thead class="bg-slate-50">
+                                    <thead style="background: linear-gradient(to right, #141d30, #2d3a52);">
                                         <tr>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Used In Item</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Report Date</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Line</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Shift</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Used Stock</th>
-                                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">In Stock</th>
-                                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">Tracked At</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Used In Item</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Report Date</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Line</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Shift</th>
+                                            <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Used Stock</th>
+                                            <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">In Stock</th>
+                                            <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Tracked At</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-200">
@@ -308,7 +308,7 @@
                             <span>Delete Item</span>
                         </button>
                     </form>
-                    <a href="{{ route('admin.items.index') }}" class="px-6 py-2 gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2">
+                    <a href="{{ route('admin.items.index') }}" class="px-6 py-2 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105 flex items-center gap-2" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="list" class="w-4 h-4"></i>
                         <span>View All Items</span>
                     </a>

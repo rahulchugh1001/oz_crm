@@ -23,7 +23,7 @@
         <div class="p-4 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <i data-lucide="ban" class="w-4 h-4 text-white"></i>
                     </div>
                     <div>
@@ -31,7 +31,7 @@
                         <p class="text-xs text-slate-500">Manage reject reason master data</p>
                     </div>
                 </div>
-                <a href="{{ route('admin.reject-reasons.create') }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs gradient-primary text-white font-semibold rounded-lg hover:shadow-lg transition-all">
+                <a href="{{ route('admin.reject-reasons.create') }}" class="inline-flex items-center gap-2 px-3 py-1.5 text-xs text-white font-semibold rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     <span>Add Reject Reason</span>
                 </a>
@@ -39,7 +39,7 @@
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-4">
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.reject-reasons.index', ['mode' => 'active']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'active' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.reject-reasons.index', ['mode' => 'active']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'active' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'active') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         Active
                     </a>
                     <a href="{{ route('admin.reject-reasons.index', ['mode' => 'deleted']) }}" class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium border {{ $mode === 'deleted' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
@@ -63,7 +63,7 @@
                                 class="w-full pl-10 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
                         </div>
-                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all">Search</button>
+                        <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white rounded-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">Search</button>
                         @if(!empty($search))
                             <a href="{{ route('admin.reject-reasons.index', ['mode' => $mode]) }}" class="px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">Reset</a>
                         @endif
@@ -74,14 +74,14 @@
 
         <div class="overflow-x-auto">
             <table class="w-full text-xs">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">ID</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Name</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Category</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-center text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Used Count</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold text-slate-700 uppercase tracking-wider">Actions</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">ID</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Name</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Category</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Used Count</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
