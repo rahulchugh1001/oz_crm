@@ -602,8 +602,8 @@ class SF003Controller extends Controller
             $finalStockQuery = DB::table('sf3_production_reports as reports')
                 ->select(
                     'reports.*',
-                    'items.code as item_code',
-                    'items.name as item_name',
+                    DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as item_code"),
+                    DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as item_name"),
                     'items.size as item_size',
                     'users.name as created_by_name'
                 )
@@ -647,8 +647,8 @@ class SF003Controller extends Controller
         $reportQuery = DB::table('sf3_production_reports as reports')
             ->select(
                 'reports.*',
-                'items.code as item_code',
-                'items.name as item_name',
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as item_code"),
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as item_name"),
                 'items.size as item_size',
                 'users.name as created_by_name'
             )
@@ -671,8 +671,8 @@ class SF003Controller extends Controller
             $productRows = DB::table('sf3_production_report_products as details')
                 ->select(
                     'details.*',
-                    'product_items.code as product_code',
-                    'product_items.name as product_name',
+                    DB::raw("CASE WHEN product_items.category = 'sf1-sf2' AND product_items.code_sf2 IS NOT NULL AND product_items.code_sf2 != '' THEN product_items.code_sf2 ELSE product_items.code END as product_code"),
+                    DB::raw("CASE WHEN product_items.category = 'sf1-sf2' AND product_items.name_sf2 IS NOT NULL AND product_items.name_sf2 != '' THEN product_items.name_sf2 ELSE product_items.name END as product_name"),
                     'product_items.category as product_category',
                     'transfers.quantity as transfer_quantity',
                     'transfers.used_quantity as transfer_used_quantity',

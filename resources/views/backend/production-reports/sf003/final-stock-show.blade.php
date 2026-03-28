@@ -20,7 +20,7 @@
         <div class="p-6 border-b border-slate-200 flex items-center justify-between">
             <div>
                 <h2 class="text-lg font-bold text-slate-900">Final Stock Master Details</h2>
-                <p class="text-sm text-slate-500 mt-1">Source table: sf3_production_reports</p>
+                {{-- <p class="text-sm text-slate-500 mt-1">Source table: sf3_production_reports</p> --}}
             </div>
             <a href="{{ route('admin.production-reports.sf003.final-stock') }}" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
                 <i data-lucide="arrow-left" class="w-4 h-4"></i>
@@ -69,22 +69,22 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle overflow-hidden">
         <div class="p-6 border-b border-slate-200">
             <h3 class="text-base font-bold text-slate-900">Product Breakdown</h3>
-            <p class="text-sm text-slate-500 mt-1">Source table: sf3_production_report_products</p>
+            {{-- <p class="text-sm text-slate-500 mt-1">Source table: sf3_production_report_products</p> --}}
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-[13px]">
-                <thead class="bg-slate-50 border-b border-slate-200">
+            <table class="w-full table-fixed text-[13px]">
+                <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-700">#</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-700">Transfer ID</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-700">Product</th>
-                        <th class="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-700">Category</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-700">Qty Required</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-700">Qty Used</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-700">Transfer Qty</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-700">Transfer Used</th>
-                        <th class="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-slate-700">Transfer Available</th>
+                        <th class="w-[50px] px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">#</th>
+                        <th class="w-[100px] px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Transfer ID</th>
+                        <th class="w-[250px] px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Product</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Category</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Qty Required</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Qty Used</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Transfer Qty</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Transfer Used</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Transfer Available</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200">
@@ -92,7 +92,10 @@
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-3 text-slate-700">{{ $index + 1 }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $detail->transfered_id ?? '-' }}</td>
-                        <td class="px-4 py-3 text-slate-700">{{ ($detail->product_code ?? '-') . ' - ' . ($detail->product_name ?? '-') }}</td>
+                        <td class="px-4 py-3 text-slate-700 break-words">
+                            {{ $detail->product_name ?? '-' }}
+                            <span class="text-[11px] text-slate-500">({{ $detail->product_code ?? '-' }})</span>
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $detail->product_category ?? '-' }}</td>
                         <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) ($detail->quantity_required ?? 0), 2) }}</td>
                         <td class="px-4 py-3 text-right text-slate-700">{{ number_format((float) ($detail->quantity_used ?? 0), 2) }}</td>
