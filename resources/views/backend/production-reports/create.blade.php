@@ -65,22 +65,36 @@
 
                     <!-- Total Workman -->
                     <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">Total Workman</label>
-                        <div class="flex items-center gap-2 px-2 py-1.5 bg-blue-50 border border-blue-200 rounded-lg h-[34px]">
-                            <i data-lucide="users" class="w-3.5 h-3.5 text-blue-500 flex-shrink-0"></i>
-                            <span class="text-xs text-slate-500">Total:</span>
-                            <span id="total_workman_display" class="text-sm font-bold text-blue-700">0</span>
-                        </div>
+                        <label for="global_workman_count" class="block text-xs font-medium text-slate-700 mb-1">
+                            Total Workman <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="global_workman_count"
+                            name="workman_count"
+                            min="0"
+                            step="1"
+                            value="0"
+                            placeholder="Enter workman count"
+                            class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
                     </div>
 
                     <!-- Total Staff -->
                     <div>
-                        <label class="block text-xs font-medium text-slate-700 mb-1">Total Staff</label>
-                        <div class="flex items-center gap-2 px-2 py-1.5 bg-green-50 border border-green-200 rounded-lg h-[34px]">
-                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-green-500 flex-shrink-0"></i>
-                            <span class="text-xs text-slate-500">Total:</span>
-                            <span id="total_staff_display" class="text-sm font-bold text-green-700">0</span>
-                        </div>
+                        <label for="global_staff_count" class="block text-xs font-medium text-slate-700 mb-1">
+                            Total Staff <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="global_staff_count"
+                            name="staff_count"
+                            min="0"
+                            step="1"
+                            value="0"
+                            placeholder="Enter staff count"
+                            class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
                     </div>
                 </div>
             </div>
@@ -146,8 +160,7 @@
                             <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="6-7">6PM-7PM</th>
                             <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;" data-hour="7-8">7PM-8PM</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Actual Set</th>
-                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Workman</th>
-                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #2d3a52;">Staff</th>
+                            <!-- Workman and Staff columns hidden - entered globally at top -->
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -309,12 +322,7 @@
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="actual_set_shift[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set calc-input" style="pointer-events: none;" disabled>
             </td>
-            <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="workman_count[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" onchange="updateTotals()" oninput="updateTotals()" disabled>
-            </td>
-            <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="staff_count[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()" onchange="updateTotals()" oninput="updateTotals()" disabled>
-            </td>
+            <!-- Workman and Staff per-row inputs hidden - entered globally at top -->
             <input type="hidden" name="machine_id[]" value="${machine.id}">
             <input type="hidden" name="report_date[]" value="${reportDate}">
             <input type="hidden" name="shift[]" value="${shift}">
@@ -388,23 +396,7 @@
     }
 
     function updateTotals() {
-        let totalWorkman = 0;
-        let totalStaff = 0;
-
-        document.querySelectorAll('tr.machine-row').forEach(row => {
-            const checkbox = row.querySelector('.machine-checkbox');
-            if (!checkbox || !checkbox.checked) return;
-
-            const workman = parseFloat(row.querySelector('input[name="workman_count[]"]')?.value) || 0;
-            const staff = parseFloat(row.querySelector('input[name="staff_count[]"]')?.value) || 0;
-            totalWorkman += workman;
-            totalStaff += staff;
-        });
-
-        const workmanDisplay = document.getElementById('total_workman_display');
-        const staffDisplay = document.getElementById('total_staff_display');
-        if (workmanDisplay) workmanDisplay.textContent = totalWorkman;
-        if (staffDisplay) staffDisplay.textContent = totalStaff;
+        // Workman and Staff are now entered globally at the top, no per-row totals needed
     }
 
     async function toggleAllRows(selectAll) {
