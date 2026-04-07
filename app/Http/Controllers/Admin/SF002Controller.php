@@ -42,6 +42,7 @@ class SF002Controller extends Controller
                 'transfers.transfer_by',
                 'transfers.remark',
                 'transfers.sf002_remark',
+                'transfers.reject_reason_id',
                 'items.code as item_code',
                 'items.name as item_name',
                 'items.size as item_size',
@@ -78,7 +79,13 @@ class SF002Controller extends Controller
      */
     public function index(): View
     {
-        $assignedTransfers = $this->assignedTransfersQuery()->get();
+        $assignedTransfers = $this->assignedTransfersQuery()
+            ->addSelect(DB::raw('CASE WHEN sf2_usage.id IS NOT NULL THEN 1 ELSE 0 END as is_used_in_sf2'))
+            ->leftJoin('sf2_production_reports as sf2_usage', function ($join) {
+                $join->on('transfers.id', '=', 'sf2_usage.transfered_id')
+                    ->where('sf2_usage.is_deleted', false);
+            })
+            ->get();
 
         $rejectReasons = DB::table('reject_reasons')
             ->select('id', 'name')
@@ -871,8 +878,13 @@ class SF002Controller extends Controller
             return back()->with('error', 'Transfer record not found or not assigned to you.');
         }
 
-        if ((int) $transfer->is_accept !== 0) {
-            return back()->with('error', 'Status already updated. You cannot change the status or remark again.');
+        $isUsedInSf2 = DB::table('sf2_production_reports')
+            ->where('transfered_id', $transferId)
+            ->where('is_deleted', false)
+            ->exists();
+
+        if ($isUsedInSf2) {
+            return back()->with('error', 'This stock is already used in SF2 production. You cannot update it.');
         }
 
         $currentQuantity = (float) $transfer->quantity;

@@ -100,11 +100,13 @@
                                     <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                 </button>
                                 @if($canUpdateStatus)
-                                @if((int) $transfer->is_accept === 0)
+                                @php
+                                    $isUsedInSf2 = (int) ($transfer->is_used_in_sf2 ?? 0) === 1;
+                                @endphp
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all bg-green-50 text-green-700 hover:bg-green-100"
-                                    onclick="openStatusModal(this)"
+                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all {{ $isUsedInSf2 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-50 text-green-700 hover:bg-green-100' }}"
+                                    {{ $isUsedInSf2 ? '' : 'onclick=openStatusModal(this)' }}
                                     data-action="{{ route('admin.production-reports.sf002.stock.status', $transfer->id) }}"
                                     data-status="1"
                                     data-item-name="{{ $transfer->item_name }}"
@@ -112,12 +114,14 @@
                                     data-assign-sf2="{{ $transfer->assign_sf2 ?? '' }}"
                                     data-assigned-at="{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}"
                                     data-current-remark="{{ $transfer->sf002_remark ?? '' }}"
-                                    title="Accept"
-                                    aria-label="Accept"
+                                    data-reject-quantity="{{ (float) ($transfer->reject_quantity ?? 0) }}"
+                                    data-reject-reason-id="{{ $transfer->reject_reason_id ?? '' }}"
+                                    title="{{ $isUsedInSf2 ? 'Stock used in SF2 production' : 'Accept' }}"
+                                    aria-label="{{ $isUsedInSf2 ? 'Stock used in SF2 production' : 'Accept' }}"
+                                    {{ $isUsedInSf2 ? 'disabled' : '' }}
                                 >
                                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                 </button>
-                                @endif
                                 @endif
                             </div>
                         </td>
@@ -456,11 +460,23 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmButton.classList.remove('opacity-60', 'cursor-not-allowed');
         confirmButton.disabled = false;
 
-        acceptAllToggle.checked = true;
-        rejectQuantityField.max = activeQuantity.toString();
-        rejectQuantityField.value = '0';
-        if (rejectReasonField) {
-            rejectReasonField.value = '';
+        const prevRejectQty = parseFloat(button.getAttribute('data-reject-quantity') || '0');
+        const prevRejectReasonId = button.getAttribute('data-reject-reason-id') || '';
+
+        if (prevRejectQty > 0) {
+            acceptAllToggle.checked = false;
+            rejectQuantityField.max = activeQuantity.toString();
+            rejectQuantityField.value = prevRejectQty.toString();
+            if (rejectReasonField) {
+                rejectReasonField.value = prevRejectReasonId;
+            }
+        } else {
+            acceptAllToggle.checked = true;
+            rejectQuantityField.max = activeQuantity.toString();
+            rejectQuantityField.value = '0';
+            if (rejectReasonField) {
+                rejectReasonField.value = '';
+            }
         }
         updateToggleUI();
 
