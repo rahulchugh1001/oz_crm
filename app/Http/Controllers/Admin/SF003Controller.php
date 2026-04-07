@@ -480,7 +480,12 @@ class SF003Controller extends Controller
      */
     public function index(): View
     {
-        $assignedTransfers = $this->assignedTransfersQuery()->get();
+        $assignedTransfers = $this->assignedTransfersQuery()
+            ->addSelect(DB::raw('CASE WHEN sf3_usage.id IS NOT NULL THEN 1 ELSE 0 END as is_used_in_sf3'))
+            ->leftJoin('sf3_production_report_products as sf3_usage', function ($join) {
+                $join->on('transfers.id', '=', 'sf3_usage.transfered_id');
+            })
+            ->get();
 
         $rejectReasons = DB::table('reject_reasons')
             ->select('id', 'name')
@@ -955,8 +960,12 @@ class SF003Controller extends Controller
             return back()->with('error', 'Transfer record not found or not assigned to you.');
         }
 
-        if ((int) $transfer->is_accept !== 0) {
-            return back()->with('error', 'Status already updated. You cannot change the status or remark again.');
+        $isUsedInSf3 = DB::table('sf3_production_report_products')
+            ->where('transfered_id', $transferId)
+            ->exists();
+
+        if ($isUsedInSf3) {
+            return back()->with('error', 'This stock is already used in SF3 production. You cannot update it.');
         }
 
         $currentQuantity = (float) $transfer->quantity;

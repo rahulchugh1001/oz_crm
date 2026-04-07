@@ -101,11 +101,13 @@
                                     <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                 </button>
                                 @if($canUpdateStatus)
-                                @if((int) $transfer->is_accept === 0)
+                                @php
+                                    $isUsedInSf3 = (int) ($transfer->is_used_in_sf3 ?? 0) === 1;
+                                @endphp
                                 <button
                                     type="button"
-                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-green-50 text-green-700 hover:bg-green-100"
-                                    onclick="openStatusModal(this)"
+                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all {{ $isUsedInSf3 ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-50 text-green-700 hover:bg-green-100' }}"
+                                    {{ $isUsedInSf3 ? '' : 'onclick=openStatusModal(this)' }}
                                     data-action="{{ route('admin.production-reports.sf003.stock.status', $transfer->id) }}"
                                     data-status="1"
                                     data-item-name="{{ $transfer->item_name }}"
@@ -113,33 +115,14 @@
                                     data-sf3-process="{{ $transfer->sf3_process ?? '' }}"
                                     data-assigned-at="{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}"
                                     data-current-remark="{{ $transfer->sf003_remark ?? '' }}"
-                                    title="Accept"
-                                    aria-label="Accept"
+                                    data-reject-quantity="{{ (float) ($transfer->reject_quantity ?? 0) }}"
+                                    data-reject-reason-id="{{ $transfer->reject_reason_id ?? '' }}"
+                                    title="{{ $isUsedInSf3 ? 'Stock used in SF3 production' : 'Accept' }}"
+                                    aria-label="{{ $isUsedInSf3 ? 'Stock used in SF3 production' : 'Accept' }}"
+                                    {{ $isUsedInSf3 ? 'disabled' : '' }}
                                 >
                                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                 </button>
-
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center justify-center p-2 text-[11px] font-medium rounded-lg transition-all bg-rose-50 text-rose-700 hover:bg-rose-100"
-                                    onclick="openStatusModal(this)"
-                                    data-action="{{ route('admin.production-reports.sf003.stock.status', $transfer->id) }}"
-                                    data-status="2"
-                                    data-item-name="{{ $transfer->item_name }}"
-                                    data-quantity="{{ (float) $transfer->quantity }}"
-                                    data-sf3-process="{{ $transfer->sf3_process ?? '' }}"
-                                    data-assigned-at="{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}"
-                                    data-current-remark="{{ $transfer->sf003_remark ?? '' }}"
-                                    title="Reject"
-                                    aria-label="Reject"
-                                >
-                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                </button>
-                                @else
-                                <div class="text-center text-[11px] font-medium text-slate-500">
-                                    Done
-                                </div>
-                                @endif
                                 @endif
                             </div>
                         </td>
@@ -498,11 +481,23 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmButton.classList.remove('opacity-60', 'cursor-not-allowed');
         confirmButton.disabled = false;
 
-        acceptAllToggle.checked = true;
-        rejectQuantityField.max = activeQuantity.toString();
-        rejectQuantityField.value = '0';
-        if (rejectReasonField) {
-            rejectReasonField.value = '';
+        const prevRejectQty = parseFloat(button.getAttribute('data-reject-quantity') || '0');
+        const prevRejectReasonId = button.getAttribute('data-reject-reason-id') || '';
+
+        if (prevRejectQty > 0) {
+            acceptAllToggle.checked = false;
+            rejectQuantityField.max = activeQuantity.toString();
+            rejectQuantityField.value = prevRejectQty.toString();
+            if (rejectReasonField) {
+                rejectReasonField.value = prevRejectReasonId;
+            }
+        } else {
+            acceptAllToggle.checked = true;
+            rejectQuantityField.max = activeQuantity.toString();
+            rejectQuantityField.value = '0';
+            if (rejectReasonField) {
+                rejectReasonField.value = '';
+            }
         }
         updateToggleUI();
 
