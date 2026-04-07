@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.admin.role' => CheckAdminRole::class,
             'check.admin.or.stock.role' => CheckAdminOrStockRole::class,
         ]);
+        $middleware->redirectUsersTo('/admin/dashboard');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
