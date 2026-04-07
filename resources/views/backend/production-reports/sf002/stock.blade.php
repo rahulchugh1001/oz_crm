@@ -117,27 +117,6 @@
                                 >
                                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                 </button>
-
-                                <button
-                                    type="button"
-                                    class="inline-flex items-center justify-center p-1.5 text-[11px] font-medium rounded-lg transition-all bg-rose-50 text-rose-700 hover:bg-rose-100"
-                                    onclick="openStatusModal(this)"
-                                    data-action="{{ route('admin.production-reports.sf002.stock.status', $transfer->id) }}"
-                                    data-status="2"
-                                    data-item-name="{{ $transfer->item_name }}"
-                                    data-quantity="{{ (float) $transfer->quantity }}"
-                                    data-assign-sf2="{{ $transfer->assign_sf2 ?? '' }}"
-                                    data-assigned-at="{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}"
-                                    data-current-remark="{{ $transfer->sf002_remark ?? '' }}"
-                                    title="Reject"
-                                    aria-label="Reject"
-                                >
-                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                </button>
-                                @else
-                                <div class="text-center text-[11px] font-medium text-slate-500">
-                                    Done
-                                </div>
                                 @endif
                                 @endif
                             </div>
