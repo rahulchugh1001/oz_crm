@@ -86,14 +86,14 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <div class="relative">
+                        {{-- <div class="relative">
                             <button class="p-2 hover:bg-slate-100 rounded-lg relative transition-all">
                                 <i data-lucide="bell" class="w-5 h-5 text-slate-600"></i>
                                 <span class="absolute -top-1 -right-1 w-5 h-5 gradient-danger text-white text-xs rounded-full flex items-center justify-center hidden" id="notification-badge">
                                     0
                                 </span>
                             </button>
-                        </div>
+                        </div> --}}
                         <div class="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-lg border border-slate-200">
                             <i data-lucide="calendar" class="w-4 h-4 text-slate-600"></i>
                             <span id="header-current-date" class="text-slate-700">{{ now()->format('F d, Y') }}</span>

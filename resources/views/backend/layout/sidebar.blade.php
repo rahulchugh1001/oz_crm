@@ -127,10 +127,6 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Weight Capacity</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf001.coil-stock', ['from' => 'masters']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isMasterSupplierContext ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">Supplier</span>
-                    </a>
                     @endif
                 </div>
             </div>
