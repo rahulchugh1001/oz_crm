@@ -43,4 +43,9 @@ class CoilStock extends Model
     {
         return $this->belongsToMany(Machine::class, 'coil_machine', 'coil_stock_id', 'machine_id')->withTimestamps();
     }
+
+    public function loadNumbers()
+    {
+        return $this->hasMany(CoilLoadNumber::class, 'coil_id');
+    }
 }

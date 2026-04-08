@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoilLoadNumber;
 use App\Models\CoilMachineTrack;
 use App\Models\CoilMachineTrackLog;
 use App\Models\CoilManufacture;
@@ -409,6 +410,7 @@ class SF001Controller extends Controller
             'form_type' => 'required|in:' . $validFormTypes,
             'coil_id' => 'nullable|integer|exists:coil_stock,id',
             'machine_id' => 'required|integer|exists:machines,id',
+            'coil_no' => 'required_if:form_type,' . $loadAction . '|string|max:120',
             'load_weight' => 'required_if:form_type,' . $loadAction . '|numeric|gt:0',
             'unload_weight' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string|max:255',
@@ -510,13 +512,20 @@ class SF001Controller extends Controller
                         'machine_id' => $machine->id,
                         'machine_name' => $machine->name,
                         'coil_id' => $coil->id,
-                        'coil_no' => $coil->coil_no,
+                        'coil_no' => $validated['coil_no'] ?? null,
                         'load_weight' => $loadWeight,
                         'remaining_net_weight' => $remainingNetWeight,
                         'total_weight' => $coilNetWeightTotal,
                     ],
                     'Coil loaded to machine.'
                 );
+
+                CoilLoadNumber::query()->create([
+                    'coil_id' => $coil->id,
+                    'coil_machine_track_id' => $track->id,
+                    'coil_no' => trim((string) $validated['coil_no']),
+                    'created_by' => Auth::id(),
+                ]);
             });
 
             return back()->with('success', 'Coil loaded to machine successfully.');

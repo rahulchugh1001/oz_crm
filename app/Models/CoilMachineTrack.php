@@ -70,4 +70,9 @@ class CoilMachineTrack extends Model
     {
         return $this->hasMany(CoilMachineTrackLog::class, 'coil_machine_track_id');
     }
+
+    public function loadNumber(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(CoilLoadNumber::class, 'coil_machine_track_id');
+    }
 }

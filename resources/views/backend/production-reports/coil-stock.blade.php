@@ -301,6 +301,11 @@
                         </div>
                     </div>
                 </div>
+                <div id="manage_coil_no_section">
+                    <label for="manage_coil_no" class="block text-sm font-semibold text-slate-700 mb-2">Coil Number <span class="text-rose-500">*</span></label>
+                    <input type="text" id="manage_coil_no" name="coil_no" value="{{ old('coil_no') }}" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('coil_no') border-rose-500 @enderror" placeholder="Enter coil number for this load">
+                    @error('coil_no')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
                 <label for="manage_load_weight" class="block text-sm font-semibold text-slate-700 mb-2">Load Weight (KG)</label>
                 <input type="number" id="manage_load_weight" name="load_weight" value="{{ old('load_weight') }}" min="1" step="1" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('load_weight') border-rose-500 @enderror" placeholder="Enter load weight">
                 <p id="manage_load_weight_hint" class="mt-1 text-xs text-slate-500">Max you can load 0 KG net weight.</p>
@@ -1126,6 +1131,8 @@
         const machineSelect = document.getElementById('manage_machine_id');
         const loadSection = document.getElementById('manage_load_section');
         const unloadSection = document.getElementById('manage_unload_section');
+        const coilNoSection = document.getElementById('manage_coil_no_section');
+        const coilNoInput = document.getElementById('manage_coil_no');
         const submitButton = document.getElementById('manageCoilSubmitButton');
         const loadWeightInput = document.getElementById('manage_load_weight');
         const unloadWeightInput = document.getElementById('manage_unload_weight');
@@ -1178,6 +1185,9 @@
         if (action === 'load') {
             loadSection.classList.remove('hidden');
             unloadSection.classList.add('hidden');
+            coilNoSection.classList.remove('hidden');
+            coilNoInput.required = true;
+            coilNoInput.value = '';
             loadWeightInput.required = true;
             unloadWeightInput.required = false;
             unloadWeightInput.value = '';
@@ -1229,6 +1239,9 @@
         } else {
             loadSection.classList.add('hidden');
             unloadSection.classList.remove('hidden');
+            coilNoSection.classList.add('hidden');
+            coilNoInput.required = false;
+            coilNoInput.value = '';
             loadWeightInput.required = false;
             loadWeightInput.disabled = true;
             unloadWeightInput.required = true;
