@@ -97,6 +97,9 @@
                                             <div>
                                                 <p class="text-xs font-semibold text-emerald-900 leading-4">{{ $loadedMachine['name'] }}</p>
                                                 <p class="text-[10px] uppercase tracking-[0.14em] text-emerald-700">Machine</p>
+                                                @if(!empty($loadedMachine['active_load_coil_no']))
+                                                    <p class="text-[10px] text-emerald-800 mt-0.5">Coil: <span class="font-semibold">{{ $loadedMachine['active_load_coil_no'] }}</span></p>
+                                                @endif
                                             </div>
                                             <span class="inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
                                                 {{ $loadedMachine['machine_code'] ?: 'No Code' }}
@@ -271,6 +274,9 @@
                     <i data-lucide="loader-circle" class="h-3.5 w-3.5 manage-load-indicator-icon"></i>
                     Coil Loaded - unload first
                 </div>
+                <div id="manage_current_coil_no_info" class="hidden mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+                    <p class="text-xs text-blue-800">Current Coil No: <span id="manage_current_coil_no_value" class="font-semibold">-</span></p>
+                </div>
             </div>
 
             <div>
@@ -297,6 +303,9 @@
                                 This coil is currently loaded on
                                 <span id="manage_loaded_machine_list" class="font-semibold">machine(s)</span>.
                                 Please unload first.
+                            </p>
+                            <p id="manage_loaded_coil_no" class="mt-1 text-xs hidden">
+                                Coil No: <span id="manage_loaded_coil_no_value" class="font-semibold">-</span>
                             </p>
                         </div>
                     </div>
@@ -1075,9 +1084,25 @@
         const ruleNotice = document.getElementById('manage_load_rule_notice');
         const loadedStatusChip = document.getElementById('manage_loaded_status_chip');
         const loadedMachineList = document.getElementById('manage_loaded_machine_list');
+        const currentCoilNoInfo = document.getElementById('manage_current_coil_no_info');
+        const currentCoilNoValue = document.getElementById('manage_current_coil_no_value');
 
         if (loadedStatusChip) {
             loadedStatusChip.classList.toggle('hidden', !isAlreadyLoaded);
+        }
+
+        if (currentCoilNoInfo && currentCoilNoValue) {
+            const coilNos = isAlreadyLoaded
+                ? currentManageContext.loadedMachines
+                    .map(function (m) { return m.active_load_coil_no || ''; })
+                    .filter(function (n) { return n.length > 0; })
+                : [];
+            if (coilNos.length > 0) {
+                currentCoilNoValue.textContent = coilNos.join(', ');
+                currentCoilNoInfo.classList.remove('hidden');
+            } else {
+                currentCoilNoInfo.classList.add('hidden');
+            }
         }
 
         if (ruleNotice) {
@@ -1090,6 +1115,22 @@
                 .filter(function (name) { return name.length > 0; });
 
             loadedMachineList.textContent = machineNames.length > 0 ? machineNames.join(', ') : 'selected machine(s)';
+        }
+
+        const loadedCoilNoEl = document.getElementById('manage_loaded_coil_no');
+        const loadedCoilNoValue = document.getElementById('manage_loaded_coil_no_value');
+        if (loadedCoilNoEl && loadedCoilNoValue && isAlreadyLoaded) {
+            const coilNos = currentManageContext.loadedMachines
+                .map(function (machine) { return machine.active_load_coil_no || ''; })
+                .filter(function (no) { return no.length > 0; });
+            if (coilNos.length > 0) {
+                loadedCoilNoValue.textContent = coilNos.join(', ');
+                loadedCoilNoEl.classList.remove('hidden');
+            } else {
+                loadedCoilNoEl.classList.add('hidden');
+            }
+        } else if (loadedCoilNoEl) {
+            loadedCoilNoEl.classList.add('hidden');
         }
 
         document.querySelectorAll('.manage-action-tab').forEach(function (button) {

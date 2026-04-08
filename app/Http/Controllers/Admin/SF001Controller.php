@@ -81,6 +81,14 @@ class SF001Controller extends Controller
 
                 $machine->active_load_weight = $activeLoadTrack ? (float) $activeLoadTrack->load_weight : null;
 
+                $machine->active_load_coil_no = null;
+                if ($activeLoadTrack) {
+                    $loadNumber = CoilLoadNumber::query()
+                        ->where('coil_machine_track_id', $activeLoadTrack->id)
+                        ->first(['coil_no']);
+                    $machine->active_load_coil_no = $loadNumber ? $loadNumber->coil_no : null;
+                }
+
                 return $machine;
             })
             ->groupBy('coil_id')
@@ -91,6 +99,7 @@ class SF001Controller extends Controller
                         'name' => $row->name,
                         'machine_code' => $row->machine_code,
                         'active_load_weight' => $row->active_load_weight,
+                        'active_load_coil_no' => $row->active_load_coil_no,
                     ];
                 })->values()->all();
             });
@@ -145,6 +154,7 @@ class SF001Controller extends Controller
                 'machine:id,name,machine_code',
                 'creator:id,name',
                 'referenceTrack:id,load_weight,event_at',
+                'loadNumber:id,coil_machine_track_id,coil_no',
             ])
             ->where('coil_id', $coil->id)
             ->where('is_deleted', 0)
@@ -173,13 +183,24 @@ class SF001Controller extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $coilLoadNumbers = CoilLoadNumber::query()
+            ->with([
+                'track:id,machine_id,type,load_weight,event_at',
+                'track.machine:id,name,machine_code',
+                'creator:id,name',
+            ])
+            ->where('coil_id', $coil->id)
+            ->orderByDesc('id')
+            ->get();
+
         return view('backend.production-reports.coil-stock-view', compact(
             'coil',
             'loadedMachines',
             'assignedMachines',
             'trackHistory',
             'logHistory',
-            'productionReports'
+            'productionReports',
+            'coilLoadNumbers'
         ));
     }
 

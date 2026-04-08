@@ -84,6 +84,48 @@
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="px-5 py-4 border-b border-slate-200">
+            <h3 class="text-base font-bold text-slate-900">Coil Numbers</h3>
+            <p class="text-xs text-slate-500 mt-1">Coil numbers assigned during each load event.</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">#</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Coil No</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
+                        <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Load Weight</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Loaded At</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">By</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($coilLoadNumbers as $index => $loadNum)
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 text-slate-700">{{ $index + 1 }}</td>
+                            <td class="px-4 py-3 text-slate-900 font-medium">{{ $loadNum->coil_no }}</td>
+                            <td class="px-4 py-3 text-slate-700">
+                                {{ $loadNum->track->machine->name ?? '-' }}
+                                @if(!empty($loadNum->track->machine->machine_code))
+                                    <span class="text-xs text-slate-500">({{ $loadNum->track->machine->machine_code }})</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-right text-slate-800">{{ number_format((float) ($loadNum->track->load_weight ?? 0), 0) }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $loadNum->track->event_at ? \Carbon\Carbon::parse($loadNum->track->event_at)->format('d-m-Y h:i A') : '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $loadNum->creator->name ?? '-' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-6 text-center text-slate-500">No coil numbers recorded yet.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
+        <div class="px-5 py-4 border-b border-slate-200">
             <h3 class="text-base font-bold text-slate-900">Assigned Machine(s)</h3>
             <p class="text-xs text-slate-500 mt-1">Machines linked to this coil (with assigned time).</p>
         </div>
@@ -176,6 +218,7 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Event Time</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Action</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Coil No</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold whitespace-nowrap">Machine</th>
                         <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Load Wt</th>
                         <th class="px-4 py-2 text-right text-[10px] font-semibold whitespace-nowrap">Pending/Unload Wt</th>
@@ -192,6 +235,7 @@
                                     {{ ucfirst($track->type) }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-slate-700">{{ $track->loadNumber->coil_no ?? '-' }}</td>
                             <td class="px-4 py-3 text-slate-900 font-medium">{{ $track->machine->name ?? '-' }}</td>
                             <td class="px-4 py-3 text-right text-slate-800">{{ number_format((float) $track->load_weight, 0) }}</td>
                             <td class="px-4 py-3 text-right text-slate-800">{{ number_format((float) $track->unload_weight, 0) }}</td>
@@ -200,7 +244,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-slate-500">No load/unload track history found.</td>
+                            <td colspan="8" class="px-4 py-6 text-center text-slate-500">No load/unload track history found.</td>
                         </tr>
                     @endforelse
                 </tbody>
