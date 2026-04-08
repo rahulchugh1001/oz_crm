@@ -238,6 +238,11 @@
                     </table>
                 </div>
 
+                <div id="quantityExceededWarning" class="hidden mb-4 p-3 bg-rose-50 border border-rose-300 rounded-lg flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
+                    <span id="quantityExceededMsg" class="text-sm font-medium text-rose-700"></span>
+                </div>
+
                 <div class="mt-6 flex items-center justify-end gap-3">
                     <a href="{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced')]) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                         Cancel
@@ -357,6 +362,59 @@ document.addEventListener('DOMContentLoaded', function () {
         setPerHourInput.value = perHour.toFixed(2);
     }
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const warningBanner = document.getElementById('quantityExceededWarning');
+    const warningMsg = document.getElementById('quantityExceededMsg');
+
+    function checkQuantityExceeded() {
+        const _bulkToggle = document.getElementById('bulkModeToggle');
+        const isBulk = _bulkToggle && _bulkToggle.getAttribute('aria-checked') === 'true';
+        let hasExceeded = false;
+        let messages = [];
+
+        if (!isBulk) {
+            // Single mode check
+            const selectedQty = getSelectedQuantity();
+            const actual = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
+            if (actual > selectedQty && selectedQty > 0) {
+                hasExceeded = true;
+                messages.push('Actual Set/Shift (' + actual + ') exceeds pending quantity (' + selectedQty + ').');
+            }
+        } else {
+            // Bulk mode check
+            const rows = multiModeBody ? multiModeBody.querySelectorAll('tr') : [];
+            rows.forEach(function (row) {
+                const totalSetInput = row.querySelector('.bulk-total-set');
+                const actualSetInput = row.querySelector('.bulk-actual-set');
+                if (!totalSetInput || totalSetInput.disabled) return;
+                const pending = parseFloat(totalSetInput.getAttribute('data-pending') || '0') || 0;
+                const actual = parseFloat(actualSetInput ? actualSetInput.value : '0') || 0;
+                if (actual > pending && pending > 0) {
+                    const itemLabel = row.querySelector('.text-xs.font-semibold');
+                    const name = itemLabel ? itemLabel.textContent.trim() : 'Item';
+                    hasExceeded = true;
+                    messages.push(name + ': Actual (' + actual + ') exceeds pending (' + pending + ')');
+                }
+            });
+        }
+
+        if (hasExceeded) {
+            if (warningBanner) warningBanner.classList.remove('hidden');
+            if (warningMsg) warningMsg.textContent = messages.join(' | ');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        } else {
+            if (warningBanner) warningBanner.classList.add('hidden');
+            if (warningMsg) warningMsg.textContent = '';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+    }
+
     function updateActualSetShiftFromHours() {
         if (!actualSetShiftInput) return;
 
@@ -367,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         actualSetShiftInput.value = String(Math.round(totalHours));
-        clampToSelectedQuantity(actualSetShiftInput);
+        checkQuantityExceeded();
     }
 
     function updateSelectedItemMeta() {
@@ -394,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
         clampToSelectedQuantity(totalSetShiftInput);
         clampToSelectedQuantity(actualSetShiftInput);
         updateSetPerHour();
+        checkQuantityExceeded();
     }
 
     function updateShiftLabels(shift) {
@@ -491,6 +550,13 @@ document.addEventListener('DOMContentLoaded', function () {
             clampToSelectedQuantity(actualSetShiftInput);
         });
     }
+
+    // Select all text on focus for every number input
+    document.addEventListener('focus', function (e) {
+        if (e.target && e.target.matches('#productionReportForm input[type="number"]')) {
+            e.target.select();
+        }
+    }, true);
 
     form.querySelectorAll('input[type="number"]').forEach(function (input) {
         if (input === setPerHourInput) return;
@@ -707,15 +773,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (bulkSelectedItemsEl) bulkSelectedItemsEl.appendChild(tag);
 
         // Table row
+        const pendingQtyNum = parseFloat(pendingQty) || 0;
+        const isDisabledRow = pendingQtyNum <= 0;
+        const disabledAttr = isDisabledRow ? ' disabled tabindex="-1"' : '';
+        const disabledCls = isDisabledRow ? ' opacity-50 cursor-not-allowed' : '';
+
         const hourFields = ['hour_8_9','hour_9_10','hour_10_11','hour_11_12','hour_12_1','hour_1_2','hour_2_3','hour_3_4','hour_4_5','hour_5_6','hour_6_7','hour_7_8'];
         let hourCells = '';
         hourFields.forEach(function (field) {
-            hourCells += '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][' + field + ']" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-hourly" data-row="' + idx + '" placeholder="-" step="1" min="0" value="0"></td>';
+            hourCells += '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][' + field + ']" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-hourly' + disabledCls + '" data-row="' + idx + '" placeholder="-" step="1" min="0"' + disabledAttr + '></td>';
         });
 
         const row = document.createElement('tr');
         row.id = 'bulkRow_' + idx;
-        row.className = 'hover:bg-slate-50';
+        row.className = isDisabledRow ? 'bg-rose-50' : 'hover:bg-slate-50';
         row.innerHTML =
             '<td class="border border-slate-300 px-3 py-2 font-medium text-slate-900 whitespace-nowrap">' +
                 '<div class="flex items-center gap-2">' +
@@ -723,18 +794,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     '<div>' +
                         '<div class="text-xs font-semibold">' + itemCode + '</div>' +
                         '<div class="text-[10px] text-slate-500">' + itemName + ' (' + itemSize + ')</div>' +
-                        '<div class="text-[10px] text-blue-600">Pending: ' + pendingQty + '</div>' +
+                        '<div class="text-[10px] ' + (isDisabledRow ? 'text-rose-600 font-semibold' : 'text-blue-600') + '">Pending: ' + pendingQty + '</div>' +
                     '</div>' +
                 '</div>' +
                 '<input type="hidden" name="items[' + idx + '][transfer_id]" value="' + transferId + '">' +
             '</td>' +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][total_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-total-set" data-row="' + idx + '" data-pending="' + pendingQty + '" placeholder="-" step="1" min="0" max="' + pendingQty + '" value="0"></td>' +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][set_per_hour]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="0.01" min="0" readonly value="0.00"></td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][total_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-total-set' + disabledCls + '" data-row="' + idx + '" data-pending="' + pendingQty + '" placeholder="-" step="1" min="0" max="' + pendingQty + '"' + disabledAttr + '></td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][set_per_hour]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50' + disabledCls + '" placeholder="-" step="0.01" min="0" readonly' + disabledAttr + '></td>' +
             hourCells +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][actual_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50 bulk-actual-set" data-row="' + idx + '" placeholder="-" step="1" min="0" readonly value="0"></td>';
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][actual_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50 bulk-actual-set' + disabledCls + '" data-row="' + idx + '" placeholder="-" step="1" min="0" readonly' + disabledAttr + '></td>';
 
         if (multiModeBody) multiModeBody.appendChild(row);
-        attachBulkRowListeners(idx, parseFloat(pendingQty) || 0);
+        if (!isDisabledRow) attachBulkRowListeners(idx, pendingQtyNum);
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
     }
@@ -765,6 +836,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 hourlySum += Math.max(parseFloat(inp.value || '0') || 0, 0);
             });
             if (actualSetInput) actualSetInput.value = String(Math.round(hourlySum));
+            checkQuantityExceeded();
         }
 
         function clampBulkValue(input) {
