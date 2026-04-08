@@ -49,6 +49,10 @@
                     <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
                     Suppliers
                 </button>
+                <button type="button" onclick="openLoadCoilSelectorModal()" title="Quick Load Coil" class="inline-flex items-center gap-2 rounded-xl border border-indigo-300 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors">
+                    <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                    Load Coil
+                </button>
                 <button type="button" onclick="openAddCoilModal()" title="Add New Coil" class="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium text-white transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     Add Coil
@@ -702,6 +706,39 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- Load Coil Selector Modal --}}
+<div id="loadCoilSelectorModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 mx-4">
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+            <div>
+                <h3 class="text-base font-semibold text-slate-900">Quick Load Coil</h3>
+                <p class="mt-0.5 text-xs text-slate-500">Select a coil to load onto a machine</p>
+            </div>
+            <button type="button" onclick="closeLoadCoilSelectorModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+                <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+        </div>
+        <div class="px-6 py-5">
+            <label class="block text-xs font-medium text-slate-700 mb-2">Select Coil</label>
+            <select id="load_coil_selector" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                <option value="">— Choose a coil —</option>
+                @foreach($coils as $coil)
+                    @if((int) $coil->status === 1 && $coil->process !== 'completed' && $coil->process !== 'out_of_stock')
+                        <option value="{{ $coil->id }}">{{ $coil->manufacture->name ?? 'Unknown' }} — {{ number_format((float) $coil->thickness, 3) }}mm — {{ number_format((float) $coil->net_weight_kg, 0) }}kg</option>
+                    @endif
+                @endforeach
+            </select>
+        </div>
+        <div class="flex justify-end gap-2 border-t border-slate-200 px-6 py-4">
+            <button type="button" onclick="closeLoadCoilSelectorModal()" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm">Cancel</button>
+            <button type="button" onclick="loadSelectedCoil()" class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium text-sm">
+                <i data-lucide="truck" class="w-3.5 h-3.5 inline-block mr-1"></i>
+                Load
+            </button>
         </div>
     </div>
 </div>
@@ -1360,6 +1397,33 @@
 
     function closeManageCoilModal() {
         document.getElementById('manageCoilModal').classList.add('hidden');
+    }
+
+    function openLoadCoilSelectorModal() {
+        document.getElementById('load_coil_selector').value = '';
+        document.getElementById('loadCoilSelectorModal').classList.remove('hidden');
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    function closeLoadCoilSelectorModal() {
+        document.getElementById('loadCoilSelectorModal').classList.add('hidden');
+    }
+
+    function loadSelectedCoil() {
+        const coilId = document.getElementById('load_coil_selector').value;
+        if (!coilId) {
+            Swal.fire('Select a Coil', 'Please select a coil from the dropdown.', 'warning');
+            return;
+        }
+        closeLoadCoilSelectorModal();
+        const manageButton = document.querySelector('button[onclick="openManageCoilModal(this)"][data-coil-id="' + coilId + '"]');
+        if (manageButton) {
+            openManageCoilModal(manageButton, 'load');
+        } else {
+            Swal.fire('Error', 'Could not find coil data. Please reload the page.', 'error');
+        }
     }
 
     function openAddCoilModal() {
