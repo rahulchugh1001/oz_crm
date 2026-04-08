@@ -35,7 +35,8 @@ class ProductionReport extends Model
         'workman_count',
         'staff_count',
         'status',
-        'is_deleted'
+        'is_deleted',
+        'is_draft'
     ];
 
     public function slideSize()

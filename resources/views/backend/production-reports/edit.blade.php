@@ -75,12 +75,25 @@
             </div>
 
             <!-- Production Table -->
-            <div class="mb-8 overflow-x-auto">
+            <div class="mb-8">
                 <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p class="text-sm text-blue-800">
                         <strong>How to use:</strong> The current report's machine is already checked and filled. You can check other machines to add more reports, or update the existing one.
                     </p>
                 </div>
+                <div class="mb-2 flex items-center justify-end gap-2">
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="scrollTableHorizontal('left')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                            Left
+                        </button>
+                        <button type="button" onclick="scrollTableHorizontal('right')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
+                            Right
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto" id="tableScrollContainer">
                 <table class="w-full border-collapse" id="productionTable">
                     <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <tr>
@@ -110,13 +123,18 @@
                         <!-- Rows will be added here by JavaScript -->
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Form Actions -->
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+                <a href="{{ route('admin.production-reports.sf001') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
+                <button type="button" id="saveDraftBtn" onclick="saveAsDraft()" class="px-5 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition-all">
+                    <i data-lucide="save" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i>
+                    Save as Draft
+                </button>
                 <button type="submit" id="editSubmitBtn" class="px-6 py-2 text-sm font-medium text-white rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     Update Production Report
                 </button>
@@ -129,6 +147,13 @@
     const machines = @json($machines);
     const slideSizes = @json($slideSizes);
     const existingReport = @json($productionReport);
+
+    function scrollTableHorizontal(direction) {
+        const container = document.getElementById('tableScrollContainer');
+        if (!container) return;
+        const amount = 450;
+        container.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
+    }
 
     function syncCommonFields() {
         const reportDate = document.getElementById('report_date').value;
@@ -352,7 +377,8 @@
             const data = await response.json();
 
             if (response.ok) {
-                window.location.href = data.redirect || "{{ route('admin.production-reports.index') }}";
+                formSubmitted = true;
+                window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
                 return;
             }
 
@@ -371,11 +397,133 @@
             submitBtn.textContent = originalText;
         }
     });
+
+    // ── Draft Feature ──
+    let formSubmitted = false;
+    let draftSaving = false;
+
+    function isFormDirty() {
+        const hourInputs = document.querySelectorAll('input[name^="hour_"]');
+        for (const input of hourInputs) {
+            if (input.value && parseFloat(input.value) > 0) return true;
+        }
+        const totalSetInputs = document.querySelectorAll('.total-set-shift');
+        for (const input of totalSetInputs) {
+            if (input.value && parseFloat(input.value) > 0) return true;
+        }
+        const slideSize = document.querySelector('select[name="slide_size_id[]"]');
+        if (slideSize && slideSize.value) return true;
+        return false;
+    }
+
+    async function saveAsDraft() {
+        draftSaving = true;
+        const draftBtn = document.getElementById('saveDraftBtn');
+        const originalHTML = draftBtn.innerHTML;
+        draftBtn.disabled = true;
+        draftBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline-block mr-1 -mt-0.5 animate-spin"></i> Saving...';
+
+        try {
+            const form = document.getElementById('productionReportEditForm');
+            const formData = new FormData(form);
+            formData.append('is_draft', '1');
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                formSubmitted = true;
+                Swal.fire({
+                    title: 'Draft Saved!',
+                    text: 'Your production report has been saved as a draft.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
+                });
+                return;
+            }
+
+            if (response.status === 422) {
+                markValidationErrors(data.errors);
+                const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
+                Swal.fire('Validation Error', firstError, 'error');
+                return;
+            }
+
+            Swal.fire('Error', data.message || 'Something went wrong.', 'error');
+        } catch (error) {
+            Swal.fire('Network Error', 'Please check your connection and try again.', 'error');
+        } finally {
+            draftBtn.disabled = false;
+            draftBtn.innerHTML = originalHTML;
+            draftSaving = false;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
+    // Intercept tab/browser close
+    window.addEventListener('beforeunload', function (e) {
+        if (formSubmitted || draftSaving) return;
+        if (!isFormDirty()) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+
+    // Intercept link clicks for SweetAlert draft prompt
+    document.addEventListener('click', function (e) {
+        if (formSubmitted || draftSaving) return;
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        if (link.getAttribute('href') === '#' || link.getAttribute('target') === '_blank') return;
+        if (!isFormDirty()) return;
+
+        e.preventDefault();
+        const targetUrl = link.href;
+
+        Swal.fire({
+            title: 'Unsaved Changes',
+            text: 'You have unsaved data. Would you like to save it as a draft?',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Save as Draft',
+            denyButtonText: 'Discard & Leave',
+            cancelButtonText: 'Stay',
+            confirmButtonColor: '#d97706',
+            denyButtonColor: '#64748b',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                saveAsDraft();
+            } else if (result.isDenied) {
+                formSubmitted = true;
+                window.location.href = targetUrl;
+            }
+        });
+    });
 </script>
 
 <style>
     table {
         border-collapse: collapse;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
     }
 </style>
 @endsection

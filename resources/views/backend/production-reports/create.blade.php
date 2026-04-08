@@ -176,6 +176,10 @@
                 <a href="{{ route('admin.production-reports.index') }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
+                <button type="button" id="saveDraftBtn" onclick="saveAsDraft()" class="px-5 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition-all">
+                    <i data-lucide="save" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i>
+                    Save as Draft
+                </button>
                 <button type="submit" id="createSubmitBtn" class="px-6 py-2 text-sm font-medium text-white rounded-lg hover:shadow-lg transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     Create Selected Reports
                 </button>
@@ -926,6 +930,7 @@
             const data = await response.json();
 
             if (response.ok) {
+                formSubmitted = true;
                 Swal.fire({
                     title: 'Success!',
                     text: 'Production reports created successfully.',
@@ -970,6 +975,129 @@
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
+    });
+
+    // ── Draft Feature ──
+    let formSubmitted = false;
+    let draftSaving = false;
+
+    function isFormDirty() {
+        const checkedBoxes = document.querySelectorAll('.machine-checkbox:checked');
+        if (checkedBoxes.length > 0) return true;
+        const hourInputs = document.querySelectorAll('input[name^="hour_"]');
+        for (const input of hourInputs) {
+            if (input.value && parseFloat(input.value) > 0) return true;
+        }
+        const totalSetInputs = document.querySelectorAll('.total-set-shift');
+        for (const input of totalSetInputs) {
+            if (input.value && parseFloat(input.value) > 0) return true;
+        }
+        return false;
+    }
+
+    async function saveAsDraft() {
+        const checkedCheckboxes = document.querySelectorAll('.machine-checkbox:checked');
+        if (checkedCheckboxes.length === 0) {
+            Swal.fire('No Machines Selected', 'Please select at least one machine to save as draft.', 'warning');
+            return;
+        }
+
+        draftSaving = true;
+        const draftBtn = document.getElementById('saveDraftBtn');
+        const originalHTML = draftBtn.innerHTML;
+        draftBtn.disabled = true;
+        draftBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline-block mr-1 -mt-0.5 animate-spin"></i> Saving...';
+
+        try {
+            recalculateAllFields();
+            const form = document.getElementById('productionReportCreateForm');
+            const formData = new FormData(form);
+            formData.append('is_draft', '1');
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                formSubmitted = true;
+                Swal.fire({
+                    title: 'Draft Saved!',
+                    text: 'Your production report has been saved as a draft.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
+                });
+                return;
+            }
+
+            if (response.status === 422) {
+                const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
+                Swal.fire('Validation Error', firstError, 'error');
+                return;
+            }
+
+            Swal.fire('Error', data.message || 'Something went wrong.', 'error');
+        } catch (error) {
+            Swal.fire('Network Error', 'Please check your connection and try again.', 'error');
+        } finally {
+            draftBtn.disabled = false;
+            draftBtn.innerHTML = originalHTML;
+            draftSaving = false;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
+    // Mark form as submitted on successful create
+    const origSubmitHandler = document.getElementById('productionReportCreateForm');
+    origSubmitHandler.addEventListener('formSubmitted', () => { formSubmitted = true; });
+
+    // Intercept navigation away (back button, links, closing tab)
+    window.addEventListener('beforeunload', function (e) {
+        if (formSubmitted || draftSaving) return;
+        if (!isFormDirty()) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+
+    // Intercept link clicks within the page for SweetAlert draft prompt
+    document.addEventListener('click', function (e) {
+        if (formSubmitted || draftSaving) return;
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        if (link.getAttribute('href') === '#' || link.getAttribute('target') === '_blank') return;
+        if (!isFormDirty()) return;
+
+        e.preventDefault();
+        const targetUrl = link.href;
+
+        Swal.fire({
+            title: 'Unsaved Changes',
+            text: 'You have unsaved data. Would you like to save it as a draft?',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Save as Draft',
+            denyButtonText: 'Discard & Leave',
+            cancelButtonText: 'Stay',
+            confirmButtonColor: '#d97706',
+            denyButtonColor: '#64748b',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                saveAsDraft();
+            } else if (result.isDenied) {
+                formSubmitted = true;
+                window.location.href = targetUrl;
+            }
+        });
     });
 
 </script>

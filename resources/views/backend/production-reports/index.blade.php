@@ -51,18 +51,21 @@
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-4">
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('admin.production-reports.index', ['mode' => 'active']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'active' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'active') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
+                    <a href="{{ route('admin.production-reports.sf001', ['mode' => 'active']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'active' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'active') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         Active
                     </a>
-                    <a href="{{ route('admin.production-reports.index', ['mode' => 'deleted']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'deleted' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.production-reports.sf001', ['mode' => 'draft']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'draft' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                        Draft
+                    </a>
+                    <a href="{{ route('admin.production-reports.sf001', ['mode' => 'deleted']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'deleted' ? 'bg-rose-600 text-white border-rose-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
                         Deleted
                     </a>
-                    <a href="{{ route('admin.production-reports.index', ['mode' => 'all']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'all' ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                    <a href="{{ route('admin.production-reports.sf001', ['mode' => 'all']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border {{ $mode === 'all' ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
                         All
                     </a>
                 </div>
 
-                <form action="{{ route('admin.production-reports.index') }}" method="GET" class="w-full lg:w-auto">
+                <form action="{{ route('admin.production-reports.sf001') }}" method="GET" class="w-full lg:w-auto">
                     <input type="hidden" name="mode" value="{{ $mode }}">
                     <div class="flex items-center gap-2">
                         <div class="relative w-full lg:w-80">
@@ -79,7 +82,7 @@
                             Search
                         </button>
                         @if(!empty($search))
-                        <a href="{{ route('admin.production-reports.index', ['mode' => $mode]) }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
+                        <a href="{{ route('admin.production-reports.sf001', ['mode' => $mode]) }}" class="px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-all">
                             Reset
                         </a>
                         @endif
@@ -109,7 +112,12 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($productionReports as $report)
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">#{{ $report->id }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">
+                            #{{ $report->id }}
+                            @if($report->is_draft)
+                                <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Draft</span>
+                            @endif
+                        </td>
                         <td class="px-3 py-2.5 text-xs text-slate-900 font-semibold">{{ $report->machine->name ?? '-' }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-600">{{ $report->slideSize->name ?? '-' }}</td>
                         <td class="px-3 py-2.5 text-xs text-slate-900">{{ $report->report_date ? \Carbon\Carbon::parse($report->report_date)->format('d M Y') : '-' }}</td>

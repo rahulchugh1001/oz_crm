@@ -28,11 +28,13 @@ class ProductionReportController extends Controller
 
         if ($mode === 'deleted') {
             $query->where('is_deleted', true);
+        } elseif ($mode === 'draft') {
+            $query->where('is_deleted', false)->where('is_draft', true);
         } elseif ($mode === 'all') {
             // no filter
         } else {
             $mode = 'active';
-            $query->where('is_deleted', false);
+            $query->where('is_deleted', false)->where('is_draft', false);
         }
 
         if ($search !== '') {
@@ -64,11 +66,13 @@ class ProductionReportController extends Controller
 
         if ($mode === 'deleted') {
             $query->where('is_deleted', true);
+        } elseif ($mode === 'draft') {
+            $query->where('is_deleted', false)->where('is_draft', true);
         } elseif ($mode === 'all') {
             // no filter
         } else {
             $mode = 'active';
-            $query->where('is_deleted', false);
+            $query->where('is_deleted', false)->where('is_draft', false);
         }
 
         if ($search !== '') {
@@ -137,6 +141,7 @@ class ProductionReportController extends Controller
             ->where('report_date', $validated['report_date'])
             ->where('shift', $validated['shift'])
             ->where('is_deleted', false)
+            ->where('is_draft', false)
             ->exists();
 
         return response()->json([
@@ -152,6 +157,17 @@ class ProductionReportController extends Controller
      */
     public function store(Request $request): RedirectResponse|JsonResponse
     {
+        $isDraft = (bool) $request->input('is_draft', false);
+
+        // Slide size validation: required for normal save, nullable for drafts
+        $slideSizeRules = $isDraft
+            ? ['nullable', Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)->where('status', true)->where('category', 'SF1-SF2');
+                })]
+            : ['required', Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)->where('status', true)->where('category', 'SF1-SF2');
+                })];
+
         // Validate arrays
         $validated = $request->validate([
             'selected_machines' => 'nullable|array',
@@ -159,15 +175,8 @@ class ProductionReportController extends Controller
             'machine_id.*' => 'required|exists:machines,id',
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
-            'slide_size_id' => 'required|array',
-            'slide_size_id.*' => [
-                'required',
-                Rule::exists('items', 'id')->where(function ($query) {
-                    $query->where('is_deleted', false)
-                        ->where('status', true)
-                        ->where('category', 'SF1-SF2');
-                }),
-            ],
+            'slide_size_id' => $isDraft ? 'nullable|array' : 'required|array',
+            'slide_size_id.*' => $slideSizeRules,
             'report_date' => 'required|array',
             'report_date.*' => 'required|date',
             'shift' => 'required|array',
@@ -224,7 +233,7 @@ class ProductionReportController extends Controller
                 ->with('error', $message);
         }
 
-        $this->validateDuplicateCombinations($validated);
+        $this->validateDuplicateCombinations($validated, null, $isDraft);
 
         $createdCount = 0;
 
@@ -254,13 +263,16 @@ class ProductionReportController extends Controller
                 'staff_count' => $validated['staff_count'] ?? 0,
                 'status' => true,
                 'is_deleted' => false,
+                'is_draft' => $isDraft,
             ];
 
             ProductionReport::create($data);
             $createdCount++;
         }
 
-        $message = "$createdCount production report(s) created successfully.";
+        $message = $isDraft
+            ? "$createdCount production report(s) saved as draft."
+            : "$createdCount production report(s) created successfully.";
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -302,23 +314,24 @@ class ProductionReportController extends Controller
      */
     public function update(Request $request, ProductionReport $productionReport): RedirectResponse|JsonResponse
     {
+        $isDraft = (bool) $request->input('is_draft', false);
 
-   
+        $slideSizeRules = $isDraft
+            ? ['nullable', Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)->where('status', true)->where('category', 'SF1-SF2');
+                })]
+            : ['required', Rule::exists('items', 'id')->where(function ($query) {
+                    $query->where('is_deleted', false)->where('status', true)->where('category', 'SF1-SF2');
+                })];
+
         $validated = $request->validate([
             'selected_machines' => 'nullable|array',
             'machine_id' => 'required|array',
             'machine_id.*' => 'required|exists:machines,id',
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
-            'slide_size_id' => 'required|array',
-            'slide_size_id.*' => [
-                'required',
-                Rule::exists('items', 'id')->where(function ($query) {
-                    $query->where('is_deleted', false)
-                        ->where('status', true)
-                        ->where('category', 'SF1-SF2');
-                }),
-            ],
+            'slide_size_id' => $isDraft ? 'nullable|array' : 'required|array',
+            'slide_size_id.*' => $slideSizeRules,
             'report_date' => 'required|array',
             'report_date.*' => 'required|date',
             'shift' => 'required|array',
@@ -371,7 +384,7 @@ class ProductionReportController extends Controller
                 ->with('error', $message);
         }
 
-        $this->validateDuplicateCombinations($validated, $productionReport);
+        $this->validateDuplicateCombinations($validated, $productionReport, $isDraft);
 
         $updatedCount = 0;
 
@@ -401,6 +414,7 @@ class ProductionReportController extends Controller
                 'staff_count' => $validated['staff_count'][$i] ?? 0,
                 'status' => 1,
                 'is_deleted' => false,
+                'is_draft' => $isDraft,
             ];
 
             // If this is the original report's machine, update it
@@ -427,8 +441,13 @@ class ProductionReportController extends Controller
             ->with('success', $message);
     }
 
-    private function validateDuplicateCombinations(array $validated, ?ProductionReport $currentReport = null): void
+    private function validateDuplicateCombinations(array $validated, ?ProductionReport $currentReport = null, bool $isDraft = false): void
     {
+        // Skip duplicate validation for drafts
+        if ($isDraft) {
+            return;
+        }
+
         $selectedMachines = $validated['selected_machines'] ?? [];
         $errors = [];
 
@@ -440,7 +459,8 @@ class ProductionReportController extends Controller
                 ->where('machine_id', $machineId)
                 ->where('report_date', $reportDate)
                 ->where('shift', $shift)
-                ->where('is_deleted', false);
+                ->where('is_deleted', false)
+                ->where('is_draft', false);
 
             if ($currentReport) {
                 $query->where('id', '!=', $currentReport->id);
