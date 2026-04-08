@@ -244,7 +244,7 @@
         </div>
     </div>
     
-    <!-- 2. Production Stage Performance -->
+    {{-- <!-- 2. Production Stage Performance -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         @php
             $stages = [
@@ -333,6 +333,7 @@
         </div>
         @endforeach
     </div>
+    --}}
     
     <!-- 3. Machine Status Grid -->
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle p-6 hover-lift transition-all">
