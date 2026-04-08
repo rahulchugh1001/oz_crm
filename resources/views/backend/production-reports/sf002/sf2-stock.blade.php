@@ -131,6 +131,9 @@
                             <option value="line_1" {{ old('sf3_process') === 'line_1' ? 'selected' : '' }}>Assemble Line 1</option>
                             <option value="line_2" {{ old('sf3_process') === 'line_2' ? 'selected' : '' }}>Assemble Line 2</option>
                             <option value="line_3" {{ old('sf3_process') === 'line_3' ? 'selected' : '' }}>Assemble Line 3</option>
+                            <option value="line_4" {{ old('sf3_process') === 'line_4' ? 'selected' : '' }}>Assemble Line 4</option>
+                            <option value="line_5" {{ old('sf3_process') === 'line_5' ? 'selected' : '' }}>Assemble Line 5</option>
+                            <option value="line_6" {{ old('sf3_process') === 'line_6' ? 'selected' : '' }}>Assemble Line 6</option>
                         </select>
                         @error('sf3_process')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>

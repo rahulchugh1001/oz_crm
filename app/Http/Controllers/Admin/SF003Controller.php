@@ -394,6 +394,9 @@ class SF003Controller extends Controller
             'l1' => ['code' => 'line_1', 'label' => 'L1', 'title' => 'Assemble Line 1'],
             'l2' => ['code' => 'line_2', 'label' => 'L2', 'title' => 'Assemble Line 2'],
             'l3' => ['code' => 'line_3', 'label' => 'L3', 'title' => 'Assemble Line 3'],
+            'l4' => ['code' => 'line_4', 'label' => 'L4', 'title' => 'Assemble Line 4'],
+            'l5' => ['code' => 'line_5', 'label' => 'L5', 'title' => 'Assemble Line 5'],
+            'l6' => ['code' => 'line_6', 'label' => 'L6', 'title' => 'Assemble Line 6'],
         ];
 
         $normalized = strtolower($requestedLine);

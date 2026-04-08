@@ -143,6 +143,12 @@
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">Assemble Line 2</span>
                             @elseif($transfer->sf3_process === 'line_3')
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700">Assemble Line 3</span>
+                            @elseif($transfer->sf3_process === 'line_4')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Assemble Line 4</span>
+                            @elseif($transfer->sf3_process === 'line_5')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Assemble Line 5</span>
+                            @elseif($transfer->sf3_process === 'line_6')
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-teal-50 text-teal-700">Assemble Line 6</span>
                             @else
                                 <span class="text-slate-400">-</span>
                             @endif
@@ -422,6 +428,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (processCode === 'line_1') return 'Assemble Line 1';
         if (processCode === 'line_2') return 'Assemble Line 2';
         if (processCode === 'line_3') return 'Assemble Line 3';
+        if (processCode === 'line_4') return 'Assemble Line 4';
+        if (processCode === 'line_5') return 'Assemble Line 5';
+        if (processCode === 'line_6') return 'Assemble Line 6';
         return processCode || '-';
     }
 

@@ -654,7 +654,7 @@ class SF002Controller extends Controller
         $validated = $request->validate([
             'item_id'  => 'required|integer|exists:items,id',
             'type'     => 'required|string|in:ced,zinc',
-            'sf3_process' => 'required|string|in:line_1,line_2,line_3',
+            'sf3_process' => 'required|string|in:line_1,line_2,line_3,line_4,line_5,line_6',
             'quantity' => 'required|numeric|gt:0',
             'date'     => 'required|date',
             'time'     => 'required|date_format:H:i:s',
