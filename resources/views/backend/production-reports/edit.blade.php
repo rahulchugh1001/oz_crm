@@ -232,6 +232,8 @@
             </td>
             <input type="hidden" name="selected_machines[]" value="${machine.id}">
             <input type="hidden" name="machine_id[]" value="${machine.id}">
+            <input type="hidden" name="coil_id[]" value="${prefillData && prefillData.coil_id ? prefillData.coil_id : ''}">
+            <input type="hidden" name="coil_number_id[]" value="${prefillData && prefillData.coil_number_id ? prefillData.coil_number_id : ''}">
             <input type="hidden" name="report_date[]" value="${reportDate}">
             <input type="hidden" name="shift[]" value="${shift}">
         `;

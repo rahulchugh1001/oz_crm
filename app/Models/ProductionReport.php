@@ -12,7 +12,8 @@ class ProductionReport extends Model
 
     protected $fillable = [
         'machine_id',
-        'coil_id',
+        'coil_id',           // Reference to coil_stock.id
+        'coil_number_id',    // Reference to coil_load_numbers.id
         'created_by',
         'slide_size_id',
         'report_date',
@@ -52,6 +53,11 @@ class ProductionReport extends Model
     public function coil()
     {
         return $this->belongsTo(CoilStock::class, 'coil_id');
+    }
+
+    public function coilNumber()
+    {
+        return $this->belongsTo(CoilLoadNumber::class, 'coil_number_id');
     }
 
     /**

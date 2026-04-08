@@ -311,6 +311,7 @@
                 </label>
                 <input type="hidden" name="selected_machines[]" value="${machine.id}" class="selected-machine-input" disabled>
                 <input type="hidden" name="coil_id[]" value="${machine.coil && machine.coil.id ? machine.coil.id : ''}" class="row-input" disabled>
+                <input type="hidden" name="coil_number_id[]" value="${machine.load_coil_number_id || ''}" class="row-input" disabled>
             </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
                 <div class="leading-tight">

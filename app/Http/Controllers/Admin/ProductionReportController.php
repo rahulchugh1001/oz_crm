@@ -140,12 +140,14 @@ class ProductionReportController extends Controller
                     ->orderByDesc('id')
                     ->first(['id']);
 
-                $machine->load_coil_no = null;
+                $machine->setAttribute('load_coil_no', null);
+                $machine->setAttribute('load_coil_number_id', null);
                 if ($activeLoadTrack) {
                     $loadNumber = CoilLoadNumber::query()
                         ->where('coil_machine_track_id', $activeLoadTrack->id)
-                        ->first(['coil_no']);
-                    $machine->load_coil_no = $loadNumber ? $loadNumber->coil_no : null;
+                        ->first(['id', 'coil_no']);
+                    $machine->setAttribute('load_coil_no', $loadNumber ? $loadNumber->coil_no : null);
+                    $machine->setAttribute('load_coil_number_id', $loadNumber ? $loadNumber->id : null);
                 }
             }
         }
@@ -221,6 +223,8 @@ class ProductionReportController extends Controller
             'machine_id.*' => 'required|exists:machines,id',
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
+            'coil_number_id' => 'nullable|array',
+            'coil_number_id.*' => 'nullable|exists:coil_load_numbers,id',
             'slide_size_id' => $isDraft ? 'nullable|array' : 'required|array',
             'slide_size_id.*' => $slideSizeRules,
             'report_date' => 'required|array',
@@ -286,7 +290,8 @@ class ProductionReportController extends Controller
         foreach ($selectedMachines as $i => $machineId) {
             $data = [
                 'machine_id' => $machineId,
-                'coil_id' => $validated['coil_id'][$i] ?? null,
+                'coil_id' => $validated['coil_id'][$i] ?? null,                   // coil_stock.id
+                'coil_number_id' => $validated['coil_number_id'][$i] ?? null,     // coil_load_numbers.id
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,
@@ -376,6 +381,8 @@ class ProductionReportController extends Controller
             'machine_id.*' => 'required|exists:machines,id',
             'coil_id' => 'nullable|array',
             'coil_id.*' => 'nullable|exists:coil_stock,id',
+            'coil_number_id' => 'nullable|array',
+            'coil_number_id.*' => 'nullable|exists:coil_load_numbers,id',
             'slide_size_id' => $isDraft ? 'nullable|array' : 'required|array',
             'slide_size_id.*' => $slideSizeRules,
             'report_date' => 'required|array',
@@ -437,7 +444,8 @@ class ProductionReportController extends Controller
         foreach ($selectedMachines as $i => $machineId) {
             $data = [
                 'machine_id' => $machineId,
-                'coil_id' => $validated['coil_id'][$i] ?? null,
+                'coil_id' => $validated['coil_id'][$i] ?? null,                   // coil_stock.id
+                'coil_number_id' => $validated['coil_number_id'][$i] ?? null,     // coil_load_numbers.id
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,
