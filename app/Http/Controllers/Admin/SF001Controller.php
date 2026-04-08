@@ -190,7 +190,6 @@ class SF001Controller extends Controller
         $validated = $request->validate([
             'manufacture_id' => 'required',
             'new_manufacture_name' => 'nullable|string|max:100|unique:coil_manufacture,name',
-            'coil_no' => 'required|string|max:120|unique:coil_stock,coil_no',
             'coil_size' => 'required|string|max:60',
             'thickness' => 'required|numeric|min:0',
             'net_weight_kg' => 'required|numeric|min:0',
@@ -236,7 +235,7 @@ class SF001Controller extends Controller
 
         $coil = CoilStock::query()->create([
             'manufacture_id' => $manufactureId,
-            'coil_no' => trim((string) $validated['coil_no']),
+            'coil_no' => null,
             'coil_size' => trim((string) $validated['coil_size']),
             'thickness' => (float) $validated['thickness'],
             'net_weight_kg' => (float) $validated['net_weight_kg'],
@@ -269,7 +268,6 @@ class SF001Controller extends Controller
         $validated = $request->validate([
             'edit_id' => 'required|integer',
             'manufacture_id' => 'required|integer|exists:coil_manufacture,id',
-            'coil_no' => 'required|string|max:120|unique:coil_stock,coil_no,' . $coilId,
             'coil_size' => 'required|string|max:60',
             'thickness' => 'required|numeric|min:0',
             'net_weight_kg' => 'required|numeric|min:0',
@@ -281,7 +279,6 @@ class SF001Controller extends Controller
 
         $coil->update([
             'manufacture_id' => (int) $validated['manufacture_id'],
-            'coil_no' => trim((string) $validated['coil_no']),
             'coil_size' => trim((string) $validated['coil_size']),
             'thickness' => (float) $validated['thickness'],
             'net_weight_kg' => (float) $validated['net_weight_kg'],

@@ -11,7 +11,7 @@
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <a href="{{ route('admin.production-reports.sf001.coil-stock') }}" class="text-slate-600 hover:text-slate-900">Coil Stock</a>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="font-medium text-slate-900">View Coil {{ $coil->coil_no }}</span>
+    <span class="font-medium text-slate-900">View Coil</span>
 @endsection
 
 @section('content')
@@ -19,7 +19,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-subtle">
         <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between gap-3">
             <div>
-                <h2 class="text-lg font-bold text-slate-900">Coil Details: {{ $coil->coil_no }}</h2>
+                <h2 class="text-lg font-bold text-slate-900">Coil Details</h2>
                 <p class="text-sm text-slate-500">Complete details, reporting and load/unload history.</p>
             </div>
             <a href="{{ route('admin.production-reports.sf001.coil-stock') }}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">
@@ -29,10 +29,6 @@
         </div>
 
         <div class="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p class="text-[11px] uppercase tracking-wide text-slate-500">Coil No</p>
-                <p class="mt-1 text-base font-semibold text-slate-900">{{ $coil->coil_no }}</p>
-            </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-[11px] uppercase tracking-wide text-slate-500">Supplier</p>
                 <p class="mt-1 text-base font-semibold text-slate-900">{{ $coil->manufacture->name ?? '-' }}</p>
