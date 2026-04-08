@@ -514,14 +514,16 @@ class SF002Controller extends Controller
             'items.*.hour_5_6'            => 'required|numeric|min:0',
             'items.*.hour_6_7'            => 'required|numeric|min:0',
             'items.*.hour_7_8'            => 'required|numeric|min:0',
-            'items.*.manpower'            => 'required|numeric|min:0',
-            'items.*.staff_count'         => 'required|integer|min:0',
+            $fieldPrefix . '_manpower'    => 'required|numeric|min:0',
+            $fieldPrefix . '_staff_count'  => 'required|integer|min:0',
         ]);
 
         $sf2TypeDbValue = strtoupper($sf2Type);
         $requestShift = strtolower((string) $request->input($fieldPrefix . '_shift', ''));
         $reportShift  = in_array($requestShift, ['morning', 'night'], true) ? $requestShift : null;
         $reportDate   = (string) $request->input($fieldPrefix . '_report_date', now()->toDateString());
+        $globalManpower  = (float) ($request->input($fieldPrefix . '_manpower') ?? 0);
+        $globalStaffCount = (int) ($request->input($fieldPrefix . '_staff_count') ?? 0);
 
         $items    = $request->input('items', []);
         $errors   = [];
@@ -611,8 +613,8 @@ class SF002Controller extends Controller
                 'hour_6_7'         => (float) ($item['hour_6_7'] ?? 0),
                 'hour_7_8'         => (float) ($item['hour_7_8'] ?? 0),
                 'actual_set_shift' => $actualSetShift,
-                'manpower_workman' => (float) ($item['manpower'] ?? 0),
-                'staff_count'      => (int) ($item['staff_count'] ?? 0),
+                'manpower_workman' => $globalManpower,
+                'staff_count'      => $globalStaffCount,
                 'status'           => 1,
                 'is_deleted'       => 0,
                 'created_at'       => now(),

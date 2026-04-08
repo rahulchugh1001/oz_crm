@@ -58,7 +58,7 @@
                 </div>
                 @endif
 
-                <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="mb-4 grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div id="singleItemCol">
                         <label for="item_selector" class="block text-sm font-medium text-slate-700 mb-2">Select Item</label>
                         <select
@@ -90,7 +90,7 @@
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50"
                         >
                     </div>
-                    <div id="multiItemCol" class="hidden md:col-span-2">
+                    <div id="multiItemCol" class="hidden md:col-span-4">
                         <label class="block text-sm font-medium text-slate-700 mb-2">Add Items</label>
                         <div class="flex gap-2">
                             <select id="bulkItemSelector" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -133,6 +133,28 @@
                             <option value="morning" {{ old($sf2Prefix . '_shift', $existingReport->shift ?? $defaultShift) === 'morning' ? 'selected' : '' }}>Morning</option>
                             <option value="night" {{ old($sf2Prefix . '_shift', $existingReport->shift ?? $defaultShift) === 'night' ? 'selected' : '' }}>Night</option>
                         </select>
+                    </div>
+                    <div>
+                        <label for="{{ $sf2Prefix }}_manpower" class="block text-sm font-medium text-slate-700 mb-2">Manpower / Workman</label>
+                        <input
+                            type="number"
+                            id="{{ $sf2Prefix }}_manpower"
+                            name="{{ $sf2Prefix }}_manpower"
+                            value="{{ old($sf2Prefix . '_manpower', isset($existingReport) ? (int) $existingReport->manpower_workman : '0') }}"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0" step="1" min="0"
+                        >
+                    </div>
+                    <div>
+                        <label for="{{ $sf2Prefix }}_staff_count" class="block text-sm font-medium text-slate-700 mb-2">Staff Count</label>
+                        <input
+                            type="number"
+                            id="{{ $sf2Prefix }}_staff_count"
+                            name="{{ $sf2Prefix }}_staff_count"
+                            value="{{ old($sf2Prefix . '_staff_count', isset($existingReport) ? (int) $existingReport->staff_count : '0') }}"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0" step="1" min="0"
+                        >
                     </div>
                 </div>
 
@@ -184,8 +206,6 @@
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="6-7">6PM to 7PM</th>
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="7-8">7PM to 8PM</th>
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Actual / Set / Shift</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Manpower / Workman</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Staff Count</th>
                             </tr>
                         </thead>
                         <tbody id="singleModeBody">
@@ -211,12 +231,6 @@
                                 <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_7_8" value="{{ old($sf2Prefix . '_hour_7_8', isset($existingReport) ? (int) $existingReport->hour_7_8 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
                                 <td class="border border-slate-300 px-3 py-2">
                                     <input type="number" name="{{ $sf2Prefix }}_actual_set_shift" value="{{ old($sf2Prefix . '_actual_set_shift', isset($existingReport) ? (int) $existingReport->actual_set_shift : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="1" min="0" readonly>
-                                </td>
-                                <td class="border border-slate-300 px-3 py-2">
-                                    <input type="number" name="{{ $sf2Prefix }}_manpower" value="{{ old($sf2Prefix . '_manpower', isset($existingReport) ? (int) $existingReport->manpower_workman : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0">
-                                </td>
-                                <td class="border border-slate-300 px-3 py-2">
-                                    <input type="number" name="{{ $sf2Prefix }}_staff_count" value="{{ old($sf2Prefix . '_staff_count', isset($existingReport) ? (int) $existingReport->staff_count : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0">
                                 </td>
                             </tr>
                         </tbody>
@@ -717,9 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
             '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][total_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-total-set" data-row="' + idx + '" data-pending="' + pendingQty + '" placeholder="-" step="1" min="0" max="' + pendingQty + '" value="0"></td>' +
             '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][set_per_hour]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="0.01" min="0" readonly value="0.00"></td>' +
             hourCells +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][actual_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50 bulk-actual-set" data-row="' + idx + '" placeholder="-" step="1" min="0" readonly value="0"></td>' +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][manpower]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0" value="0"></td>' +
-            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][staff_count]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0" value="0"></td>';
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][actual_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50 bulk-actual-set" data-row="' + idx + '" placeholder="-" step="1" min="0" readonly value="0"></td>';
 
         if (multiModeBody) multiModeBody.appendChild(row);
         attachBulkRowListeners(idx, parseFloat(pendingQty) || 0);
