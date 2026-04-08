@@ -49,8 +49,17 @@
                 <input type="hidden" id="selected_transfer_id" name="selected_transfer_id" value="{{ $transfer->id }}">
                 <input type="hidden" id="report_id" name="report_id" value="{{ isset($existingReport) && $existingReport ? \Illuminate\Support\Facades\Crypt::encryptString((string) $existingReport->id) : '' }}">
 
+                @if(!(isset($existingReport) && $existingReport))
+                <div class="mb-4 flex items-center gap-3">
+                    <span class="text-sm font-semibold text-slate-700">Bulk Production</span>
+                    <button type="button" id="bulkModeToggle" class="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" role="switch" aria-checked="false">
+                        <span id="bulkToggleKnob" class="inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform translate-x-1"></span>
+                    </button>
+                </div>
+                @endif
+
                 <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div>
+                    <div id="singleItemCol">
                         <label for="item_selector" class="block text-sm font-medium text-slate-700 mb-2">Select Item</label>
                         <select
                             id="item_selector"
@@ -71,7 +80,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
+                    <div id="singlePendingCol">
                         <label for="selected_item_quantity" class="block text-sm font-medium text-slate-700 mb-2">Pending Quantity</label>
                         <input
                             type="text"
@@ -80,6 +89,29 @@
                             readonly
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-50"
                         >
+                    </div>
+                    <div id="multiItemCol" class="hidden md:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Add Items</label>
+                        <div class="flex gap-2">
+                            <select id="bulkItemSelector" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                @foreach($availableTransfers as $row)
+                                    <option
+                                        value="{{ $row->id }}"
+                                        data-item-id="{{ $row->item_id }}"
+                                        data-item-code="{{ $row->item_code }}"
+                                        data-item-name="{{ $row->item_name }}"
+                                        data-item-size="{{ $row->item_size }}"
+                                        data-quantity="{{ number_format((float) ($row->pending_quantity ?? 0), 0, '.', '') }}"
+                                    >
+                                        {{ $row->item_code }} - {{ $row->item_name }} ({{ $row->item_size }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="button" id="addBulkItemBtn" class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity" style="background: linear-gradient(to right, #141d30, #2d3a52);">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Add
+                            </button>
+                        </div>
+                        <div id="bulkSelectedItems" class="flex flex-wrap gap-2 mt-2"></div>
                     </div>
                     <div>
                         <label for="{{ $sf2Prefix }}_report_date" class="block text-sm font-medium text-slate-700 mb-2">Report Date</label>
@@ -156,7 +188,7 @@
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Staff Count</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="singleModeBody">
                             <tr class="hover:bg-slate-50">
                                 <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">{{ $sf2Label }}</td>
                                 <td class="border border-slate-300 px-3 py-2">
@@ -188,6 +220,7 @@
                                 </td>
                             </tr>
                         </tbody>
+                        <tbody id="multiModeBody" class="hidden"></tbody>
                     </table>
                 </div>
 
@@ -498,6 +531,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', async function (event) {
+        // Bulk mode — delegate to bulk handler
+        const _bulkToggle = document.getElementById('bulkModeToggle');
+        if (_bulkToggle && _bulkToggle.getAttribute('aria-checked') === 'true') {
+            event.preventDefault();
+            await handleBulkSubmit();
+            return;
+        }
+
         const selectedQuantity = getSelectedQuantity();
         const totalSetShiftValue = Math.max(parseFloat(totalSetShiftInput ? totalSetShiftInput.value : '0') || 0, 0);
         const actualSetShiftValue = Math.max(parseFloat(actualSetShiftInput ? actualSetShiftInput.value : '0') || 0, 0);
@@ -561,6 +602,235 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    // ===== BULK MODE LOGIC =====
+    const bulkToggle = document.getElementById('bulkModeToggle');
+    const bulkToggleKnob = document.getElementById('bulkToggleKnob');
+    const singleItemCol = document.getElementById('singleItemCol');
+    const singlePendingCol = document.getElementById('singlePendingCol');
+    const multiItemCol = document.getElementById('multiItemCol');
+    const singleModeBody = document.getElementById('singleModeBody');
+    const multiModeBody = document.getElementById('multiModeBody');
+    const bulkItemSelectorEl = document.getElementById('bulkItemSelector');
+    const addBulkItemBtn = document.getElementById('addBulkItemBtn');
+    const bulkSelectedItemsEl = document.getElementById('bulkSelectedItems');
+    let bulkRowIndex = 0;
+    const addedTransferIds = new Set();
+
+    if (bulkToggle) {
+        bulkToggle.addEventListener('click', function () {
+            const isOn = this.getAttribute('aria-checked') !== 'true';
+            this.setAttribute('aria-checked', isOn ? 'true' : 'false');
+
+            if (isOn) {
+                this.classList.remove('bg-slate-300');
+                this.classList.add('bg-blue-600');
+                bulkToggleKnob.classList.remove('translate-x-1');
+                bulkToggleKnob.classList.add('translate-x-6');
+                if (singleItemCol) singleItemCol.classList.add('hidden');
+                if (singlePendingCol) singlePendingCol.classList.add('hidden');
+                if (multiItemCol) multiItemCol.classList.remove('hidden');
+                if (singleModeBody) singleModeBody.classList.add('hidden');
+                if (multiModeBody) multiModeBody.classList.remove('hidden');
+                // Auto-add all available items
+                autoAddAllItems();
+            } else {
+                this.classList.remove('bg-blue-600');
+                this.classList.add('bg-slate-300');
+                bulkToggleKnob.classList.remove('translate-x-6');
+                bulkToggleKnob.classList.add('translate-x-1');
+                if (singleItemCol) singleItemCol.classList.remove('hidden');
+                if (singlePendingCol) singlePendingCol.classList.remove('hidden');
+                if (multiItemCol) multiItemCol.classList.add('hidden');
+                if (singleModeBody) singleModeBody.classList.remove('hidden');
+                if (multiModeBody) multiModeBody.classList.add('hidden');
+                // Clear all bulk rows when toggling off
+                clearAllBulkItems();
+            }
+        });
+    }
+
+    function clearAllBulkItems() {
+        if (multiModeBody) multiModeBody.innerHTML = '';
+        if (bulkSelectedItemsEl) bulkSelectedItemsEl.innerHTML = '';
+        addedTransferIds.clear();
+        bulkRowIndex = 0;
+    }
+
+    function autoAddAllItems() {
+        clearAllBulkItems();
+        if (!bulkItemSelectorEl) return;
+        const options = bulkItemSelectorEl.options;
+        for (let i = 0; i < options.length; i++) {
+            bulkItemSelectorEl.selectedIndex = i;
+            addBulkItem();
+        }
+    }
+
+    function addBulkItem() {
+        if (!bulkItemSelectorEl) return;
+        const opt = bulkItemSelectorEl.options[bulkItemSelectorEl.selectedIndex];
+        if (!opt) return;
+
+        const transferId = opt.value;
+        if (addedTransferIds.has(transferId)) {
+            showLimitWarning('This item is already added.');
+            return;
+        }
+
+        addedTransferIds.add(transferId);
+        const itemCode = opt.getAttribute('data-item-code');
+        const itemName = opt.getAttribute('data-item-name');
+        const itemSize = opt.getAttribute('data-item-size');
+        const pendingQty = opt.getAttribute('data-quantity');
+        const idx = bulkRowIndex++;
+
+        // Tag badge
+        const tag = document.createElement('span');
+        tag.id = 'bulkTag_' + idx;
+        tag.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200';
+        tag.innerHTML = itemCode + ' <button type="button" class="text-blue-400 hover:text-rose-600" onclick="removeBulkItem(' + idx + ', \'' + transferId + '\')"><i data-lucide="x" class="w-3 h-3"></i></button>';
+        if (bulkSelectedItemsEl) bulkSelectedItemsEl.appendChild(tag);
+
+        // Table row
+        const hourFields = ['hour_8_9','hour_9_10','hour_10_11','hour_11_12','hour_12_1','hour_1_2','hour_2_3','hour_3_4','hour_4_5','hour_5_6','hour_6_7','hour_7_8'];
+        let hourCells = '';
+        hourFields.forEach(function (field) {
+            hourCells += '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][' + field + ']" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-hourly" data-row="' + idx + '" placeholder="-" step="1" min="0" value="0"></td>';
+        });
+
+        const row = document.createElement('tr');
+        row.id = 'bulkRow_' + idx;
+        row.className = 'hover:bg-slate-50';
+        row.innerHTML =
+            '<td class="border border-slate-300 px-3 py-2 font-medium text-slate-900 whitespace-nowrap">' +
+                '<div class="flex items-center gap-2">' +
+                    '<button type="button" onclick="removeBulkItem(' + idx + ', \'' + transferId + '\')" class="text-rose-400 hover:text-rose-600 flex-shrink-0"><i data-lucide="x-circle" class="w-4 h-4"></i></button>' +
+                    '<div>' +
+                        '<div class="text-xs font-semibold">' + itemCode + '</div>' +
+                        '<div class="text-[10px] text-slate-500">' + itemName + ' (' + itemSize + ')</div>' +
+                        '<div class="text-[10px] text-blue-600">Pending: ' + pendingQty + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<input type="hidden" name="items[' + idx + '][transfer_id]" value="' + transferId + '">' +
+            '</td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][total_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bulk-total-set" data-row="' + idx + '" data-pending="' + pendingQty + '" placeholder="-" step="1" min="0" max="' + pendingQty + '" value="0"></td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][set_per_hour]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="0.01" min="0" readonly value="0.00"></td>' +
+            hourCells +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][actual_set_shift]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50 bulk-actual-set" data-row="' + idx + '" placeholder="-" step="1" min="0" readonly value="0"></td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][manpower]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0" value="0"></td>' +
+            '<td class="border border-slate-300 px-3 py-2"><input type="number" name="items[' + idx + '][staff_count]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0" value="0"></td>';
+
+        if (multiModeBody) multiModeBody.appendChild(row);
+        attachBulkRowListeners(idx, parseFloat(pendingQty) || 0);
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    window.removeBulkItem = function (idx, transferId) {
+        const row = document.getElementById('bulkRow_' + idx);
+        const tag = document.getElementById('bulkTag_' + idx);
+        if (row) row.remove();
+        if (tag) tag.remove();
+        addedTransferIds.delete(transferId);
+    };
+
+    function attachBulkRowListeners(idx, pendingQtyNum) {
+        const row = document.getElementById('bulkRow_' + idx);
+        if (!row) return;
+
+        const totalSetInput = row.querySelector('.bulk-total-set');
+        const setPerHourInput = row.querySelector('input[name="items[' + idx + '][set_per_hour]"]');
+        const actualSetInput = row.querySelector('.bulk-actual-set');
+        const hourlyInputsInRow = row.querySelectorAll('.bulk-hourly');
+
+        function updateRowCalc() {
+            const totalSet = parseFloat(totalSetInput?.value || '0') || 0;
+            if (setPerHourInput) setPerHourInput.value = (totalSet / 12).toFixed(2);
+
+            let hourlySum = 0;
+            hourlyInputsInRow.forEach(function (inp) {
+                hourlySum += Math.max(parseFloat(inp.value || '0') || 0, 0);
+            });
+            if (actualSetInput) actualSetInput.value = String(Math.round(hourlySum));
+        }
+
+        function clampBulkValue(input) {
+            const val = parseFloat(input.value || '0') || 0;
+            if (val > pendingQtyNum) {
+                input.value = String(pendingQtyNum);
+                showLimitWarning('Value cannot exceed pending quantity (' + pendingQtyNum + ').');
+            }
+        }
+
+        if (totalSetInput) {
+            totalSetInput.addEventListener('input', function () {
+                normalizeWholeNumber(this);
+                clampBulkValue(this);
+                updateRowCalc();
+            });
+        }
+
+        hourlyInputsInRow.forEach(function (input) {
+            input.addEventListener('input', function () {
+                normalizeWholeNumber(this);
+                updateRowCalc();
+            });
+        });
+    }
+
+    if (addBulkItemBtn) {
+        addBulkItemBtn.addEventListener('click', addBulkItem);
+    }
+
+    async function handleBulkSubmit() {
+        const rows = multiModeBody ? multiModeBody.querySelectorAll('tr') : [];
+        if (rows.length === 0) {
+            showSubmitError('Please add at least one item.');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (!submitBtn) return;
+
+        const defaultSubmitHtml = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="flex items-center gap-2"><i data-lucide="loader" class="w-4 h-4 animate-spin"></i>Saving...</span>';
+
+        try {
+            const formData = new FormData(form);
+            formData.append('bulk_mode', '1');
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+
+            const data = await response.json().catch(function () { return {}; });
+
+            if (!response.ok) {
+                const validationErrors = data.errors || {};
+                const firstFieldKey = Object.keys(validationErrors)[0];
+                const firstFieldError = firstFieldKey ? validationErrors[firstFieldKey][0] : null;
+                const message = firstFieldError || data.message || 'Unable to save production reports.';
+                showSubmitError(message);
+                return;
+            }
+
+            await showSubmitSuccess(data.message || 'Production reports saved successfully.');
+            window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced'), 'tab' => 'production']) }}';
+        } catch (error) {
+            showSubmitError('Network error while saving. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = defaultSubmitHtml;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
 });
 
 function scrollTableHorizontal(direction) {

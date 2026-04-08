@@ -301,6 +301,12 @@ class SF002Controller extends Controller
         }
 
         $fieldPrefix = $sf2Type;
+
+        // Handle bulk mode
+        if ($request->boolean('bulk_mode')) {
+            return $this->storeBulkProductionReport($request, $sf2Type);
+        }
+
         $encryptedReportIdInput = (string) $request->input('report_id', '');
         $reportId = 0;
         if ($encryptedReportIdInput !== '') {
@@ -480,6 +486,156 @@ class SF002Controller extends Controller
         }
 
         return redirect()->to($redirectUrl)->with('success', $successMessage);
+    }
+
+    /**
+     * Handle bulk production report creation (multiple items at once).
+     */
+    private function storeBulkProductionReport(Request $request, string $sf2Type): JsonResponse
+    {
+        $fieldPrefix = $sf2Type;
+
+        $request->validate([
+            $fieldPrefix . '_report_date' => 'required|date',
+            $fieldPrefix . '_shift'       => 'required|in:morning,night',
+            'items'                       => 'required|array|min:1',
+            'items.*.transfer_id'         => 'required|integer|min:1',
+            'items.*.total_set_shift'     => 'required|numeric|min:0',
+            'items.*.set_per_hour'        => 'required|numeric|min:0',
+            'items.*.hour_8_9'            => 'required|numeric|min:0',
+            'items.*.hour_9_10'           => 'required|numeric|min:0',
+            'items.*.hour_10_11'          => 'required|numeric|min:0',
+            'items.*.hour_11_12'          => 'required|numeric|min:0',
+            'items.*.hour_12_1'           => 'required|numeric|min:0',
+            'items.*.hour_1_2'            => 'required|numeric|min:0',
+            'items.*.hour_2_3'            => 'required|numeric|min:0',
+            'items.*.hour_3_4'            => 'required|numeric|min:0',
+            'items.*.hour_4_5'            => 'required|numeric|min:0',
+            'items.*.hour_5_6'            => 'required|numeric|min:0',
+            'items.*.hour_6_7'            => 'required|numeric|min:0',
+            'items.*.hour_7_8'            => 'required|numeric|min:0',
+            'items.*.manpower'            => 'required|numeric|min:0',
+            'items.*.staff_count'         => 'required|integer|min:0',
+        ]);
+
+        $sf2TypeDbValue = strtoupper($sf2Type);
+        $requestShift = strtolower((string) $request->input($fieldPrefix . '_shift', ''));
+        $reportShift  = in_array($requestShift, ['morning', 'night'], true) ? $requestShift : null;
+        $reportDate   = (string) $request->input($fieldPrefix . '_report_date', now()->toDateString());
+
+        $items    = $request->input('items', []);
+        $errors   = [];
+        $payloads = [];
+
+        foreach ($items as $index => $item) {
+            $transferId = (int) ($item['transfer_id'] ?? 0);
+
+            $query = DB::table('sf001_stock_transfers')
+                ->where('id', $transferId)
+                ->where('is_deleted', false)
+                ->where('is_accept', 1)
+                ->where('assign_sf2', $sf2TypeDbValue);
+
+            if (Auth::user()?->role !== 'Admin') {
+                $role = $this->currentAssignableRole();
+
+                if (!$role) {
+                    $query->whereRaw('1 = 0');
+                } else {
+                    $query->where('assign_role', $role)
+                        ->where('assign_to', Auth::id());
+                }
+            }
+
+            $transfer = $query->first();
+
+            if (!$transfer) {
+                $errors[] = "Item #" . ($index + 1) . ": Transfer not found or not assigned to you.";
+                continue;
+            }
+
+            $hourlyTotal =
+                (float) ($item['hour_8_9'] ?? 0) +
+                (float) ($item['hour_9_10'] ?? 0) +
+                (float) ($item['hour_10_11'] ?? 0) +
+                (float) ($item['hour_11_12'] ?? 0) +
+                (float) ($item['hour_12_1'] ?? 0) +
+                (float) ($item['hour_1_2'] ?? 0) +
+                (float) ($item['hour_2_3'] ?? 0) +
+                (float) ($item['hour_3_4'] ?? 0) +
+                (float) ($item['hour_4_5'] ?? 0) +
+                (float) ($item['hour_5_6'] ?? 0) +
+                (float) ($item['hour_6_7'] ?? 0) +
+                (float) ($item['hour_7_8'] ?? 0);
+
+            $actualSetShift = round($hourlyTotal);
+
+            $baseAvailableQuantity = max((float) $transfer->quantity - (float) ($transfer->reject_quantity ?? 0), 0);
+            $alreadyUsedQuantity = (float) (DB::table('sf2_production_reports')
+                ->where('type', $sf2Type)
+                ->where('transfered_id', $transferId)
+                ->where('is_deleted', 0)
+                ->sum('actual_set_shift') ?? 0);
+            $availableQuantity = max($baseAvailableQuantity - $alreadyUsedQuantity, 0);
+            $totalSetShift = (float) ($item['total_set_shift'] ?? 0);
+
+            if ($totalSetShift > $availableQuantity) {
+                $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Total Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
+                continue;
+            }
+
+            if ($actualSetShift > $availableQuantity) {
+                $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Actual Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
+                continue;
+            }
+
+            $payloads[] = [
+                'type'             => $sf2Type,
+                'created_by'       => Auth::id(),
+                'report_date'      => $reportDate,
+                'shift'            => $reportShift,
+                'transfered_id'    => $transferId,
+                'item_id'          => $transfer->item_id,
+                'set_per_hour'     => (float) ($item['set_per_hour'] ?? 0),
+                'total_set_shift'  => $totalSetShift,
+                'hour_8_9'         => (float) ($item['hour_8_9'] ?? 0),
+                'hour_9_10'        => (float) ($item['hour_9_10'] ?? 0),
+                'hour_10_11'       => (float) ($item['hour_10_11'] ?? 0),
+                'hour_11_12'       => (float) ($item['hour_11_12'] ?? 0),
+                'hour_12_1'        => (float) ($item['hour_12_1'] ?? 0),
+                'hour_1_2'         => (float) ($item['hour_1_2'] ?? 0),
+                'hour_2_3'         => (float) ($item['hour_2_3'] ?? 0),
+                'hour_3_4'         => (float) ($item['hour_3_4'] ?? 0),
+                'hour_4_5'         => (float) ($item['hour_4_5'] ?? 0),
+                'hour_5_6'         => (float) ($item['hour_5_6'] ?? 0),
+                'hour_6_7'         => (float) ($item['hour_6_7'] ?? 0),
+                'hour_7_8'         => (float) ($item['hour_7_8'] ?? 0),
+                'actual_set_shift' => $actualSetShift,
+                'manpower_workman' => (float) ($item['manpower'] ?? 0),
+                'staff_count'      => (int) ($item['staff_count'] ?? 0),
+                'status'           => 1,
+                'is_deleted'       => 0,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ];
+        }
+
+        if (!empty($errors)) {
+            return response()->json(['message' => implode(' | ', $errors)], 422);
+        }
+
+        if (empty($payloads)) {
+            return response()->json(['message' => 'No valid items to save.'], 422);
+        }
+
+        DB::table('sf2_production_reports')->insert($payloads);
+
+        $redirectUrl = route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production']);
+
+        return response()->json([
+            'message'      => count($payloads) . ' production report(s) saved successfully.',
+            'redirect_url' => $redirectUrl,
+        ]);
     }
 
     public function destroyProductionReport(int $id): RedirectResponse
