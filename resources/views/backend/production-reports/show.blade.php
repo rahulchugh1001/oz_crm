@@ -87,24 +87,24 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-green-50 rounded-lg p-4 border border-green-200">
                         <label class="block text-xs font-medium text-green-600 mb-1">Total Set/Shift (Target)</label>
-                        <p class="text-3xl font-bold text-green-700">{{ number_format($productionReport->total_set_shift, 2) }}</p>
+                        <p class="text-3xl font-bold text-green-700">{{ $productionReport->total_set_shift !== null ? number_format($productionReport->total_set_shift, 2) : '-' }}</p>
                     </div>
                     <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
                         <label class="block text-xs font-medium text-blue-600 mb-1">Set/Hour (Target)</label>
-                        <p class="text-3xl font-bold text-blue-700">{{ number_format($productionReport->set_per_hour, 2) }}</p>
+                        <p class="text-3xl font-bold text-blue-700">{{ $productionReport->set_per_hour !== null ? number_format($productionReport->set_per_hour, 2) : '-' }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Target Achievement Status -->
             @php
-                $targetAchievement = $productionReport->total_set_shift > 0 
-                    ? ($productionReport->actual_set_shift / $productionReport->total_set_shift) * 100 
+                $targetAchievement = ($productionReport->total_set_shift ?? 0) > 0 
+                    ? (($productionReport->actual_set_shift ?? 0) / $productionReport->total_set_shift) * 100 
                     : 0;
                 $efficiency = $targetAchievement; // Same as achievement percentage
-                $isAchieved = $productionReport->actual_set_shift >= $productionReport->total_set_shift;
+                $isAchieved = ($productionReport->actual_set_shift ?? 0) >= ($productionReport->total_set_shift ?? 0);
                 $pendingPercentage = $isAchieved ? 0 : max(0, 100 - $targetAchievement);
-                $pendingAmount = $isAchieved ? 0 : max(0, $productionReport->total_set_shift - $productionReport->actual_set_shift);
+                $pendingAmount = $isAchieved ? 0 : max(0, ($productionReport->total_set_shift ?? 0) - ($productionReport->actual_set_shift ?? 0));
             @endphp
             <div class="mb-8 pb-8 border-b border-slate-200">
                 <h3 class="text-md font-semibold text-slate-900 mb-4 flex items-center gap-2">
@@ -175,7 +175,7 @@
                             <div class="flex items-baseline gap-2 mb-1">
                                 @if($isAchieved)
                                     @php
-                                        $exceededAmount = $productionReport->actual_set_shift - $productionReport->total_set_shift;
+                                        $exceededAmount = ($productionReport->actual_set_shift ?? 0) - ($productionReport->total_set_shift ?? 0);
                                         $exceededPercentage = $targetAchievement - 100;
                                     @endphp
                                     <p class="text-3xl font-extrabold text-indigo-700">
@@ -248,7 +248,7 @@
                             <tr class="bg-white">
                                 @foreach($hourFields as $field)
                                     <td class="border border-slate-300 px-4 py-3 text-center">
-                                        <span class="text-lg font-semibold text-slate-900">{{ number_format($productionReport->$field, 0) }}</span>
+                                        <span class="text-lg font-semibold text-slate-900">{{ $productionReport->$field !== null ? number_format($productionReport->$field, 0) : '-' }}</span>
                                     </td>
                                 @endforeach
                             </tr>

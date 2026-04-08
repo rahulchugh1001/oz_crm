@@ -193,7 +193,7 @@
     const slideSizes = @json($slideSizes);
     const duplicateCheckUrl = "{{ route('admin.production-reports.check-duplicate') }}";
 
-    async function validateMachineDuplicate(machineId, reportDate, shift) {
+    async function validateMachineDuplicate(machineId, reportDate, shift, slideSizeId, coilId) {
         const csrfToken = document.querySelector('input[name="_token"]')?.value;
 
         const response = await fetch(duplicateCheckUrl, {
@@ -208,6 +208,8 @@
                 machine_id: machineId,
                 report_date: reportDate,
                 shift: shift,
+                slide_size_id: slideSizeId || null,
+                coil_id: coilId || null,
             }),
         });
 
@@ -246,12 +248,17 @@
             return { allowed: false, reason: 'missing' };
         }
 
-        const result = await validateMachineDuplicate(machineId, reportDate, shift);
+        const slideSizeSelect = row.querySelector('select[name="slide_size_id[]"]');
+        const slideSizeId = slideSizeSelect ? slideSizeSelect.value : null;
+        const coilIdInput = row.querySelector('input[name="coil_id[]"]');
+        const coilId = coilIdInput ? coilIdInput.value : null;
+
+        const result = await validateMachineDuplicate(machineId, reportDate, shift, slideSizeId, coilId);
         if (!result.allowed) {
             if (showErrorPopup) {
                 Swal.fire({
                     title: 'Duplicate Not Allowed',
-                    text: `${machineName}: Report date, shift and machine data already exists.`,
+                    text: `${machineName}: A report with the same date, shift, machine, item, and coil already exists.`,
                     icon: 'error',
                     confirmButtonColor: '#3b82f6',
                     confirmButtonText: 'OK',
@@ -308,7 +315,7 @@
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
                 <div class="leading-tight">
                     <div>${machine.name}</div>
-                    ${machine.coil && machine.coil.coil_no ? `<small class="text-slate-500 font-normal">${machine.coil.coil_no}</small>` : ''}
+                    ${machine.load_coil_no ? `<small class="text-slate-500 font-normal">${machine.load_coil_no}</small>` : ''}
                 </div>
             </td>
             <td class="border border-slate-300 px-3 py-2">

@@ -188,20 +188,22 @@
             'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'
         ];
 
+        function toVal(v) { return v !== null && v !== undefined && v !== '' ? v : ''; }
+
         let hourInputs = '';
         hourFields.forEach(field => {
-            const value = prefillData ? parseFloat(prefillData[field]) || 0 : 0;
+            const value = prefillData ? toVal(prefillData[field]) : '';
             const disabled = prefillData ? '' : 'disabled';
             hourInputs += `<td class="border border-slate-300 px-2 py-2">
-                <input type="number" name="${field}[]" step="0.01" value="${value}" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" ${disabled}>
+                <input type="number" name="${field}[]" step="0.01" value="${value}" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" ${disabled}>
             </td>`;
         });
 
-        const totalSetShift = prefillData ? parseFloat(prefillData.total_set_shift) || 0 : 0;
-        const setPerHour = prefillData ? parseFloat(prefillData.set_per_hour) || 0 : 0;
-        const actualSet = prefillData ? parseFloat(prefillData.actual_set_shift) || 0 : 0;
-        const workmanCount = prefillData ? parseInt(prefillData.workman_count) || 0 : 0;
-        const staffCount = prefillData ? parseInt(prefillData.staff_count) || 0 : 0;
+        const totalSetShift = prefillData ? toVal(prefillData.total_set_shift) : '';
+        const setPerHour = prefillData && prefillData.set_per_hour !== null && prefillData.set_per_hour !== undefined ? parseFloat(prefillData.set_per_hour).toFixed(2) : '';
+        const actualSet = prefillData && prefillData.actual_set_shift !== null && prefillData.actual_set_shift !== undefined ? parseFloat(prefillData.actual_set_shift).toFixed(2) : '';
+        const workmanCount = prefillData ? toVal(prefillData.workman_count) : '';
+        const staffCount = prefillData ? toVal(prefillData.staff_count) : '';
 
         row.innerHTML = `
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
@@ -213,20 +215,20 @@
                 </select>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="total_set_shift[]" step="0.01" value="${totalSetShift}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()">
+                <input type="number" name="total_set_shift[]" step="0.01" value="${totalSetShift}" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()">
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="set_per_hour[]" step="0.01" value="${setPerHour.toFixed(2)}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
+                <input type="number" name="set_per_hour[]" step="0.01" value="${setPerHour}" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 set-per-hour" readonly>
             </td>
             ${hourInputs}
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="actual_set_shift[]" step="0.01" value="${actualSet.toFixed(2)}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
+                <input type="number" name="actual_set_shift[]" step="0.01" value="${actualSet}" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm bg-slate-50 actual-set" readonly>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="workman_count[]" step="1" min="0" value="${workmanCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
+                <input type="number" name="workman_count[]" step="1" min="0" value="${workmanCount}" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <input type="number" name="staff_count[]" step="1" min="0" value="${staffCount}" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
+                <input type="number" name="staff_count[]" step="1" min="0" value="${staffCount}" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input" onfocus="this.select()">
             </td>
             <input type="hidden" name="selected_machines[]" value="${machine.id}">
             <input type="hidden" name="machine_id[]" value="${machine.id}">

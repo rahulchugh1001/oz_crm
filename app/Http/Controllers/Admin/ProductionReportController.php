@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductionReport;
 use App\Models\Machine;
 use App\Models\Item;
+use App\Models\CoilMachineTrack;
+use App\Models\CoilLoadNumber;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -117,6 +120,36 @@ class ProductionReportController extends Controller
             ->where('is_deleted', false)
             ->where('status', true)
             ->get();
+
+        // Attach active load coil_no from coil_load_numbers for machines with loaded coils
+        $machinesWithCoil = $machines->whereNotNull('coil_id');
+        if ($machinesWithCoil->isNotEmpty()) {
+            foreach ($machinesWithCoil as $machine) {
+                $activeLoadTrack = CoilMachineTrack::query()
+                    ->where('machine_id', $machine->id)
+                    ->where('coil_id', $machine->coil_id)
+                    ->where('type', CoilMachineTrack::ACTION_LOAD)
+                    ->where('is_deleted', 0)
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('coil_machine_track as unload_tracks')
+                            ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
+                            ->where('unload_tracks.type', CoilMachineTrack::ACTION_UNLOAD)
+                            ->where('unload_tracks.is_deleted', 0);
+                    })
+                    ->orderByDesc('id')
+                    ->first(['id']);
+
+                $machine->load_coil_no = null;
+                if ($activeLoadTrack) {
+                    $loadNumber = CoilLoadNumber::query()
+                        ->where('coil_machine_track_id', $activeLoadTrack->id)
+                        ->first(['coil_no']);
+                    $machine->load_coil_no = $loadNumber ? $loadNumber->coil_no : null;
+                }
+            }
+        }
+
         $slideSizes = Item::where('is_deleted', false)
             ->where('status', true)
             ->where('category', 'SF1-SF2')
@@ -134,21 +167,34 @@ class ProductionReportController extends Controller
             'machine_id' => 'required|exists:machines,id',
             'report_date' => 'required|date',
             'shift' => 'required|string|in:Morning,Night',
+            'slide_size_id' => 'nullable|exists:items,id',
+            'coil_id' => 'nullable|exists:coil_stock,id',
         ]);
 
-        $exists = ProductionReport::query()
+        $query = ProductionReport::query()
             ->where('machine_id', $validated['machine_id'])
             ->where('report_date', $validated['report_date'])
             ->where('shift', $validated['shift'])
             ->where('is_deleted', false)
-            ->where('is_draft', false)
-            ->exists();
+            ->where('is_draft', false);
+
+        if (!empty($validated['slide_size_id'])) {
+            $query->where('slide_size_id', $validated['slide_size_id']);
+        }
+
+        if (!empty($validated['coil_id'])) {
+            $query->where('coil_id', $validated['coil_id']);
+        } else {
+            $query->whereNull('coil_id');
+        }
+
+        $exists = $query->exists();
 
         return response()->json([
             'exists' => $exists,
             'message' => $exists
-                ? 'Report date, shift and machine data already exists.'
-                : 'This machine is available for the selected report date and shift.',
+                ? 'A report with the same date, shift, machine, item, and coil already exists.'
+                : 'This combination is available.',
         ]);
     }
 
@@ -244,23 +290,23 @@ class ProductionReportController extends Controller
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,
-                'total_set_shift' => $validated['total_set_shift'][$i] ?? 0,
-                'set_per_hour' => $validated['set_per_hour'][$i] ?? 0,
-                'actual_set_shift' => $validated['actual_set_shift'][$i] ?? 0,
-                'hour_8_9' => $validated['hour_8_9'][$i] ?? 0,
-                'hour_9_10' => $validated['hour_9_10'][$i] ?? 0,
-                'hour_10_11' => $validated['hour_10_11'][$i] ?? 0,
-                'hour_11_12' => $validated['hour_11_12'][$i] ?? 0,
-                'hour_12_1' => $validated['hour_12_1'][$i] ?? 0,
-                'hour_1_2' => $validated['hour_1_2'][$i] ?? 0,
-                'hour_2_3' => $validated['hour_2_3'][$i] ?? 0,
-                'hour_3_4' => $validated['hour_3_4'][$i] ?? 0,
-                'hour_4_5' => $validated['hour_4_5'][$i] ?? 0,
-                'hour_5_6' => $validated['hour_5_6'][$i] ?? 0,
-                'hour_6_7' => $validated['hour_6_7'][$i] ?? 0,
-                'hour_7_8' => $validated['hour_7_8'][$i] ?? 0,
-                'workman_count' => $validated['workman_count'] ?? 0,
-                'staff_count' => $validated['staff_count'] ?? 0,
+                'total_set_shift' => $validated['total_set_shift'][$i] ?? null,
+                'set_per_hour' => $validated['set_per_hour'][$i] ?? null,
+                'actual_set_shift' => $validated['actual_set_shift'][$i] ?? null,
+                'hour_8_9' => $validated['hour_8_9'][$i] ?? null,
+                'hour_9_10' => $validated['hour_9_10'][$i] ?? null,
+                'hour_10_11' => $validated['hour_10_11'][$i] ?? null,
+                'hour_11_12' => $validated['hour_11_12'][$i] ?? null,
+                'hour_12_1' => $validated['hour_12_1'][$i] ?? null,
+                'hour_1_2' => $validated['hour_1_2'][$i] ?? null,
+                'hour_2_3' => $validated['hour_2_3'][$i] ?? null,
+                'hour_3_4' => $validated['hour_3_4'][$i] ?? null,
+                'hour_4_5' => $validated['hour_4_5'][$i] ?? null,
+                'hour_5_6' => $validated['hour_5_6'][$i] ?? null,
+                'hour_6_7' => $validated['hour_6_7'][$i] ?? null,
+                'hour_7_8' => $validated['hour_7_8'][$i] ?? null,
+                'workman_count' => $validated['workman_count'] ?? null,
+                'staff_count' => $validated['staff_count'] ?? null,
                 'status' => true,
                 'is_deleted' => false,
                 'is_draft' => $isDraft,
@@ -395,23 +441,23 @@ class ProductionReportController extends Controller
                 'slide_size_id' => $validated['slide_size_id'][$i] ?? null,
                 'report_date' => $validated['report_date'][$i] ?? null,
                 'shift' => $validated['shift'][$i] ?? null,
-                'total_set_shift' => $validated['total_set_shift'][$i] ?? 0,
-                'set_per_hour' => $validated['set_per_hour'][$i] ?? 0,
-                'actual_set_shift' => $validated['actual_set_shift'][$i] ?? 0,
-                'hour_8_9' => $validated['hour_8_9'][$i] ?? 0,
-                'hour_9_10' => $validated['hour_9_10'][$i] ?? 0,
-                'hour_10_11' => $validated['hour_10_11'][$i] ?? 0,
-                'hour_11_12' => $validated['hour_11_12'][$i] ?? 0,
-                'hour_12_1' => $validated['hour_12_1'][$i] ?? 0,
-                'hour_1_2' => $validated['hour_1_2'][$i] ?? 0,
-                'hour_2_3' => $validated['hour_2_3'][$i] ?? 0,
-                'hour_3_4' => $validated['hour_3_4'][$i] ?? 0,
-                'hour_4_5' => $validated['hour_4_5'][$i] ?? 0,
-                'hour_5_6' => $validated['hour_5_6'][$i] ?? 0,
-                'hour_6_7' => $validated['hour_6_7'][$i] ?? 0,
-                'hour_7_8' => $validated['hour_7_8'][$i] ?? 0,
-                'workman_count' => $validated['workman_count'][$i] ?? 0,
-                'staff_count' => $validated['staff_count'][$i] ?? 0,
+                'total_set_shift' => $validated['total_set_shift'][$i] ?? null,
+                'set_per_hour' => $validated['set_per_hour'][$i] ?? null,
+                'actual_set_shift' => $validated['actual_set_shift'][$i] ?? null,
+                'hour_8_9' => $validated['hour_8_9'][$i] ?? null,
+                'hour_9_10' => $validated['hour_9_10'][$i] ?? null,
+                'hour_10_11' => $validated['hour_10_11'][$i] ?? null,
+                'hour_11_12' => $validated['hour_11_12'][$i] ?? null,
+                'hour_12_1' => $validated['hour_12_1'][$i] ?? null,
+                'hour_1_2' => $validated['hour_1_2'][$i] ?? null,
+                'hour_2_3' => $validated['hour_2_3'][$i] ?? null,
+                'hour_3_4' => $validated['hour_3_4'][$i] ?? null,
+                'hour_4_5' => $validated['hour_4_5'][$i] ?? null,
+                'hour_5_6' => $validated['hour_5_6'][$i] ?? null,
+                'hour_6_7' => $validated['hour_6_7'][$i] ?? null,
+                'hour_7_8' => $validated['hour_7_8'][$i] ?? null,
+                'workman_count' => $validated['workman_count'][$i] ?? null,
+                'staff_count' => $validated['staff_count'][$i] ?? null,
                 'status' => 1,
                 'is_deleted' => false,
                 'is_draft' => $isDraft,
@@ -454,6 +500,8 @@ class ProductionReportController extends Controller
         foreach ($selectedMachines as $i => $machineId) {
             $reportDate = $validated['report_date'][$i] ?? null;
             $shift = $validated['shift'][$i] ?? null;
+            $slideSizeId = $validated['slide_size_id'][$i] ?? null;
+            $coilId = $validated['coil_id'][$i] ?? null;
 
             $query = ProductionReport::query()
                 ->where('machine_id', $machineId)
@@ -462,12 +510,22 @@ class ProductionReportController extends Controller
                 ->where('is_deleted', false)
                 ->where('is_draft', false);
 
+            if ($slideSizeId) {
+                $query->where('slide_size_id', $slideSizeId);
+            }
+
+            if ($coilId) {
+                $query->where('coil_id', $coilId);
+            } else {
+                $query->whereNull('coil_id');
+            }
+
             if ($currentReport) {
                 $query->where('id', '!=', $currentReport->id);
             }
 
             if ($query->exists()) {
-                $errors["machine_id.$i"] = 'Duplicate entry not allowed: same report date, shift, and machine already exists.';
+                $errors["machine_id.$i"] = 'Duplicate entry not allowed: a report with the same date, shift, machine, item, and coil already exists.';
             }
         }
 

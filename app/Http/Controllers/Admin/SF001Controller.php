@@ -431,8 +431,8 @@ class SF001Controller extends Controller
             'form_type' => 'required|in:' . $validFormTypes,
             'coil_id' => 'nullable|integer|exists:coil_stock,id',
             'machine_id' => 'required|integer|exists:machines,id',
-            'coil_no' => 'required_if:form_type,' . $loadAction . '|string|max:120',
-            'load_weight' => 'required_if:form_type,' . $loadAction . '|numeric|gt:0',
+            'coil_no' => 'required_if:form_type,' . $loadAction . '|nullable|string|max:120',
+            'load_weight' => 'required_if:form_type,' . $loadAction . '|nullable|numeric|gt:0',
             'unload_weight' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string|max:255',
         ]);
