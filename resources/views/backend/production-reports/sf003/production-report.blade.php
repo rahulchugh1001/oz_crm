@@ -75,6 +75,11 @@
                             <option value="night" {{ old('sf3_shift', $existingReport->shift ?? $defaultShift) === 'night' ? 'selected' : '' }}>Night</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Max Producible Qty</label>
+                        <input type="text" id="maxProducibleQty" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 font-semibold text-slate-700 cursor-not-allowed" value="-" readonly>
+                        <p id="maxProducibleBottleneck" class="mt-1 text-[11px] text-slate-500 truncate" title=""></p>
+                    </div>
                 </div>
 
                 <div class="mb-2 flex items-center justify-end gap-2">
@@ -226,6 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let stockInsufficient = false;
     let requiredProductsData = [];
     let stockRowsData = [];
+    const maxProducibleQtyInput = document.getElementById('maxProducibleQty');
+    const maxProducibleBottleneck = document.getElementById('maxProducibleBottleneck');
 
     if (!form) return;
 
@@ -253,6 +260,67 @@ document.addEventListener('DOMContentLoaded', function () {
 
         stockCapacityNote.textContent = message;
         stockCapacityNote.classList.remove('hidden');
+    }
+
+    function calculateMaxProducibleQty() {
+        if (!maxProducibleQtyInput) return;
+
+        if (requiredProductsData.length === 0) {
+            maxProducibleQtyInput.value = '-';
+            if (maxProducibleBottleneck) {
+                maxProducibleBottleneck.textContent = '';
+                maxProducibleBottleneck.title = '';
+            }
+            return;
+        }
+
+        const stockByProduct = {};
+        stockRowsData.forEach(function (row) {
+            const productId = parseInt(row.item_id || 0, 10);
+            const quantity = Math.max(parseFloat(row.quantity || 0) || 0, 0);
+            if (productId > 0) {
+                stockByProduct[productId] = (stockByProduct[productId] || 0) + quantity;
+            }
+        });
+
+        let minProducible = Infinity;
+        let bottleneckName = '';
+
+        requiredProductsData.forEach(function (product) {
+            const productId = parseInt(product.product || 0, 10);
+            const requiredPerSet = Math.max(parseFloat(product.quantity || 0) || 0, 0);
+
+            if (requiredPerSet <= 0) return;
+
+            const category = String(product.product_category || '').toLowerCase();
+            const stockQty = category === 'store'
+                ? Math.max(parseFloat(product.product_store_quantity || 0) || 0, 0)
+                : (stockByProduct[productId] || 0);
+
+            const producible = Math.floor(stockQty / requiredPerSet);
+
+            if (producible < minProducible) {
+                minProducible = producible;
+                bottleneckName = product.product_code || product.product_name || 'Unknown';
+            }
+        });
+
+        if (minProducible === Infinity) {
+            maxProducibleQtyInput.value = '-';
+            if (maxProducibleBottleneck) {
+                maxProducibleBottleneck.textContent = '';
+                maxProducibleBottleneck.title = '';
+            }
+            return;
+        }
+
+        maxProducibleQtyInput.value = minProducible;
+
+        if (maxProducibleBottleneck) {
+            const note = 'Limited by: ' + bottleneckName;
+            maxProducibleBottleneck.textContent = note;
+            maxProducibleBottleneck.title = note;
+        }
     }
 
     function evaluateStockCapability() {
@@ -442,6 +510,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             requiredProductsData = [];
             stockRowsData = [];
+            calculateMaxProducibleQty();
             evaluateStockCapability();
             return;
         }
@@ -501,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Render merged table with both required and stock data
                 renderMergedTable();
+                calculateMaxProducibleQty();
                 evaluateStockCapability();
             })
             .catch(function (error) {
@@ -767,12 +837,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         renderMergedTable();
                     }
+                    calculateMaxProducibleQty();
                     evaluateStockCapability();
                     return;
                 }
 
                 // Render merged table with stock data included
                 renderMergedTable();
+                calculateMaxProducibleQty();
                 evaluateStockCapability();
             })
             .catch(function (error) {
@@ -788,6 +860,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
 
+                calculateMaxProducibleQty();
                 evaluateStockCapability();
             });
     }

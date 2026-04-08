@@ -46,6 +46,7 @@
                     <tr>
                         <th class="w-[56px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">#</th>
                         <th class="w-[130px] px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Action</th>
+                        <th class="w-[110px] px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Status</th>
                         <th class="w-[150px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">When Assigned</th>
                         <th class="w-[120px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Code</th>
                         <th class="w-[180px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Name</th>
@@ -55,7 +56,6 @@
                         <th class="w-[130px] px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Rejected Quantity</th>
                         <th class="w-[170px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Reject Reason</th>
                         <th class="w-[160px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Transfer By</th>
-                        <th class="w-[110px] px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Status</th>
                         <th class="w-[220px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">CED &amp; Zinc (SF2) Remark</th>
                         <th class="w-[220px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Assembly (SF3) Remark</th>
                     </tr>
@@ -126,6 +126,15 @@
                                 @endif
                             </div>
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            @if($transfer->is_accept == 1)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
+                            @elseif($transfer->is_accept == 2)
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Rejected</span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Pending</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}</td>
                         <td class="px-4 py-3 font-medium text-slate-900">
                             <span class="block truncate" title="{{ $transfer->item_code }}">{{ $transfer->item_code }}</span>
@@ -176,15 +185,6 @@
                         </td>
                         <td class="px-4 py-3 text-slate-700">
                             <span class="block truncate" title="{{ $transfer->transfer_by_name ?? 'N/A' }}">{{ $transfer->transfer_by_name ?? 'N/A' }}</span>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            @if($transfer->is_accept == 1)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-green-50 text-green-700">Accepted</span>
-                            @elseif($transfer->is_accept == 2)
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Rejected</span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Pending</span>
-                            @endif
                         </td>
                         <td class="px-4 py-3 text-slate-700 align-top break-words">
                             @if($sf001Remark === '')
