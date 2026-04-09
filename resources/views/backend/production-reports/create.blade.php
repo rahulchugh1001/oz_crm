@@ -436,13 +436,11 @@
             'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'
         ];
 
-        // Check if ANY hour is locked (means all will be locked)
-        const anyLocked = hourFields.some(f => filledHours[f]);
-        if (!anyLocked) return;
-
+        // Only lock hours that individually have data (non-null)
+        let lockedCount = 0;
         hourFields.forEach(field => {
             const input = row.querySelector(`input[name="${field}[]"]`);
-            if (input) {
+            if (input && filledHours[field]) {
                 input.value = '';
                 input.setAttribute('data-locked', '1');
                 input.readOnly = true;
@@ -450,34 +448,18 @@
                 input.tabIndex = -1;
                 input.classList.add('bg-slate-200', 'cursor-not-allowed');
                 input.title = 'Already record found for this machine, date, and shift';
+                lockedCount++;
             }
         });
 
-        // Also lock total_set_shift and slide_size
-        const totalSetInput = row.querySelector('input[name="total_set_shift[]"]');
-        if (totalSetInput) {
-            totalSetInput.setAttribute('data-locked', '1');
-            totalSetInput.readOnly = true;
-            totalSetInput.style.pointerEvents = 'none';
-            totalSetInput.tabIndex = -1;
-            totalSetInput.classList.add('bg-slate-200', 'cursor-not-allowed');
-            totalSetInput.title = 'Already record found for this machine, date, and shift';
-        }
-
-        const slideSizeSelect = row.querySelector('select[name="slide_size_id[]"]');
-        if (slideSizeSelect) {
-            slideSizeSelect.setAttribute('data-locked', '1');
-            slideSizeSelect.disabled = true;
-            slideSizeSelect.classList.add('bg-slate-200', 'cursor-not-allowed');
-            slideSizeSelect.title = 'Already record found for this machine, date, and shift';
-        }
+        if (lockedCount === 0) return;
 
         const machineName = (row.querySelector('td:nth-child(2) div > div')?.textContent || '').trim();
 
         Swal.fire({
-            title: 'Not Allowed',
-            html: `<p><strong>${machineName}</strong> already has a record for this date and shift.</p>
-                   <p class="text-sm text-slate-500 mt-1">All hour blocks are locked.</p>`,
+            title: 'Partial Record Found',
+            html: `<p><strong>${machineName}</strong> already has data for ${lockedCount} hour block(s) on this date and shift.</p>
+                   <p class="text-sm text-slate-500 mt-1">Filled hour blocks are locked. Empty blocks are still editable.</p>`,
             icon: 'warning',
             confirmButtonColor: '#3b82f6',
             confirmButtonText: 'OK',

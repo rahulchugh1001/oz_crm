@@ -209,20 +209,16 @@ class ProductionReportController extends Controller
                 ->where('is_draft', false)
                 ->get($hourFields);
 
-            // Check if ANY hour has a value (0 or greater) in any existing report
-            $hasAnyFilledHour = false;
+            // Check each hour individually: only mark as filled if it has a non-null value
+            foreach ($hourFields as $field) {
+                $filledHours[$field] = false;
+            }
             foreach ($existingReports as $report) {
                 foreach ($hourFields as $field) {
-                    if ($report->$field !== null && (float) $report->$field >= 0) {
-                        $hasAnyFilledHour = true;
-                        break 2;
+                    if ($report->$field !== null) {
+                        $filledHours[$field] = true;
                     }
                 }
-            }
-
-            // If any hour is filled, lock ALL hours for this machine+date+shift
-            foreach ($hourFields as $field) {
-                $filledHours[$field] = $hasAnyFilledHour;
             }
         }
 
