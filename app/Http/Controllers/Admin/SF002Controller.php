@@ -43,6 +43,8 @@ class SF002Controller extends Controller
                 'transfers.remark',
                 'transfers.sf002_remark',
                 'transfers.reject_reason_id',
+                'transfers.is_self_transferred',
+                'parent_transfer.assign_sf2 as parent_assign_sf2',
                 'items.code as item_code',
                 'items.name as item_name',
                 'items.size as item_size',
@@ -52,6 +54,7 @@ class SF002Controller extends Controller
             ->join('items', 'transfers.item_id', '=', 'items.id')
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assigned_to_user', 'transfers.assign_to', '=', 'assigned_to_user.id')
+            ->leftJoin('sf001_stock_transfers as parent_transfer', 'transfers.self_transferred_parent_id', '=', 'parent_transfer.id')
             ->where('transfers.is_deleted', false)
             ->orderByDesc('transfers.date')
             ->orderByDesc('transfers.time')

@@ -52,6 +52,7 @@
                     <tr>
                         <th class="w-[56px] px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">#</th>
                         <th class="w-[130px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Action</th>
+                        <th class="w-[120px] px-3 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Self Transferred</th>
                         <th class="w-[150px] px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">When Assigned</th>
                         <th class="w-[120px] px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Code</th>
                         <th class="w-[180px] px-3 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item Name</th>
@@ -131,6 +132,22 @@
                                 @endif
                             </div>
                         </td>
+                        <td class="px-3 py-2.5 text-center">
+                            @if($transfer->is_self_transferred)
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700">
+                                        <i data-lucide="repeat" class="w-3 h-3 mr-1"></i> Yes
+                                    </span>
+                                    @if($transfer->parent_assign_sf2)
+                                        <span class="text-[10px] text-slate-500">From {{ $transfer->parent_assign_sf2 }}</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+                                    <i data-lucide="x" class="w-3 h-3 mr-1"></i> No
+                                </span>
+                            @endif
+                        </td>
                         <td class="px-3 py-2.5 text-slate-700">{{ $transfer->created_at ? \Carbon\Carbon::parse($transfer->created_at)->format('M d, Y h:i A') : '-' }}</td>
                         <td class="px-3 py-2.5 font-medium text-slate-900">
                             <span class="block truncate" title="{{ $transfer->item_code }}">{{ $transfer->item_code }}</span>
@@ -201,7 +218,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="13" class="px-4 py-10 text-center">
+                        <td colspan="14" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>

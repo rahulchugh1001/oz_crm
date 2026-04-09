@@ -243,7 +243,9 @@
                                     @endif
                                 </div>
                             @else
-                                <span class="text-slate-400">-</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600">
+                                    <i data-lucide="x" class="w-3 h-3 mr-1"></i> No
+                                </span>
                             @endif
                         </td>
                         <td class="px-4 py-3 text-slate-700 align-top">
