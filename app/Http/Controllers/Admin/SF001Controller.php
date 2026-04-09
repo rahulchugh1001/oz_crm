@@ -729,8 +729,8 @@ class SF001Controller extends Controller
                 DB::raw('COALESCE(SUM(production_reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(sf001_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(sf001_transfers.rejected_quantity), 0) as rejected_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as pending_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0), 0) as total_stock'),
+                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0) - COALESCE(MAX(sf001_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0) - COALESCE(MAX(sf001_transfers.rejected_quantity), 0), 0) as total_stock'),
                 DB::raw('MAX(production_reports.created_at) as last_stock_update')
             )
             ->join('production_reports', function ($join) {
