@@ -217,18 +217,18 @@
                                 <td class="border border-slate-300 px-3 py-2">
                                     <input type="number" name="{{ $sf2Prefix }}_set_per_hour" value="{{ old($sf2Prefix . '_set_per_hour', isset($existingReport) ? number_format((float) $existingReport->set_per_hour, 2, '.', '') : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="0.01" min="0" readonly>
                                 </td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_8_9" value="{{ old($sf2Prefix . '_hour_8_9', isset($existingReport) ? (int) $existingReport->hour_8_9 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_9_10" value="{{ old($sf2Prefix . '_hour_9_10', isset($existingReport) ? (int) $existingReport->hour_9_10 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_10_11" value="{{ old($sf2Prefix . '_hour_10_11', isset($existingReport) ? (int) $existingReport->hour_10_11 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_11_12" value="{{ old($sf2Prefix . '_hour_11_12', isset($existingReport) ? (int) $existingReport->hour_11_12 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_12_1" value="{{ old($sf2Prefix . '_hour_12_1', isset($existingReport) ? (int) $existingReport->hour_12_1 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_1_2" value="{{ old($sf2Prefix . '_hour_1_2', isset($existingReport) ? (int) $existingReport->hour_1_2 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_2_3" value="{{ old($sf2Prefix . '_hour_2_3', isset($existingReport) ? (int) $existingReport->hour_2_3 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_3_4" value="{{ old($sf2Prefix . '_hour_3_4', isset($existingReport) ? (int) $existingReport->hour_3_4 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_4_5" value="{{ old($sf2Prefix . '_hour_4_5', isset($existingReport) ? (int) $existingReport->hour_4_5 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_5_6" value="{{ old($sf2Prefix . '_hour_5_6', isset($existingReport) ? (int) $existingReport->hour_5_6 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_6_7" value="{{ old($sf2Prefix . '_hour_6_7', isset($existingReport) ? (int) $existingReport->hour_6_7 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
-                                <td class="border border-slate-300 px-3 py-2"><input type="number" name="{{ $sf2Prefix }}_hour_7_8" value="{{ old($sf2Prefix . '_hour_7_8', isset($existingReport) ? (int) $existingReport->hour_7_8 : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_8_9" value="{{ old($sf2Prefix . '_hour_8_9', isset($existingReport) ? ($existingReport->hour_8_9 === null ? '-' : (int) $existingReport->hour_8_9) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_9_10" value="{{ old($sf2Prefix . '_hour_9_10', isset($existingReport) ? ($existingReport->hour_9_10 === null ? '-' : (int) $existingReport->hour_9_10) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_10_11" value="{{ old($sf2Prefix . '_hour_10_11', isset($existingReport) ? ($existingReport->hour_10_11 === null ? '-' : (int) $existingReport->hour_10_11) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_11_12" value="{{ old($sf2Prefix . '_hour_11_12', isset($existingReport) ? ($existingReport->hour_11_12 === null ? '-' : (int) $existingReport->hour_11_12) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_12_1" value="{{ old($sf2Prefix . '_hour_12_1', isset($existingReport) ? ($existingReport->hour_12_1 === null ? '-' : (int) $existingReport->hour_12_1) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_1_2" value="{{ old($sf2Prefix . '_hour_1_2', isset($existingReport) ? ($existingReport->hour_1_2 === null ? '-' : (int) $existingReport->hour_1_2) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_2_3" value="{{ old($sf2Prefix . '_hour_2_3', isset($existingReport) ? ($existingReport->hour_2_3 === null ? '-' : (int) $existingReport->hour_2_3) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_3_4" value="{{ old($sf2Prefix . '_hour_3_4', isset($existingReport) ? ($existingReport->hour_3_4 === null ? '-' : (int) $existingReport->hour_3_4) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_4_5" value="{{ old($sf2Prefix . '_hour_4_5', isset($existingReport) ? ($existingReport->hour_4_5 === null ? '-' : (int) $existingReport->hour_4_5) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_5_6" value="{{ old($sf2Prefix . '_hour_5_6', isset($existingReport) ? ($existingReport->hour_5_6 === null ? '-' : (int) $existingReport->hour_5_6) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_6_7" value="{{ old($sf2Prefix . '_hour_6_7', isset($existingReport) ? ($existingReport->hour_6_7 === null ? '-' : (int) $existingReport->hour_6_7) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
+                                <td class="border border-slate-300 px-3 py-2"><input type="text" name="{{ $sf2Prefix }}_hour_7_8" value="{{ old($sf2Prefix . '_hour_7_8', isset($existingReport) ? ($existingReport->hour_7_8 === null ? '-' : (int) $existingReport->hour_7_8) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf2-hour-input" placeholder="-"></td>
                                 <td class="border border-slate-300 px-3 py-2">
                                     <input type="number" name="{{ $sf2Prefix }}_actual_set_shift" value="{{ old($sf2Prefix . '_actual_set_shift', isset($existingReport) ? (int) $existingReport->actual_set_shift : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="1" min="0" readonly>
                                 </td>
@@ -237,7 +237,7 @@
                         <tbody id="multiModeBody" class="hidden"></tbody>
                     </table>
                 </div>
-
+ 
                 <div id="quantityExceededWarning" class="hidden mb-4 p-3 bg-rose-50 border border-rose-300 rounded-lg flex items-center gap-2">
                     <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-600 flex-shrink-0"></i>
                     <span id="quantityExceededMsg" class="text-sm font-medium text-rose-700"></span>
@@ -331,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function clampToSelectedQuantity(input) {
         if (!input) return;
+        if (input.value === '-' || input.value === '') return;
 
         const selectedQuantity = getSelectedQuantity();
         input.max = String(selectedQuantity);
@@ -344,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function normalizeWholeNumber(input) {
         if (!input) return;
-        if (input.value === '') return;
+        if (input.value === '' || input.value === '-') return;
 
         const numericValue = parseFloat(input.value);
         if (Number.isNaN(numericValue)) return;
@@ -420,8 +421,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let totalHours = 0;
         hourlyInputs.forEach(function (input) {
-            const value = Math.max(parseFloat(input.value || '0') || 0, 0);
-            totalHours += value;
+            const val = (input.value || '').trim();
+            if (val !== '-' && val !== '') {
+                const value = Math.max(parseFloat(val) || 0, 0);
+                totalHours += value;
+            }
         });
 
         actualSetShiftInput.value = String(Math.round(totalHours));
@@ -569,8 +573,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    function sanitizeSf2HourInput(input) {
+        let val = input.value.trim();
+        if (val === '-' || val === '') return;
+        val = val.replace(/[^0-9]/g, '');
+        input.value = val;
+    }
+
     hourlyInputs.forEach(function (input) {
         input.addEventListener('input', function () {
+            sanitizeSf2HourInput(input);
             normalizeWholeNumber(input);
             updateActualSetShiftFromHours();
         });

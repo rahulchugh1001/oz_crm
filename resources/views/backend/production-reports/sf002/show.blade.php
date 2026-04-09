@@ -193,7 +193,7 @@
                             <tr class="bg-white">
                                 @foreach($hourFields as $field)
                                     <td class="border border-slate-300 px-4 py-3 text-center">
-                                        <span class="text-lg font-semibold text-slate-900">{{ number_format((float) ($report->$field ?? 0), 0) }}</span>
+                                        <span class="text-lg font-semibold {{ $report->$field === null ? 'text-slate-400' : 'text-slate-900' }}">{{ $report->$field === null ? '-' : number_format((float) $report->$field, 0) }}</span>
                                     </td>
                                 @endforeach
                             </tr>

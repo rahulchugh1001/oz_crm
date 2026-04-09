@@ -787,6 +787,19 @@ class SF003Controller extends Controller
             }
         }
 
+        // Sanitize hour fields: convert "-" to null before validation
+        $hourFieldNames = [
+            'sf3_hour_8_9', 'sf3_hour_9_10', 'sf3_hour_10_11', 'sf3_hour_11_12',
+            'sf3_hour_12_1', 'sf3_hour_1_2', 'sf3_hour_2_3', 'sf3_hour_3_4',
+            'sf3_hour_4_5', 'sf3_hour_5_6', 'sf3_hour_6_7', 'sf3_hour_7_8',
+        ];
+        foreach ($hourFieldNames as $hf) {
+            $val = $request->input($hf);
+            if ($val === '-' || $val === '') {
+                $request->merge([$hf => null]);
+            }
+        }
+
         $validated = $request->validate([
             'item_id' => 'required|integer|min:1',
             'sf3_report_date' => 'required|date',
@@ -796,18 +809,18 @@ class SF003Controller extends Controller
             'sf3_actual_set_shift' => 'required|numeric|min:0',
             'sf3_manpower' => 'required|numeric|min:0',
             'sf3_staff_count' => 'required|integer|min:0',
-            'sf3_hour_8_9' => 'required|numeric|min:0',
-            'sf3_hour_9_10' => 'required|numeric|min:0',
-            'sf3_hour_10_11' => 'required|numeric|min:0',
-            'sf3_hour_11_12' => 'required|numeric|min:0',
-            'sf3_hour_12_1' => 'required|numeric|min:0',
-            'sf3_hour_1_2' => 'required|numeric|min:0',
-            'sf3_hour_2_3' => 'required|numeric|min:0',
-            'sf3_hour_3_4' => 'required|numeric|min:0',
-            'sf3_hour_4_5' => 'required|numeric|min:0',
-            'sf3_hour_5_6' => 'required|numeric|min:0',
-            'sf3_hour_6_7' => 'required|numeric|min:0',
-            'sf3_hour_7_8' => 'required|numeric|min:0',
+            'sf3_hour_8_9' => 'nullable|numeric|min:0',
+            'sf3_hour_9_10' => 'nullable|numeric|min:0',
+            'sf3_hour_10_11' => 'nullable|numeric|min:0',
+            'sf3_hour_11_12' => 'nullable|numeric|min:0',
+            'sf3_hour_12_1' => 'nullable|numeric|min:0',
+            'sf3_hour_1_2' => 'nullable|numeric|min:0',
+            'sf3_hour_2_3' => 'nullable|numeric|min:0',
+            'sf3_hour_3_4' => 'nullable|numeric|min:0',
+            'sf3_hour_4_5' => 'nullable|numeric|min:0',
+            'sf3_hour_5_6' => 'nullable|numeric|min:0',
+            'sf3_hour_6_7' => 'nullable|numeric|min:0',
+            'sf3_hour_7_8' => 'nullable|numeric|min:0',
         ]);
 
         $itemId = (int) $validated['item_id'];
@@ -862,18 +875,18 @@ class SF003Controller extends Controller
             'item_id' => $itemId,
             'set_per_hour' => (float) ($request->input('sf3_set_per_hour') ?? 0),
             'total_set_shift' => $totalSetShift,
-            'hour_8_9' => (float) ($request->input('sf3_hour_8_9') ?? 0),
-            'hour_9_10' => (float) ($request->input('sf3_hour_9_10') ?? 0),
-            'hour_10_11' => (float) ($request->input('sf3_hour_10_11') ?? 0),
-            'hour_11_12' => (float) ($request->input('sf3_hour_11_12') ?? 0),
-            'hour_12_1' => (float) ($request->input('sf3_hour_12_1') ?? 0),
-            'hour_1_2' => (float) ($request->input('sf3_hour_1_2') ?? 0),
-            'hour_2_3' => (float) ($request->input('sf3_hour_2_3') ?? 0),
-            'hour_3_4' => (float) ($request->input('sf3_hour_3_4') ?? 0),
-            'hour_4_5' => (float) ($request->input('sf3_hour_4_5') ?? 0),
-            'hour_5_6' => (float) ($request->input('sf3_hour_5_6') ?? 0),
-            'hour_6_7' => (float) ($request->input('sf3_hour_6_7') ?? 0),
-            'hour_7_8' => (float) ($request->input('sf3_hour_7_8') ?? 0),
+            'hour_8_9' => $request->input('sf3_hour_8_9') !== null ? (float) $request->input('sf3_hour_8_9') : null,
+            'hour_9_10' => $request->input('sf3_hour_9_10') !== null ? (float) $request->input('sf3_hour_9_10') : null,
+            'hour_10_11' => $request->input('sf3_hour_10_11') !== null ? (float) $request->input('sf3_hour_10_11') : null,
+            'hour_11_12' => $request->input('sf3_hour_11_12') !== null ? (float) $request->input('sf3_hour_11_12') : null,
+            'hour_12_1' => $request->input('sf3_hour_12_1') !== null ? (float) $request->input('sf3_hour_12_1') : null,
+            'hour_1_2' => $request->input('sf3_hour_1_2') !== null ? (float) $request->input('sf3_hour_1_2') : null,
+            'hour_2_3' => $request->input('sf3_hour_2_3') !== null ? (float) $request->input('sf3_hour_2_3') : null,
+            'hour_3_4' => $request->input('sf3_hour_3_4') !== null ? (float) $request->input('sf3_hour_3_4') : null,
+            'hour_4_5' => $request->input('sf3_hour_4_5') !== null ? (float) $request->input('sf3_hour_4_5') : null,
+            'hour_5_6' => $request->input('sf3_hour_5_6') !== null ? (float) $request->input('sf3_hour_5_6') : null,
+            'hour_6_7' => $request->input('sf3_hour_6_7') !== null ? (float) $request->input('sf3_hour_6_7') : null,
+            'hour_7_8' => $request->input('sf3_hour_7_8') !== null ? (float) $request->input('sf3_hour_7_8') : null,
             'actual_set_shift' => $actualSetShift,
             'manpower_workman' => (float) ($request->input('sf3_manpower') ?? 0),
             'staff_count' => (int) ($request->input('sf3_staff_count') ?? 0),

@@ -259,7 +259,7 @@
             if (showErrorPopup) {
                 Swal.fire({
                     title: 'Duplicate Not Allowed',
-                    text: `${machineName}: A report with the same date, shift, machine, item, and coil already exists.`,
+                    text: `${machineName}: A report with the same date, shift, machine, and coil already exists.`,
                     icon: 'error',
                     confirmButtonColor: '#3b82f6',
                     confirmButtonText: 'OK',
@@ -298,7 +298,7 @@
         let hourInputs = '';
         hourFields.forEach(field => {
             hourInputs += `<td class="border border-slate-300 px-2 py-2">
-                <input type="number" name="${field}[]" step="1" min="0" value="" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
+                <input type="text" name="${field}[]" value="" placeholder="-" class="w-full px-1 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 hour-input" oninput="sanitizeHourInput(this)" onchange="calculateActualSet(this)" onfocus="this.select()" disabled>
             </td>`;
         });
 
@@ -541,14 +541,24 @@
         evaluateActualSetConstraint(false);
     }
 
+    function sanitizeHourInput(input) {
+        let val = input.value.trim();
+        if (val === '-' || val === '') return;
+        val = val.replace(/[^0-9]/g, '');
+        input.value = val;
+    }
+
     function calculateActualSet(input) {
         const row = input.closest('tr');
         if (!row) return;
 
-        const hourInputs = row.querySelectorAll('input[name^="hour_"]');
+        const hourInputs = row.querySelectorAll('.hour-input');
         let total = 0;
         hourInputs.forEach(inp => {
-            total += Math.max(parseFloat(inp.value) || 0, 0);
+            const val = (inp.value || '').trim();
+            if (val !== '-' && val !== '') {
+                total += Math.max(parseFloat(val) || 0, 0);
+            }
         });
 
         const actualSetInput = row.querySelector('.actual-set');

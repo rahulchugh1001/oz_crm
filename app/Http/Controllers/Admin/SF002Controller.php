@@ -317,6 +317,20 @@ class SF002Controller extends Controller
             }
         }
 
+        // Sanitize hour fields: convert "-" to null before validation
+        $hourFieldNames = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8',
+        ];
+        foreach ($hourFieldNames as $hf) {
+            $prefixedField = $fieldPrefix . '_' . $hf;
+            $val = $request->input($prefixedField);
+            if ($val === '-' || $val === '') {
+                $request->merge([$prefixedField => null]);
+            }
+        }
+
         $validated = $request->validate([
             'selected_transfer_id' => 'required|integer|min:1',
             $fieldPrefix . '_report_date' => 'required|date',
@@ -326,18 +340,18 @@ class SF002Controller extends Controller
             $fieldPrefix . '_actual_set_shift' => 'required|numeric|min:0',
             $fieldPrefix . '_manpower' => 'required|numeric|min:0',
             $fieldPrefix . '_staff_count' => 'required|integer|min:0',
-            $fieldPrefix . '_hour_8_9' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_9_10' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_10_11' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_11_12' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_12_1' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_1_2' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_2_3' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_3_4' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_4_5' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_5_6' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_6_7' => 'required|numeric|min:0',
-            $fieldPrefix . '_hour_7_8' => 'required|numeric|min:0',
+            $fieldPrefix . '_hour_8_9' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_9_10' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_10_11' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_11_12' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_12_1' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_1_2' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_2_3' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_3_4' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_4_5' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_5_6' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_6_7' => 'nullable|numeric|min:0',
+            $fieldPrefix . '_hour_7_8' => 'nullable|numeric|min:0',
         ]);
 
         $selectedTransferId = (int) ($request->input('selected_transfer_id') ?: $transferId);
@@ -430,18 +444,18 @@ class SF002Controller extends Controller
             'item_id' => $transfer->item_id,
             'set_per_hour' => (float) ($request->input($fieldPrefix . '_set_per_hour') ?? 0),
             'total_set_shift' => $totalSetShift,
-            'hour_8_9' => (float) ($request->input($fieldPrefix . '_hour_8_9') ?? 0),
-            'hour_9_10' => (float) ($request->input($fieldPrefix . '_hour_9_10') ?? 0),
-            'hour_10_11' => (float) ($request->input($fieldPrefix . '_hour_10_11') ?? 0),
-            'hour_11_12' => (float) ($request->input($fieldPrefix . '_hour_11_12') ?? 0),
-            'hour_12_1' => (float) ($request->input($fieldPrefix . '_hour_12_1') ?? 0),
-            'hour_1_2' => (float) ($request->input($fieldPrefix . '_hour_1_2') ?? 0),
-            'hour_2_3' => (float) ($request->input($fieldPrefix . '_hour_2_3') ?? 0),
-            'hour_3_4' => (float) ($request->input($fieldPrefix . '_hour_3_4') ?? 0),
-            'hour_4_5' => (float) ($request->input($fieldPrefix . '_hour_4_5') ?? 0),
-            'hour_5_6' => (float) ($request->input($fieldPrefix . '_hour_5_6') ?? 0),
-            'hour_6_7' => (float) ($request->input($fieldPrefix . '_hour_6_7') ?? 0),
-            'hour_7_8' => (float) ($request->input($fieldPrefix . '_hour_7_8') ?? 0),
+            'hour_8_9' => $request->input($fieldPrefix . '_hour_8_9') !== null ? (float) $request->input($fieldPrefix . '_hour_8_9') : null,
+            'hour_9_10' => $request->input($fieldPrefix . '_hour_9_10') !== null ? (float) $request->input($fieldPrefix . '_hour_9_10') : null,
+            'hour_10_11' => $request->input($fieldPrefix . '_hour_10_11') !== null ? (float) $request->input($fieldPrefix . '_hour_10_11') : null,
+            'hour_11_12' => $request->input($fieldPrefix . '_hour_11_12') !== null ? (float) $request->input($fieldPrefix . '_hour_11_12') : null,
+            'hour_12_1' => $request->input($fieldPrefix . '_hour_12_1') !== null ? (float) $request->input($fieldPrefix . '_hour_12_1') : null,
+            'hour_1_2' => $request->input($fieldPrefix . '_hour_1_2') !== null ? (float) $request->input($fieldPrefix . '_hour_1_2') : null,
+            'hour_2_3' => $request->input($fieldPrefix . '_hour_2_3') !== null ? (float) $request->input($fieldPrefix . '_hour_2_3') : null,
+            'hour_3_4' => $request->input($fieldPrefix . '_hour_3_4') !== null ? (float) $request->input($fieldPrefix . '_hour_3_4') : null,
+            'hour_4_5' => $request->input($fieldPrefix . '_hour_4_5') !== null ? (float) $request->input($fieldPrefix . '_hour_4_5') : null,
+            'hour_5_6' => $request->input($fieldPrefix . '_hour_5_6') !== null ? (float) $request->input($fieldPrefix . '_hour_5_6') : null,
+            'hour_6_7' => $request->input($fieldPrefix . '_hour_6_7') !== null ? (float) $request->input($fieldPrefix . '_hour_6_7') : null,
+            'hour_7_8' => $request->input($fieldPrefix . '_hour_7_8') !== null ? (float) $request->input($fieldPrefix . '_hour_7_8') : null,
             'actual_set_shift' => $actualSetShift,
             'manpower_workman' => (float) ($request->input($fieldPrefix . '_manpower') ?? 0),
             'staff_count' => (int) ($request->input($fieldPrefix . '_staff_count') ?? 0),
@@ -502,18 +516,18 @@ class SF002Controller extends Controller
             'items.*.transfer_id'         => 'required|integer|min:1',
             'items.*.total_set_shift'     => 'required|numeric|min:0',
             'items.*.set_per_hour'        => 'required|numeric|min:0',
-            'items.*.hour_8_9'            => 'required|numeric|min:0',
-            'items.*.hour_9_10'           => 'required|numeric|min:0',
-            'items.*.hour_10_11'          => 'required|numeric|min:0',
-            'items.*.hour_11_12'          => 'required|numeric|min:0',
-            'items.*.hour_12_1'           => 'required|numeric|min:0',
-            'items.*.hour_1_2'            => 'required|numeric|min:0',
-            'items.*.hour_2_3'            => 'required|numeric|min:0',
-            'items.*.hour_3_4'            => 'required|numeric|min:0',
-            'items.*.hour_4_5'            => 'required|numeric|min:0',
-            'items.*.hour_5_6'            => 'required|numeric|min:0',
-            'items.*.hour_6_7'            => 'required|numeric|min:0',
-            'items.*.hour_7_8'            => 'required|numeric|min:0',
+            'items.*.hour_8_9'            => 'nullable|numeric|min:0',
+            'items.*.hour_9_10'           => 'nullable|numeric|min:0',
+            'items.*.hour_10_11'          => 'nullable|numeric|min:0',
+            'items.*.hour_11_12'          => 'nullable|numeric|min:0',
+            'items.*.hour_12_1'           => 'nullable|numeric|min:0',
+            'items.*.hour_1_2'            => 'nullable|numeric|min:0',
+            'items.*.hour_2_3'            => 'nullable|numeric|min:0',
+            'items.*.hour_3_4'            => 'nullable|numeric|min:0',
+            'items.*.hour_4_5'            => 'nullable|numeric|min:0',
+            'items.*.hour_5_6'            => 'nullable|numeric|min:0',
+            'items.*.hour_6_7'            => 'nullable|numeric|min:0',
+            'items.*.hour_7_8'            => 'nullable|numeric|min:0',
             $fieldPrefix . '_manpower'    => 'required|numeric|min:0',
             $fieldPrefix . '_staff_count'  => 'required|integer|min:0',
         ]);
@@ -526,6 +540,23 @@ class SF002Controller extends Controller
         $globalStaffCount = (int) ($request->input($fieldPrefix . '_staff_count') ?? 0);
 
         $items    = $request->input('items', []);
+
+        // Sanitize hour fields in bulk items: convert "-" to null
+        $bulkHourFields = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8',
+        ];
+        foreach ($items as &$item) {
+            foreach ($bulkHourFields as $bhf) {
+                if (isset($item[$bhf]) && ($item[$bhf] === '-' || $item[$bhf] === '')) {
+                    $item[$bhf] = null;
+                }
+            }
+        }
+        unset($item);
+        $request->merge(['items' => $items]);
+
         $errors   = [];
         $payloads = [];
 
@@ -600,18 +631,18 @@ class SF002Controller extends Controller
                 'item_id'          => $transfer->item_id,
                 'set_per_hour'     => (float) ($item['set_per_hour'] ?? 0),
                 'total_set_shift'  => $totalSetShift,
-                'hour_8_9'         => (float) ($item['hour_8_9'] ?? 0),
-                'hour_9_10'        => (float) ($item['hour_9_10'] ?? 0),
-                'hour_10_11'       => (float) ($item['hour_10_11'] ?? 0),
-                'hour_11_12'       => (float) ($item['hour_11_12'] ?? 0),
-                'hour_12_1'        => (float) ($item['hour_12_1'] ?? 0),
-                'hour_1_2'         => (float) ($item['hour_1_2'] ?? 0),
-                'hour_2_3'         => (float) ($item['hour_2_3'] ?? 0),
-                'hour_3_4'         => (float) ($item['hour_3_4'] ?? 0),
-                'hour_4_5'         => (float) ($item['hour_4_5'] ?? 0),
-                'hour_5_6'         => (float) ($item['hour_5_6'] ?? 0),
-                'hour_6_7'         => (float) ($item['hour_6_7'] ?? 0),
-                'hour_7_8'         => (float) ($item['hour_7_8'] ?? 0),
+                'hour_8_9'         => isset($item['hour_8_9']) && $item['hour_8_9'] !== null ? (float) $item['hour_8_9'] : null,
+                'hour_9_10'        => isset($item['hour_9_10']) && $item['hour_9_10'] !== null ? (float) $item['hour_9_10'] : null,
+                'hour_10_11'       => isset($item['hour_10_11']) && $item['hour_10_11'] !== null ? (float) $item['hour_10_11'] : null,
+                'hour_11_12'       => isset($item['hour_11_12']) && $item['hour_11_12'] !== null ? (float) $item['hour_11_12'] : null,
+                'hour_12_1'        => isset($item['hour_12_1']) && $item['hour_12_1'] !== null ? (float) $item['hour_12_1'] : null,
+                'hour_1_2'         => isset($item['hour_1_2']) && $item['hour_1_2'] !== null ? (float) $item['hour_1_2'] : null,
+                'hour_2_3'         => isset($item['hour_2_3']) && $item['hour_2_3'] !== null ? (float) $item['hour_2_3'] : null,
+                'hour_3_4'         => isset($item['hour_3_4']) && $item['hour_3_4'] !== null ? (float) $item['hour_3_4'] : null,
+                'hour_4_5'         => isset($item['hour_4_5']) && $item['hour_4_5'] !== null ? (float) $item['hour_4_5'] : null,
+                'hour_5_6'         => isset($item['hour_5_6']) && $item['hour_5_6'] !== null ? (float) $item['hour_5_6'] : null,
+                'hour_6_7'         => isset($item['hour_6_7']) && $item['hour_6_7'] !== null ? (float) $item['hour_6_7'] : null,
+                'hour_7_8'         => isset($item['hour_7_8']) && $item['hour_7_8'] !== null ? (float) $item['hour_7_8'] : null,
                 'actual_set_shift' => $actualSetShift,
                 'manpower_workman' => $globalManpower,
                 'staff_count'      => $globalStaffCount,

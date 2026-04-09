@@ -180,10 +180,6 @@ class ProductionReportController extends Controller
             ->where('is_deleted', false)
             ->where('is_draft', false);
 
-        if (!empty($validated['slide_size_id'])) {
-            $query->where('slide_size_id', $validated['slide_size_id']);
-        }
-
         if (!empty($validated['coil_id'])) {
             $query->where('coil_id', $validated['coil_id']);
         } else {
@@ -225,7 +221,7 @@ class ProductionReportController extends Controller
         return response()->json([
             'exists' => $exists,
             'message' => $exists
-                ? 'A report with the same date, shift, machine, item, and coil already exists.'
+                ? 'A report with the same date, shift, machine, and coil already exists.'
                 : 'This combination is available.',
             'filled_hours' => $filledHours,
         ]);
@@ -246,6 +242,24 @@ class ProductionReportController extends Controller
             : ['required', Rule::exists('items', 'id')->where(function ($query) {
                     $query->where('is_deleted', false)->where('status', true)->where('category', 'SF1-SF2');
                 })];
+
+        // Sanitize hour fields: convert "-" to null before validation
+        $hourFieldNames = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8',
+        ];
+        foreach ($hourFieldNames as $field) {
+            if ($request->has($field) && is_array($request->input($field))) {
+                $values = $request->input($field);
+                foreach ($values as &$value) {
+                    if ($value === '-' || $value === '') {
+                        $value = null;
+                    }
+                }
+                $request->merge([$field => $values]);
+            }
+        }
 
         // Validate arrays
         $validated = $request->validate([
