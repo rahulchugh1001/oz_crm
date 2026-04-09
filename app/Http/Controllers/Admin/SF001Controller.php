@@ -858,6 +858,13 @@ class SF001Controller extends Controller
                 'transfers.assign_sf2',
                 'transfers.remark',
                 'transfers.sf002_remark',
+                'transfers.is_self_transferred',
+                'transfers.self_transferred_parent_id',
+                'parent_transfer.assign_sf2 as parent_assign_sf2',
+                'parent_transfer.quantity as parent_quantity',
+                'parent_transfer.date as parent_date',
+                'parent_transfer.time as parent_time',
+                'parent_transfer_by_user.name as parent_transfer_by_name',
                 'transfers.created_at',
                 'transfer_by_user.name as transfer_by_name',
                 'assign_to_user.name as assign_to_name'
@@ -865,6 +872,8 @@ class SF001Controller extends Controller
             ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
             ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
             ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
+            ->leftJoin('sf001_stock_transfers as parent_transfer', 'transfers.self_transferred_parent_id', '=', 'parent_transfer.id')
+            ->leftJoin('users as parent_transfer_by_user', 'parent_transfer.transfer_by', '=', 'parent_transfer_by_user.id')
             ->where('transfers.item_id', $itemId)
             ->where('transfers.is_deleted', false)
             ->orderByDesc('transfers.date')

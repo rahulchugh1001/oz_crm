@@ -161,6 +161,7 @@
                         <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Rejected Quantity</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Reject Reason</th>
                         <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Self Transferred</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Roll Forming (SF1) Remark</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">SF002 Remark</th>
                     </tr>
@@ -231,6 +232,20 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700">Pending</span>
                             @endif
                         </td>
+                        <td class="px-4 py-3 text-center">
+                            @if($transfer->is_self_transferred)
+                                <div class="flex flex-col items-center gap-1">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700">
+                                        <i data-lucide="repeat" class="w-3 h-3 mr-1"></i> Yes
+                                    </span>
+                                    @if($transfer->parent_assign_sf2)
+                                        <span class="text-[10px] text-slate-500">From {{ $transfer->parent_assign_sf2 }}</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="text-slate-400">-</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-slate-700 align-top">
                             @if($sf001Remark === '')
                                 -
@@ -260,7 +275,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="11" class="px-4 py-10 text-center">
+                        <td colspan="12" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
