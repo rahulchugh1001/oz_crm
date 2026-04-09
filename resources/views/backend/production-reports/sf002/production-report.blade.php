@@ -247,6 +247,10 @@
                     <a href="{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced')]) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                         Cancel
                     </a>
+                    <button type="button" id="saveDraftBtn" onclick="saveAsDraft()" class="px-5 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition-all">
+                        <i data-lucide="save" class="w-4 h-4 inline-block mr-1 -mt-0.5"></i>
+                        Save as Draft
+                    </button>
                     <button type="submit" class="px-4 py-2 rounded-lg text-white hover:opacity-90 font-medium" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         {{ isset($existingReport) && $existingReport ? 'Update Report' : 'Save Report' }}
                     </button>
@@ -682,6 +686,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            formSubmitted = true;
             await showSubmitSuccess(data.message || 'Production report saved successfully.');
             window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced'), 'tab' => 'production']) }}';
         } catch (error) {
@@ -917,6 +922,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            formSubmitted = true;
             await showSubmitSuccess(data.message || 'Production reports saved successfully.');
             window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced'), 'tab' => 'production']) }}';
         } catch (error) {
@@ -936,5 +942,137 @@ function scrollTableHorizontal(direction) {
     const delta = direction === 'left' ? -amount : amount;
     tableScrollContainer.scrollBy({ left: delta, behavior: 'auto' });
 }
+
+let draftSaving = false;
+let formSubmitted = false;
+
+function isFormDirty() {
+    const form = document.getElementById('productionReportForm');
+    if (!form) return false;
+
+    // Check single-mode hourly inputs
+    const hourInputs = form.querySelectorAll('.sf2-hour-input');
+    for (const input of hourInputs) {
+        if (input.value && input.value !== '-' && parseFloat(input.value) > 0) return true;
+    }
+
+    // Check total set shift
+    const totalSetInput = form.querySelector('input[name$="_total_set_shift"]');
+    if (totalSetInput && totalSetInput.value && parseFloat(totalSetInput.value) > 0) return true;
+
+    // Check bulk mode rows
+    const multiModeBody = document.getElementById('multiModeBody');
+    if (multiModeBody && multiModeBody.querySelectorAll('tr').length > 0) return true;
+
+    return false;
+}
+
+async function saveAsDraft() {
+    const form = document.getElementById('productionReportForm');
+    if (!form) return;
+
+    // In bulk mode, check at least one item exists
+    const _bulkToggle = document.getElementById('bulkModeToggle');
+    const isBulk = _bulkToggle && _bulkToggle.getAttribute('aria-checked') === 'true';
+    if (isBulk) {
+        const multiModeBody = document.getElementById('multiModeBody');
+        const rows = multiModeBody ? multiModeBody.querySelectorAll('tr') : [];
+        if (rows.length === 0) {
+            Swal.fire('No Items', 'Please add at least one item to save as draft.', 'warning');
+            return;
+        }
+    }
+
+    draftSaving = true;
+    const draftBtn = document.getElementById('saveDraftBtn');
+    const originalHTML = draftBtn.innerHTML;
+    draftBtn.disabled = true;
+    draftBtn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 inline-block mr-1 -mt-0.5 animate-spin"></i> Saving...';
+
+    try {
+        const formData = new FormData(form);
+        formData.append('is_draft', '1');
+        if (isBulk) {
+            formData.append('bulk_mode', '1');
+        }
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: formData,
+        });
+
+        const data = await response.json().catch(function () { return {}; });
+
+        if (response.ok) {
+            formSubmitted = true;
+            Swal.fire({
+                title: 'Draft Saved!',
+                text: data.message || 'Your production report has been saved as a draft.',
+                icon: 'success',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            }).then(function () {
+                window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf002.process', ['type' => request()->query('type', 'ced'), 'tab' => 'production']) }}';
+            });
+            return;
+        }
+
+        if (response.status === 422) {
+            const validationErrors = data.errors || {};
+            const firstFieldKey = Object.keys(validationErrors)[0];
+            const firstFieldError = firstFieldKey ? validationErrors[firstFieldKey][0] : null;
+            const message = firstFieldError || data.message || 'Validation failed.';
+            Swal.fire('Validation Error', message, 'error');
+            return;
+        }
+
+        Swal.fire('Error', data.message || 'Something went wrong.', 'error');
+    } catch (error) {
+        Swal.fire('Network Error', 'Please check your connection and try again.', 'error');
+    } finally {
+        draftBtn.disabled = false;
+        draftBtn.innerHTML = originalHTML;
+        draftSaving = false;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
+// Intercept navigation away (back button, closing tab)
+window.addEventListener('beforeunload', function (e) {
+    if (formSubmitted || draftSaving) return;
+    if (!isFormDirty()) return;
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// Intercept link clicks within the page for SweetAlert draft prompt
+document.addEventListener('click', function (e) {
+    if (formSubmitted || draftSaving) return;
+    var link = e.target.closest('a[href]');
+    if (!link) return;
+    if (link.getAttribute('href') === '#' || link.getAttribute('target') === '_blank') return;
+    if (!isFormDirty()) return;
+
+    e.preventDefault();
+    var targetUrl = link.href;
+
+    Swal.fire({
+        title: 'Unsaved Changes',
+        text: 'You have unsaved data. Would you like to save it as a draft?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Save as Draft',
+        cancelButtonText: 'Stay',
+        confirmButtonColor: '#d97706',
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            saveAsDraft();
+        }
+    });
+});
 </script>
 @endpush

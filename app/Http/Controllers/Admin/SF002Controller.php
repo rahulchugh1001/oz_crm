@@ -156,6 +156,8 @@ class SF002Controller extends Controller
                 ->get();
         }
 
+        $mode = $request->query('mode', 'active');
+
         $sf2ProductionReportsQuery = DB::table('sf2_production_reports as reports')
             ->select(
                 'reports.*',
@@ -170,6 +172,12 @@ class SF002Controller extends Controller
             ->where('reports.type', strtolower($sf2Type))
             ->orderByDesc('reports.report_date')
             ->orderByDesc('reports.created_at');
+
+        if ($mode === 'draft') {
+            $sf2ProductionReportsQuery->where('reports.is_draft', true);
+        } else {
+            $sf2ProductionReportsQuery->where('reports.is_draft', false);
+        }
 
         if (Auth::user()?->role !== 'Admin') {
             $sf2ProductionReportsQuery->where('reports.created_by', Auth::id());
@@ -301,10 +309,11 @@ class SF002Controller extends Controller
         }
 
         $fieldPrefix = $sf2Type;
+        $isDraft = (bool) $request->input('is_draft', false);
 
         // Handle bulk mode
         if ($request->boolean('bulk_mode')) {
-            return $this->storeBulkProductionReport($request, $sf2Type);
+            return $this->storeBulkProductionReport($request, $sf2Type, $isDraft);
         }
 
         $encryptedReportIdInput = (string) $request->input('report_id', '');
@@ -331,15 +340,17 @@ class SF002Controller extends Controller
             }
         }
 
+        $requiredOrNullable = $isDraft ? 'nullable' : 'required';
+
         $validated = $request->validate([
             'selected_transfer_id' => 'required|integer|min:1',
-            $fieldPrefix . '_report_date' => 'required|date',
-            $fieldPrefix . '_shift' => 'required|in:morning,night',
-            $fieldPrefix . '_set_per_hour' => 'required|numeric|min:0',
-            $fieldPrefix . '_total_set_shift' => 'required|numeric|min:0',
-            $fieldPrefix . '_actual_set_shift' => 'required|numeric|min:0',
-            $fieldPrefix . '_manpower' => 'required|numeric|min:0',
-            $fieldPrefix . '_staff_count' => 'required|integer|min:0',
+            $fieldPrefix . '_report_date' => $requiredOrNullable . '|date',
+            $fieldPrefix . '_shift' => $requiredOrNullable . '|in:morning,night',
+            $fieldPrefix . '_set_per_hour' => $requiredOrNullable . '|numeric|min:0',
+            $fieldPrefix . '_total_set_shift' => $requiredOrNullable . '|numeric|min:0',
+            $fieldPrefix . '_actual_set_shift' => $requiredOrNullable . '|numeric|min:0',
+            $fieldPrefix . '_manpower' => $requiredOrNullable . '|numeric|min:0',
+            $fieldPrefix . '_staff_count' => $requiredOrNullable . '|integer|min:0',
             $fieldPrefix . '_hour_8_9' => 'nullable|numeric|min:0',
             $fieldPrefix . '_hour_9_10' => 'nullable|numeric|min:0',
             $fieldPrefix . '_hour_10_11' => 'nullable|numeric|min:0',
@@ -417,22 +428,24 @@ class SF002Controller extends Controller
         $availableQuantity = max($baseAvailableQuantity - $alreadyUsedQuantity, 0);
         $totalSetShift = (float) ($request->input($fieldPrefix . '_total_set_shift') ?? 0);
 
-        if ($totalSetShift > $availableQuantity) {
-            $message = 'Total Set/Shift cannot be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $message], 422);
+        if (!$isDraft) {
+            if ($totalSetShift > $availableQuantity) {
+                $message = 'Total Set/Shift cannot be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 422);
+                }
+
+                return back()->with('error', $message);
             }
 
-            return back()->with('error', $message);
-        }
+            if ($actualSetShift > $availableQuantity) {
+                $message = 'Actual Set/Shift cannot be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
+                if ($request->expectsJson()) {
+                    return response()->json(['message' => $message], 422);
+                }
 
-        if ($actualSetShift > $availableQuantity) {
-            $message = 'Actual Set/Shift cannot be greater than pending quantity (' . number_format($availableQuantity, 0, '.', '') . ').';
-            if ($request->expectsJson()) {
-                return response()->json(['message' => $message], 422);
+                return back()->with('error', $message);
             }
-
-            return back()->with('error', $message);
         }
 
         $payload = [
@@ -461,6 +474,7 @@ class SF002Controller extends Controller
             'staff_count' => (int) ($request->input($fieldPrefix . '_staff_count') ?? 0),
             'status' => 1,
             'is_deleted' => 0,
+            'is_draft' => $isDraft,
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -489,7 +503,9 @@ class SF002Controller extends Controller
             DB::table('sf2_production_reports')->insert($payload);
         }
 
-        $successMessage = $reportId > 0 ? 'Production report updated successfully.' : 'Production report saved successfully.';
+        $successMessage = $isDraft
+            ? ($reportId > 0 ? 'Draft updated successfully.' : 'Production report saved as draft.')
+            : ($reportId > 0 ? 'Production report updated successfully.' : 'Production report saved successfully.');
         $redirectUrl = route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production']);
 
         if ($request->expectsJson()) {
@@ -505,17 +521,18 @@ class SF002Controller extends Controller
     /**
      * Handle bulk production report creation (multiple items at once).
      */
-    private function storeBulkProductionReport(Request $request, string $sf2Type): JsonResponse
+    private function storeBulkProductionReport(Request $request, string $sf2Type, bool $isDraft = false): JsonResponse
     {
         $fieldPrefix = $sf2Type;
+        $requiredOrNullable = $isDraft ? 'nullable' : 'required';
 
         $request->validate([
-            $fieldPrefix . '_report_date' => 'required|date',
-            $fieldPrefix . '_shift'       => 'required|in:morning,night',
+            $fieldPrefix . '_report_date' => $requiredOrNullable . '|date',
+            $fieldPrefix . '_shift'       => $requiredOrNullable . '|in:morning,night',
             'items'                       => 'required|array|min:1',
             'items.*.transfer_id'         => 'required|integer|min:1',
-            'items.*.total_set_shift'     => 'required|numeric|min:0',
-            'items.*.set_per_hour'        => 'required|numeric|min:0',
+            'items.*.total_set_shift'     => $requiredOrNullable . '|numeric|min:0',
+            'items.*.set_per_hour'        => $requiredOrNullable . '|numeric|min:0',
             'items.*.hour_8_9'            => 'nullable|numeric|min:0',
             'items.*.hour_9_10'           => 'nullable|numeric|min:0',
             'items.*.hour_10_11'          => 'nullable|numeric|min:0',
@@ -528,8 +545,8 @@ class SF002Controller extends Controller
             'items.*.hour_5_6'            => 'nullable|numeric|min:0',
             'items.*.hour_6_7'            => 'nullable|numeric|min:0',
             'items.*.hour_7_8'            => 'nullable|numeric|min:0',
-            $fieldPrefix . '_manpower'    => 'required|numeric|min:0',
-            $fieldPrefix . '_staff_count'  => 'required|integer|min:0',
+            $fieldPrefix . '_manpower'    => $requiredOrNullable . '|numeric|min:0',
+            $fieldPrefix . '_staff_count'  => $requiredOrNullable . '|integer|min:0',
         ]);
 
         $sf2TypeDbValue = strtoupper($sf2Type);
@@ -612,14 +629,16 @@ class SF002Controller extends Controller
             $availableQuantity = max($baseAvailableQuantity - $alreadyUsedQuantity, 0);
             $totalSetShift = (float) ($item['total_set_shift'] ?? 0);
 
-            if ($totalSetShift > $availableQuantity) {
-                $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Total Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
-                continue;
-            }
+            if (!$isDraft) {
+                if ($totalSetShift > $availableQuantity) {
+                    $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Total Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
+                    continue;
+                }
 
-            if ($actualSetShift > $availableQuantity) {
-                $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Actual Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
-                continue;
+                if ($actualSetShift > $availableQuantity) {
+                    $errors[] = "Item #" . ($index + 1) . " (" . ($transfer->item_code ?? '') . "): Actual Set/Shift exceeds pending quantity (" . number_format($availableQuantity, 0, '.', '') . ").";
+                    continue;
+                }
             }
 
             $payloads[] = [
@@ -648,6 +667,7 @@ class SF002Controller extends Controller
                 'staff_count'      => $globalStaffCount,
                 'status'           => 1,
                 'is_deleted'       => 0,
+                'is_draft'         => $isDraft,
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ];
@@ -666,7 +686,9 @@ class SF002Controller extends Controller
         $redirectUrl = route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production']);
 
         return response()->json([
-            'message'      => count($payloads) . ' production report(s) saved successfully.',
+            'message'      => $isDraft
+                ? count($payloads) . ' production report(s) saved as draft.'
+                : count($payloads) . ' production report(s) saved successfully.',
             'redirect_url' => $redirectUrl,
         ]);
     }

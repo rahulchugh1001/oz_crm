@@ -1170,18 +1170,12 @@
             text: 'You have unsaved data. Would you like to save it as a draft?',
             icon: 'question',
             showCancelButton: true,
-            showDenyButton: true,
             confirmButtonText: 'Save as Draft',
-            denyButtonText: 'Discard & Leave',
             cancelButtonText: 'Stay',
             confirmButtonColor: '#d97706',
-            denyButtonColor: '#64748b',
         }).then((result) => {
             if (result.isConfirmed) {
                 saveAsDraft();
-            } else if (result.isDenied) {
-                formSubmitted = true;
-                window.location.href = targetUrl;
             }
         });
     });

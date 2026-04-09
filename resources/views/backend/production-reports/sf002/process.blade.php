@@ -5,6 +5,8 @@
     $sf2TypeLabel = $sf2Type === 'zinc' ? 'ZINC' : 'CED';
     $activeTab = strtolower((string) request()->query('tab', 'production'));
     $activeTab = in_array($activeTab, ['stock', 'production'], true) ? $activeTab : 'production';
+    $mode = strtolower((string) request()->query('mode', 'active'));
+    $mode = in_array($mode, ['active', 'draft'], true) ? $mode : 'active';
     $firstAcceptedTransfer = $acceptedTransfers->first();
     $stockCount = $acceptedTransfers->count();
 @endphp
@@ -205,6 +207,14 @@
             </table>
         </div>
         @else
+        <div class="flex items-center gap-2 mb-3 px-1">
+            <a href="{{ route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production', 'mode' => 'active']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border {{ $mode === 'active' ? 'text-white border-transparent' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}" @if($mode === 'active') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
+                Active
+            </a>
+            <a href="{{ route('admin.production-reports.sf002.process', ['type' => $sf2Type, 'tab' => 'production', 'mode' => 'draft']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border {{ $mode === 'draft' ? 'bg-amber-600 text-white border-amber-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50' }}">
+                Draft
+            </a>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-[13px]">
                 <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
@@ -230,7 +240,12 @@
                         $staffCount = number_format((float) ($report->staff_count ?? 0), 0);
                     @endphp
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">#{{ $report->id }}</td>
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">
+                            #{{ $report->id }}
+                            @if($report->is_draft ?? false)
+                                <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Draft</span>
+                            @endif
+                        </td>
                         <td class="px-3 py-2.5 text-xs text-slate-900">
                             {{ $report->item_code ?? '-' }} - {{ $report->item_name ?? '-' }} ({{ $report->item_size ?? '-' }})
                         </td>
