@@ -436,6 +436,13 @@
             'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'
         ];
 
+        const hourLabels = {
+            'hour_8_9': '8AM–9AM', 'hour_9_10': '9AM–10AM', 'hour_10_11': '10AM–11AM',
+            'hour_11_12': '11AM–12PM', 'hour_12_1': '12PM–1PM', 'hour_1_2': '1PM–2PM',
+            'hour_2_3': '2PM–3PM', 'hour_3_4': '3PM–4PM', 'hour_4_5': '4PM–5PM',
+            'hour_5_6': '5PM–6PM', 'hour_6_7': '6PM–7PM', 'hour_7_8': '7PM–8PM'
+        };
+
         // Only lock hours that individually have data (non-null)
         let lockedCount = 0;
         hourFields.forEach(field => {
@@ -444,10 +451,10 @@
                 input.value = '';
                 input.setAttribute('data-locked', '1');
                 input.readOnly = true;
-                input.style.pointerEvents = 'none';
                 input.tabIndex = -1;
                 input.classList.add('bg-slate-200', 'cursor-not-allowed');
-                input.title = 'Already record found for this machine, date, and shift';
+                input.title = `${hourLabels[field]} is locked — a record already exists for this machine, date, and shift in this time slot.`;
+                input.style.cursor = 'not-allowed';
                 lockedCount++;
             }
         });
