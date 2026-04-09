@@ -225,6 +225,7 @@
         return {
             allowed: !data.exists,
             message: data.message,
+            filled_hours: data.filled_hours || {},
         };
     }
 
@@ -268,7 +269,7 @@
             return { allowed: false, reason: 'duplicate' };
         }
 
-        return { allowed: true, reason: null };
+        return { allowed: true, reason: null, filled_hours: result.filled_hours };
     }
 
     function addMachineRow(machine) {
@@ -347,9 +348,11 @@
         }
     }
 
-    async function toggleRowInputs(checkbox) {
+    async function toggleRowInputs(checkbox, filledHoursOverride) {
         const row = checkbox.closest('tr');
         if (!row) return;
+
+        let selectionCheck = null;
 
         if (checkbox.checked) {
             if (row.dataset.hasCoil !== '1') {
@@ -380,7 +383,7 @@
             }
 
             checkbox.disabled = true;
-            const selectionCheck = await canSelectMachineForCurrentFilters(row, true);
+            selectionCheck = await canSelectMachineForCurrentFilters(row, true);
             checkbox.disabled = false;
 
             if (!selectionCheck.allowed) {
@@ -396,10 +399,25 @@
 
         inputs.forEach(input => {
             input.disabled = !isChecked;
+            // Clear locked state when unchecking
+            if (!isChecked) {
+                input.removeAttribute('data-locked');
+                input.readOnly = false;
+                input.style.pointerEvents = '';
+                input.tabIndex = 0;
+                input.classList.remove('bg-slate-200', 'cursor-not-allowed');
+                input.title = '';
+            }
         });
 
         if (selectedInput) {
             selectedInput.disabled = !isChecked;
+        }
+
+        // Lock hours already filled by other reports for the same machine+date+shift
+        const filledHours = filledHoursOverride || (selectionCheck ? selectionCheck.filled_hours : null);
+        if (isChecked && filledHours) {
+            lockFilledHours(row, filledHours);
         }
 
         updateSelectAllCheckbox();
@@ -409,6 +427,61 @@
 
     function updateTotals() {
         // Workman and Staff are now entered globally at the top, no per-row totals needed
+    }
+
+    function lockFilledHours(row, filledHours) {
+        const hourFields = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'
+        ];
+
+        // Check if ANY hour is locked (means all will be locked)
+        const anyLocked = hourFields.some(f => filledHours[f]);
+        if (!anyLocked) return;
+
+        hourFields.forEach(field => {
+            const input = row.querySelector(`input[name="${field}[]"]`);
+            if (input) {
+                input.value = '';
+                input.setAttribute('data-locked', '1');
+                input.readOnly = true;
+                input.style.pointerEvents = 'none';
+                input.tabIndex = -1;
+                input.classList.add('bg-slate-200', 'cursor-not-allowed');
+                input.title = 'Already record found for this machine, date, and shift';
+            }
+        });
+
+        // Also lock total_set_shift and slide_size
+        const totalSetInput = row.querySelector('input[name="total_set_shift[]"]');
+        if (totalSetInput) {
+            totalSetInput.setAttribute('data-locked', '1');
+            totalSetInput.readOnly = true;
+            totalSetInput.style.pointerEvents = 'none';
+            totalSetInput.tabIndex = -1;
+            totalSetInput.classList.add('bg-slate-200', 'cursor-not-allowed');
+            totalSetInput.title = 'Already record found for this machine, date, and shift';
+        }
+
+        const slideSizeSelect = row.querySelector('select[name="slide_size_id[]"]');
+        if (slideSizeSelect) {
+            slideSizeSelect.setAttribute('data-locked', '1');
+            slideSizeSelect.disabled = true;
+            slideSizeSelect.classList.add('bg-slate-200', 'cursor-not-allowed');
+            slideSizeSelect.title = 'Already record found for this machine, date, and shift';
+        }
+
+        const machineName = (row.querySelector('td:nth-child(2) div > div')?.textContent || '').trim();
+
+        Swal.fire({
+            title: 'Not Allowed',
+            html: `<p><strong>${machineName}</strong> already has a record for this date and shift.</p>
+                   <p class="text-sm text-slate-500 mt-1">All hour blocks are locked.</p>`,
+            icon: 'warning',
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'OK',
+        });
     }
 
     async function toggleAllRows(selectAll) {
@@ -431,13 +504,13 @@
             const selectionCheck = await canSelectMachineForCurrentFilters(row, false);
             if (!selectionCheck.allowed) {
                 checkbox.checked = false;
-                await toggleRowInputs(checkbox);
+                await toggleRowInputs(checkbox, null);
                 skippedCount++;
                 continue;
             }
 
             checkbox.checked = true;
-            await toggleRowInputs(checkbox);
+            await toggleRowInputs(checkbox, selectionCheck.filled_hours || null);
         }
 
         if (skippedCount > 0) {
@@ -774,6 +847,12 @@
         const productionForm = document.getElementById('productionReportCreateForm');
         if (productionForm) {
             productionForm.addEventListener('input', function (event) {
+                // Prevent changes on locked hour inputs
+                if (event.target && event.target.getAttribute('data-locked') === '1') {
+                    event.target.value = '';
+                    return;
+                }
+
                 if (event.target && event.target.matches('input[type="number"]')) {
                     enforceNonNegative(event.target);
                 }

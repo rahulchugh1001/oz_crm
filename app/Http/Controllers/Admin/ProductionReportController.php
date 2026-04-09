@@ -192,11 +192,46 @@ class ProductionReportController extends Controller
 
         $exists = $query->exists();
 
+        // Find hours already filled by other reports for the same machine+date+shift (any coil/item)
+        $filledHours = [];
+        if (!$exists) {
+            $hourFields = [
+                'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+                'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+                'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8',
+            ];
+
+            $existingReports = ProductionReport::query()
+                ->where('machine_id', $validated['machine_id'])
+                ->where('report_date', $validated['report_date'])
+                ->where('shift', $validated['shift'])
+                ->where('is_deleted', false)
+                ->where('is_draft', false)
+                ->get($hourFields);
+
+            // Check if ANY hour has a value (0 or greater) in any existing report
+            $hasAnyFilledHour = false;
+            foreach ($existingReports as $report) {
+                foreach ($hourFields as $field) {
+                    if ($report->$field !== null && (float) $report->$field >= 0) {
+                        $hasAnyFilledHour = true;
+                        break 2;
+                    }
+                }
+            }
+
+            // If any hour is filled, lock ALL hours for this machine+date+shift
+            foreach ($hourFields as $field) {
+                $filledHours[$field] = $hasAnyFilledHour;
+            }
+        }
+
         return response()->json([
             'exists' => $exists,
             'message' => $exists
                 ? 'A report with the same date, shift, machine, item, and coil already exists.'
                 : 'This combination is available.',
+            'filled_hours' => $filledHours,
         ]);
     }
 
@@ -284,6 +319,11 @@ class ProductionReportController extends Controller
         }
 
         $this->validateDuplicateCombinations($validated, null, $isDraft);
+
+        // Validate no hour overlap with existing reports for the same machine+date+shift
+        if (!$isDraft) {
+            $this->validateHourOverlap($validated);
+        }
 
         $createdCount = 0;
 
@@ -439,6 +479,11 @@ class ProductionReportController extends Controller
 
         $this->validateDuplicateCombinations($validated, $productionReport, $isDraft);
 
+        // Validate no hour overlap with existing reports for the same machine+date+shift
+        if (!$isDraft) {
+            $this->validateHourOverlap($validated, $productionReport);
+        }
+
         $updatedCount = 0;
 
         foreach ($selectedMachines as $i => $machineId) {
@@ -534,6 +579,66 @@ class ProductionReportController extends Controller
 
             if ($query->exists()) {
                 $errors["machine_id.$i"] = 'Duplicate entry not allowed: a report with the same date, shift, machine, item, and coil already exists.';
+            }
+        }
+
+        if (!empty($errors)) {
+            throw ValidationException::withMessages($errors);
+        }
+    }
+
+    /**
+     * Validate that submitted hourly values don't overlap with existing reports
+     * for the same machine + date + shift (regardless of coil/item).
+     */
+    private function validateHourOverlap(array $validated, ?ProductionReport $currentReport = null): void
+    {
+        $selectedMachines = $validated['selected_machines'] ?? [];
+        $hourFields = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8',
+        ];
+        $errors = [];
+
+        foreach ($selectedMachines as $i => $machineId) {
+            $reportDate = $validated['report_date'][$i] ?? null;
+            $shift = $validated['shift'][$i] ?? null;
+
+            $query = ProductionReport::query()
+                ->where('machine_id', $machineId)
+                ->where('report_date', $reportDate)
+                ->where('shift', $shift)
+                ->where('is_deleted', false)
+                ->where('is_draft', false);
+
+            if ($currentReport) {
+                $query->where('id', '!=', $currentReport->id);
+            }
+
+            $existingReports = $query->get($hourFields);
+            if ($existingReports->isEmpty()) {
+                continue;
+            }
+
+            // If any hour has a value in existing reports, block ALL hours
+            $hasAnyFilledHour = false;
+            foreach ($existingReports as $report) {
+                foreach ($hourFields as $field) {
+                    if ($report->$field !== null && (float) $report->$field >= 0) {
+                        $hasAnyFilledHour = true;
+                        break 2;
+                    }
+                }
+            }
+
+            if ($hasAnyFilledHour) {
+                foreach ($hourFields as $field) {
+                    $submittedValue = $validated[$field][$i] ?? null;
+                    if ($submittedValue !== null) {
+                        $errors["$field.$i"] = "This hour is already reported for the same machine, date, and shift.";
+                    }
+                }
             }
         }
 
