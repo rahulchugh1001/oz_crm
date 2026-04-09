@@ -1031,48 +1031,14 @@ class SF002Controller extends Controller
             return back()->withErrors(['to_type' => 'Source and destination type cannot be the same.'])->withInput();
         }
 
-        // Calculate available stock for the source type
-        $totalProduced = (float) DB::table('sf2_production_reports')
+        // Calculate available stock from sf001_stock_transfers (accepted, non-deleted, matching item + source type)
+        $availableStock = (float) DB::table('sf001_stock_transfers')
             ->where('item_id', $validated['item_id'])
-            ->where('type', $validated['from_type'])
-            ->where('is_deleted', 0)
-            ->sum('actual_set_shift');
-
-        $totalTransferred = (float) DB::table('sf002_stock_transfers')
-            ->where('item_id', $validated['item_id'])
-            ->where('type', $validated['from_type'])
+            ->where('assign_sf2', strtoupper($validated['from_type']))
+            ->where('is_accept', 1)
             ->where('is_deleted', false)
-            ->selectRaw("COALESCE(SUM(CASE
-                WHEN is_accept = 2 THEN 0
-                WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
-                ELSE quantity
-            END), 0) as transferred_quantity")
-            ->value('transferred_quantity') ?? 0;
-
-        $totalRejected = (float) DB::table('sf002_stock_transfers')
-            ->where('item_id', $validated['item_id'])
-            ->where('type', $validated['from_type'])
-            ->where('is_deleted', false)
-            ->selectRaw("COALESCE(SUM(CASE
-                WHEN is_accept = 2 THEN quantity
-                WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
-                ELSE 0
-            END), 0) as rejected_quantity")
-            ->value('rejected_quantity') ?? 0;
-
-        $selfOut = (float) DB::table('sf2_self_transfers')
-            ->where('item_id', $validated['item_id'])
-            ->where('from_type', $validated['from_type'])
-            ->where('is_deleted', false)
-            ->sum('quantity');
-
-        $selfIn = (float) DB::table('sf2_self_transfers')
-            ->where('item_id', $validated['item_id'])
-            ->where('to_type', $validated['from_type'])
-            ->where('is_deleted', false)
-            ->sum('quantity');
-
-        $availableStock = max($totalProduced + $selfIn - $selfOut - $totalTransferred - $totalRejected, 0);
+            ->selectRaw('COALESCE(SUM(GREATEST(quantity - COALESCE(reject_quantity, 0), 0)), 0) as available')
+            ->value('available');
 
         if ((float) $validated['quantity'] > $availableStock) {
             return back()->withErrors([
@@ -1080,21 +1046,92 @@ class SF002Controller extends Controller
             ])->withInput();
         }
 
-        DB::table('sf2_self_transfers')->insert([
-            'item_id'     => $validated['item_id'],
-            'from_type'   => $validated['from_type'],
-            'to_type'     => $validated['to_type'],
-            'quantity'    => $validated['quantity'],
-            'date'        => $validated['date'],
-            'time'        => $validated['time'],
-            'transfer_by' => Auth::id(),
-            'remark'      => $validated['remark'] ?? null,
-            'is_deleted'  => false,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+        $fromType = strtoupper($validated['from_type']);
+        $toType   = strtoupper($validated['to_type']);
 
-        return back()->with('success', 'Self-transfer from ' . strtoupper($validated['from_type']) . ' to ' . strtoupper($validated['to_type']) . ' saved successfully.');
+        DB::beginTransaction();
+        try {
+            // 1. Insert into sf2_self_transfers (for sf2-stock page tracking)
+            DB::table('sf2_self_transfers')->insert([
+                'item_id'     => $validated['item_id'],
+                'from_type'   => $validated['from_type'],
+                'to_type'     => $validated['to_type'],
+                'quantity'    => $validated['quantity'],
+                'date'        => $validated['date'],
+                'time'        => $validated['time'],
+                'transfer_by' => Auth::id(),
+                'remark'      => $validated['remark'] ?? null,
+                'is_deleted'  => false,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            // 2. Find parent sf001_stock_transfers records (accepted, same item + source type) FIFO
+            $parents = DB::table('sf001_stock_transfers')
+                ->where('item_id', $validated['item_id'])
+                ->where('assign_sf2', $fromType)
+                ->where('is_accept', 1)
+                ->where('is_deleted', false)
+                ->whereRaw('(quantity - COALESCE(reject_quantity, 0)) > 0')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            $remainingQty   = (float) $validated['quantity'];
+            $firstParentId  = null;
+            $parentRole     = null;
+            $parentAssignTo = null;
+
+            // 3. Reduce parent quantities in FIFO order
+            foreach ($parents as $parent) {
+                if ($remainingQty <= 0) break;
+
+                $parentAccepted = (float) $parent->quantity - (float) ($parent->reject_quantity ?? 0);
+                $deduct = min($remainingQty, $parentAccepted);
+
+                DB::table('sf001_stock_transfers')
+                    ->where('id', $parent->id)
+                    ->decrement('quantity', $deduct, ['updated_at' => now()]);
+
+                if ($firstParentId === null) {
+                    $firstParentId  = $parent->id;
+                    $parentRole     = $parent->assign_role;
+                    $parentAssignTo = $parent->assign_to;
+                }
+
+                $remainingQty -= $deduct;
+            }
+
+            // 4. Create new sf001_stock_transfers entry for the destination type
+            DB::table('sf001_stock_transfers')->insert([
+                'item_id'                  => $validated['item_id'],
+                'transfer_by'              => Auth::id(),
+                'assign_role'              => $parentRole,
+                'assign_sf2'               => $toType,
+                'assign_to'                => $parentAssignTo,
+                'quantity'                 => $validated['quantity'],
+                'reject_quantity'          => 0,
+                'reject_reason_id'         => null,
+                'date'                     => $validated['date'],
+                'time'                     => $validated['time'],
+                'is_accept'                => 1,
+                'remark'                   => $validated['remark'] ?? null,
+                'sf002_remark'             => null,
+                'is_deleted'               => false,
+                'is_self_transferred'      => true,
+                'self_transferred_parent_id' => $firstParentId,
+                'created_at'               => now(),
+                'updated_at'               => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Self-transfer failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->withErrors(['quantity' => 'Self-transfer failed: ' . $e->getMessage()])->withInput();
+        }
+
+        return back()->with('success', 'Self-transfer from ' . $fromType . ' to ' . $toType . ' saved successfully.');
     }
 
     /**
