@@ -796,7 +796,7 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(ced_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(ced_transfers.rejected_quantity), 0) as rejected_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0), 0) as pending_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0) - COALESCE(MAX(ced_transfers.rejected_quantity), 0), 0) as pending_quantity'),
                 DB::raw('MAX(reports.created_at) as last_stock_update'),
                 DB::raw('MAX(ced_transfers.sf3_process_lines) as sf3_process_lines')
             )
@@ -840,7 +840,7 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(zinc_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(zinc_transfers.rejected_quantity), 0) as rejected_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0), 0) as pending_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0) - COALESCE(MAX(zinc_transfers.rejected_quantity), 0), 0) as pending_quantity'),
                 DB::raw('MAX(reports.created_at) as last_stock_update'),
                 DB::raw('MAX(zinc_transfers.sf3_process_lines) as sf3_process_lines')
             )
