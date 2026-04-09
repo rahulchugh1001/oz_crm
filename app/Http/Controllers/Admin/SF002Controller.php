@@ -95,7 +95,27 @@ class SF002Controller extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('backend.production-reports.sf002.stock', compact('assignedTransfers', 'rejectReasons'));
+        // Unique items from assigned transfers for self-transfer modal
+        // Group by item_id + assign_sf2, sum accepted quantities
+        $selfTransferItems = $assignedTransfers
+            ->where('is_accept', 1)
+            ->groupBy(fn ($t) => $t->item_id . '_' . strtolower($t->assign_sf2 ?? ''))
+            ->map(function ($group) {
+                $first = $group->first();
+                $acceptedQty = $group->sum(fn ($t) => max((float) $t->quantity - (float) ($t->reject_quantity ?? 0), 0));
+                return (object) [
+                    'id' => $first->item_id,
+                    'code' => $first->item_code,
+                    'name' => $first->item_name,
+                    'size' => $first->item_size,
+                    'assign_sf2' => strtolower($first->assign_sf2 ?? ''),
+                    'accepted_quantity' => $acceptedQty,
+                ];
+            })
+            ->sortBy('name')
+            ->values();
+
+        return view('backend.production-reports.sf002.stock', compact('assignedTransfers', 'rejectReasons', 'selfTransferItems'));
     }
 
     /**
@@ -766,6 +786,20 @@ class SF002Controller extends Controller
      */
     public function sf2Stock(): View
     {
+        // Self-transfer subqueries: quantity moved OUT of a type
+        $cedSelfOut = DB::table('sf2_self_transfers')
+            ->where('is_deleted', false)
+            ->where('from_type', 'ced')
+            ->select('item_id', DB::raw('COALESCE(SUM(quantity), 0) as self_out'))
+            ->groupBy('item_id');
+
+        // Self-transfer subqueries: quantity moved IN to a type
+        $cedSelfIn = DB::table('sf2_self_transfers')
+            ->where('is_deleted', false)
+            ->where('to_type', 'ced')
+            ->select('item_id', DB::raw('COALESCE(SUM(quantity), 0) as self_in'))
+            ->groupBy('item_id');
+
         $cedTransferStats = DB::table('sf002_stock_transfers')
             ->where('is_deleted', false)
             ->where('type', 'ced')
@@ -796,7 +830,9 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(ced_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(ced_transfers.rejected_quantity), 0) as rejected_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0) - COALESCE(MAX(ced_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('COALESCE(MAX(ced_self_out.self_out), 0) as self_transferred_out'),
+                DB::raw('COALESCE(MAX(ced_self_in.self_in), 0) as self_transferred_in'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) + COALESCE(MAX(ced_self_in.self_in), 0) - COALESCE(MAX(ced_self_out.self_out), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0) - COALESCE(MAX(ced_transfers.rejected_quantity), 0), 0) as pending_quantity'),
                 DB::raw('MAX(reports.created_at) as last_stock_update'),
                 DB::raw('MAX(ced_transfers.sf3_process_lines) as sf3_process_lines')
             )
@@ -804,11 +840,30 @@ class SF002Controller extends Controller
             ->leftJoinSub($cedTransferStats, 'ced_transfers', function ($join) {
                 $join->on('items.id', '=', 'ced_transfers.item_id');
             })
+            ->leftJoinSub($cedSelfOut, 'ced_self_out', function ($join) {
+                $join->on('items.id', '=', 'ced_self_out.item_id');
+            })
+            ->leftJoinSub($cedSelfIn, 'ced_self_in', function ($join) {
+                $join->on('items.id', '=', 'ced_self_in.item_id');
+            })
             ->where('reports.is_deleted', 0)
             ->where('reports.type', 'ced')
             ->groupBy('items.id', 'items.code', 'items.name', 'items.code_sf2', 'items.name_sf2', 'items.size')
             ->orderBy('items.name')
             ->get();
+
+        // Self-transfer subqueries for ZINC
+        $zincSelfOut = DB::table('sf2_self_transfers')
+            ->where('is_deleted', false)
+            ->where('from_type', 'zinc')
+            ->select('item_id', DB::raw('COALESCE(SUM(quantity), 0) as self_out'))
+            ->groupBy('item_id');
+
+        $zincSelfIn = DB::table('sf2_self_transfers')
+            ->where('is_deleted', false)
+            ->where('to_type', 'zinc')
+            ->select('item_id', DB::raw('COALESCE(SUM(quantity), 0) as self_in'))
+            ->groupBy('item_id');
 
         $zincTransferStats = DB::table('sf002_stock_transfers')
             ->where('is_deleted', false)
@@ -840,13 +895,21 @@ class SF002Controller extends Controller
                 DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
                 DB::raw('COALESCE(MAX(zinc_transfers.transferred_quantity), 0) as transferred_quantity'),
                 DB::raw('COALESCE(MAX(zinc_transfers.rejected_quantity), 0) as rejected_quantity'),
-                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0) - COALESCE(MAX(zinc_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('COALESCE(MAX(zinc_self_out.self_out), 0) as self_transferred_out'),
+                DB::raw('COALESCE(MAX(zinc_self_in.self_in), 0) as self_transferred_in'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) + COALESCE(MAX(zinc_self_in.self_in), 0) - COALESCE(MAX(zinc_self_out.self_out), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0) - COALESCE(MAX(zinc_transfers.rejected_quantity), 0), 0) as pending_quantity'),
                 DB::raw('MAX(reports.created_at) as last_stock_update'),
                 DB::raw('MAX(zinc_transfers.sf3_process_lines) as sf3_process_lines')
             )
             ->join('items', 'reports.item_id', '=', 'items.id')
             ->leftJoinSub($zincTransferStats, 'zinc_transfers', function ($join) {
                 $join->on('items.id', '=', 'zinc_transfers.item_id');
+            })
+            ->leftJoinSub($zincSelfOut, 'zinc_self_out', function ($join) {
+                $join->on('items.id', '=', 'zinc_self_out.item_id');
+            })
+            ->leftJoinSub($zincSelfIn, 'zinc_self_in', function ($join) {
+                $join->on('items.id', '=', 'zinc_self_in.item_id');
             })
             ->where('reports.is_deleted', 0)
             ->where('reports.type', 'zinc')
@@ -889,7 +952,30 @@ class SF002Controller extends Controller
             END), 0) as transferred_quantity")
             ->value('transferred_quantity') ?? 0;
 
-        $availableStock = max($totalProduced - $totalTransferred, 0);
+        $totalRejected = (float) DB::table('sf002_stock_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['type'])
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN quantity
+                WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                ELSE 0
+            END), 0) as rejected_quantity")
+            ->value('rejected_quantity') ?? 0;
+
+        $selfOut = (float) DB::table('sf2_self_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('from_type', $validated['type'])
+            ->where('is_deleted', false)
+            ->sum('quantity');
+
+        $selfIn = (float) DB::table('sf2_self_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('to_type', $validated['type'])
+            ->where('is_deleted', false)
+            ->sum('quantity');
+
+        $availableStock = max($totalProduced + $selfIn - $selfOut - $totalTransferred - $totalRejected, 0);
 
         if ((float) $validated['quantity'] > $availableStock) {
             return back()->withErrors([
@@ -924,6 +1010,91 @@ class SF002Controller extends Controller
             ]);
 
         return back()->with('success', 'Stock transferred successfully.');
+    }
+
+    /**
+     * Store a self-transfer (CED ↔ ZINC) within SF2.
+     */
+    public function storeSelfTransfer(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'item_id'   => 'required|integer|exists:items,id',
+            'from_type' => 'required|string|in:ced,zinc',
+            'to_type'   => 'required|string|in:ced,zinc',
+            'quantity'  => 'required|numeric|gt:0',
+            'date'      => 'required|date',
+            'time'      => 'required|date_format:H:i:s',
+            'remark'    => 'nullable|string|max:500',
+        ]);
+
+        if ($validated['from_type'] === $validated['to_type']) {
+            return back()->withErrors(['to_type' => 'Source and destination type cannot be the same.'])->withInput();
+        }
+
+        // Calculate available stock for the source type
+        $totalProduced = (float) DB::table('sf2_production_reports')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['from_type'])
+            ->where('is_deleted', 0)
+            ->sum('actual_set_shift');
+
+        $totalTransferred = (float) DB::table('sf002_stock_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['from_type'])
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN 0
+                WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                ELSE quantity
+            END), 0) as transferred_quantity")
+            ->value('transferred_quantity') ?? 0;
+
+        $totalRejected = (float) DB::table('sf002_stock_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['from_type'])
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN quantity
+                WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                ELSE 0
+            END), 0) as rejected_quantity")
+            ->value('rejected_quantity') ?? 0;
+
+        $selfOut = (float) DB::table('sf2_self_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('from_type', $validated['from_type'])
+            ->where('is_deleted', false)
+            ->sum('quantity');
+
+        $selfIn = (float) DB::table('sf2_self_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('to_type', $validated['from_type'])
+            ->where('is_deleted', false)
+            ->sum('quantity');
+
+        $availableStock = max($totalProduced + $selfIn - $selfOut - $totalTransferred - $totalRejected, 0);
+
+        if ((float) $validated['quantity'] > $availableStock) {
+            return back()->withErrors([
+                'quantity' => 'Transfer quantity cannot be greater than available ' . strtoupper($validated['from_type']) . ' stock (' . number_format($availableStock, 0) . ').',
+            ])->withInput();
+        }
+
+        DB::table('sf2_self_transfers')->insert([
+            'item_id'     => $validated['item_id'],
+            'from_type'   => $validated['from_type'],
+            'to_type'     => $validated['to_type'],
+            'quantity'    => $validated['quantity'],
+            'date'        => $validated['date'],
+            'time'        => $validated['time'],
+            'transfer_by' => Auth::id(),
+            'remark'      => $validated['remark'] ?? null,
+            'is_deleted'  => false,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return back()->with('success', 'Self-transfer from ' . strtoupper($validated['from_type']) . ' to ' . strtoupper($validated['to_type']) . ' saved successfully.');
     }
 
     /**

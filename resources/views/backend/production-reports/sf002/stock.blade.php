@@ -37,6 +37,12 @@
                     <span class="text-slate-500">Total Records:</span>
                     <span class="ml-1 font-semibold text-slate-900">{{ $assignedTransfers->count() }}</span>
                 </div>
+                @if($canUpdateStatus && $selfTransferItems->count() > 0)
+                <button type="button" onclick="openSelfTransferModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-lg hover:opacity-90 transition-all" style="background: linear-gradient(to right, #141d30, #2d3a52);">
+                    <i data-lucide="repeat" class="w-3.5 h-3.5"></i>
+                    Self Transfer
+                </button>
+                @endif
             </div>
         </div>
 
@@ -327,6 +333,96 @@
 </div>
 @endsection
 
+@if($canUpdateStatus && $selfTransferItems->count() > 0)
+<!-- Self Transfer Modal -->
+<div id="selfTransferModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 p-4">
+    <div class="mx-auto mt-10 w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-slate-200">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                    <i data-lucide="repeat" class="w-5 h-5 text-violet-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Self Transfer</h3>
+                    <p class="text-xs text-slate-500">Transfer stock between CED and ZINC</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeSelfTransferModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <form id="selfTransferForm" action="{{ route('admin.production-reports.sf002.sf2-stock.self-transfer') }}" method="POST" class="px-6 py-5 space-y-4">
+            @csrf
+            <input type="hidden" name="item_id" id="self_transfer_item_id">
+            <input type="hidden" name="date" id="self_transfer_date">
+            <input type="hidden" name="time" id="self_transfer_time">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="self_transfer_item_select" class="block text-sm font-semibold text-slate-700 mb-2">Item <span class="text-rose-500">*</span></label>
+                    <select id="self_transfer_item_select" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="onSelfTransferItemChange()">
+                        <option value="">Select Item</option>
+                        @foreach($selfTransferItems as $item)
+                            <option value="{{ $item->id }}" data-code="{{ $item->code }}" data-name="{{ $item->name }}" data-size="{{ $item->size }}" data-type="{{ $item->assign_sf2 }}" data-accepted-qty="{{ (int) $item->accepted_quantity }}">{{ $item->code }} - {{ $item->name }} ({{ strtoupper($item->assign_sf2) }})</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">From Type</label>
+                    <input type="text" id="self_transfer_from_display" readonly class="w-full px-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700 font-medium">
+                    <input type="hidden" name="from_type" id="self_transfer_from_type">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">To Type</label>
+                    <input type="text" id="self_transfer_to_display" readonly class="w-full px-3 py-2.5 border border-slate-200 rounded-lg bg-indigo-50 text-indigo-700 font-semibold">
+                    <input type="hidden" name="to_type" id="self_transfer_to_type">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Accepted Quantity</label>
+                    <input type="text" id="self_transfer_accepted_qty" readonly class="w-full px-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700">
+                </div>
+
+                <div>
+                    <label for="self_transfer_quantity" class="block text-sm font-semibold text-slate-700 mb-2">Quantity to Transfer <span class="text-rose-500">*</span></label>
+                    <input type="number" id="self_transfer_quantity" name="quantity" required min="1" step="1"
+                        class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter quantity">
+                    <p id="self_transfer_quantity_help" class="mt-1 text-xs text-slate-500"></p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Date & Time</label>
+                    <input type="text" id="self_transfer_display_datetime" readonly class="w-full px-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Item Size</label>
+                    <input type="text" id="self_transfer_item_size" readonly class="w-full px-3 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-700">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="self_transfer_remark" class="block text-sm font-semibold text-slate-700 mb-2">Remark (Optional)</label>
+                    <textarea id="self_transfer_remark" name="remark" rows="2" maxlength="500"
+                        class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Add optional remark..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeSelfTransferModal()" class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">Cancel</button>
+                <button id="self_transfer_submit_btn" type="submit" class="px-4 py-2.5 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);">
+                    Save Self Transfer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -585,7 +681,135 @@ document.addEventListener('DOMContentLoaded', function() {
         if (event.key === 'Escape' && !statusModal.classList.contains('hidden')) {
             closeStatusModal();
         }
+
+        const selfModal = document.getElementById('selfTransferModal');
+        if (event.key === 'Escape' && selfModal && !selfModal.classList.contains('hidden')) {
+            closeSelfTransferModal();
+        }
     });
 });
+
+// ── Self Transfer Modal ──
+let selfTransferSubmitting = false;
+
+function formatSelfDate(d) {
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function formatSelfTime(d) {
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+}
+function formatSelfDisplay(d) {
+    return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+}
+
+window.openSelfTransferModal = function() {
+    const modal = document.getElementById('selfTransferModal');
+    if (!modal) return;
+
+    document.getElementById('self_transfer_item_select').value = '';
+    document.getElementById('self_transfer_from_type').value = '';
+    document.getElementById('self_transfer_from_display').value = '';
+    document.getElementById('self_transfer_to_type').value = '';
+    document.getElementById('self_transfer_to_display').value = '';
+    document.getElementById('self_transfer_item_id').value = '';
+    document.getElementById('self_transfer_quantity').value = '';
+    document.getElementById('self_transfer_item_size').value = '';
+    document.getElementById('self_transfer_accepted_qty').value = '';
+    document.getElementById('self_transfer_quantity_help').innerText = '';
+    document.getElementById('self_transfer_remark').value = '';
+
+    const now = new Date();
+    document.getElementById('self_transfer_date').value = formatSelfDate(now);
+    document.getElementById('self_transfer_time').value = formatSelfTime(now);
+    document.getElementById('self_transfer_display_datetime').value = formatSelfDisplay(now);
+
+    selfTransferSubmitting = false;
+    const btn = document.getElementById('self_transfer_submit_btn');
+    if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-60', 'cursor-not-allowed');
+        btn.textContent = 'Save Self Transfer';
+    }
+
+    modal.classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+};
+
+window.closeSelfTransferModal = function() {
+    const modal = document.getElementById('selfTransferModal');
+    if (modal) modal.classList.add('hidden');
+};
+
+window.onSelfTransferItemChange = function() {
+    const sel = document.getElementById('self_transfer_item_select');
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('self_transfer_item_id').value = sel.value;
+    document.getElementById('self_transfer_item_size').value = opt && sel.value ? opt.getAttribute('data-size') || '' : '';
+
+    if (opt && sel.value) {
+        const fromType = opt.getAttribute('data-type') || '';
+        const toType = fromType === 'ced' ? 'zinc' : 'ced';
+        const acceptedQty = parseInt(opt.getAttribute('data-accepted-qty') || '0', 10);
+
+        document.getElementById('self_transfer_from_type').value = fromType;
+        document.getElementById('self_transfer_from_display').value = fromType.toUpperCase();
+        document.getElementById('self_transfer_to_type').value = toType;
+        document.getElementById('self_transfer_to_display').value = toType.toUpperCase();
+        document.getElementById('self_transfer_accepted_qty').value = acceptedQty;
+        document.getElementById('self_transfer_quantity').max = acceptedQty;
+        document.getElementById('self_transfer_quantity_help').innerText = 'Max allowed: ' + acceptedQty;
+    } else {
+        document.getElementById('self_transfer_from_type').value = '';
+        document.getElementById('self_transfer_from_display').value = '';
+        document.getElementById('self_transfer_to_type').value = '';
+        document.getElementById('self_transfer_to_display').value = '';
+        document.getElementById('self_transfer_accepted_qty').value = '';
+        document.getElementById('self_transfer_quantity_help').innerText = '';
+    }
+};
+
+(function() {
+    const form = document.getElementById('selfTransferForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(event) {
+        const submitBtn = document.getElementById('self_transfer_submit_btn');
+
+        if (selfTransferSubmitting) {
+            event.preventDefault();
+            return;
+        }
+
+        const itemId = document.getElementById('self_transfer_item_id').value;
+        const fromType = document.getElementById('self_transfer_from_type').value;
+        const quantity = parseFloat(document.getElementById('self_transfer_quantity').value || '0');
+        const acceptedQty = parseInt(document.getElementById('self_transfer_accepted_qty').value || '0', 10);
+
+        if (!itemId || !fromType || quantity <= 0) {
+            event.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Missing Fields', text: 'Please select item and enter quantity.', confirmButtonColor: '#4f46e5' });
+            return;
+        }
+
+        if (quantity > acceptedQty) {
+            event.preventDefault();
+            Swal.fire({ icon: 'error', title: 'Invalid Quantity', text: 'Quantity cannot exceed accepted quantity (' + acceptedQty + ').', confirmButtonColor: '#4f46e5' });
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+                submitBtn.textContent = 'Save Self Transfer';
+            }
+            selfTransferSubmitting = false;
+            return;
+        }
+
+        selfTransferSubmitting = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-60', 'cursor-not-allowed');
+            submitBtn.textContent = 'Transferring...';
+        }
+    });
+})();
 </script>
 @endpush

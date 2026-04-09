@@ -104,6 +104,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::delete('/production/{id}', [SF002Controller::class, 'destroyProductionReport'])->name('production.destroy');
         Route::get('/sf2-stock', [SF002Controller::class, 'sf2Stock'])->name('sf2-stock');
         Route::post('/sf2-stock/transfer', [SF002Controller::class, 'storeSf2Transfer'])->name('sf2-stock.transfer');
+        Route::post('/sf2-stock/self-transfer', [SF002Controller::class, 'storeSelfTransfer'])->name('sf2-stock.self-transfer');
         Route::get('/sf2-stock/{itemId}/history', [SF002Controller::class, 'sf2StockHistory'])->name('sf2-stock.history');
     });
     Route::prefix('production-reports/sf003')->name('production-reports.sf003.')->group(function () {
