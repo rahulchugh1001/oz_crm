@@ -183,13 +183,22 @@
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) ($report->actual_set_shift ?? 0), 0) }}/{{ number_format((float) ($report->total_set_shift ?? 0), 0) }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ $report->created_by_name ?? 'N/A' }}</td>
                         <td class="px-4 py-3 text-center">
-                            <a
-                                href="{{ route('admin.production-reports.sf003.final-stock.show', ['encryptedId' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
-                                class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors"
-                                title="View"
-                            >
-                                <i data-lucide="eye" class="w-4 h-4 text-slate-600"></i>
-                            </a>
+                            <div class="inline-flex items-center gap-1">
+                                <a
+                                    href="{{ route('admin.production-reports.sf003.production-report', ['line' => $requestedLine, 'report_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
+                                    class="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                                    title="Edit"
+                                >
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                </a>
+                                <a
+                                    href="{{ route('admin.production-reports.sf003.final-stock.show', ['encryptedId' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
+                                    class="inline-flex items-center justify-center p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                    title="View"
+                                >
+                                    <i data-lucide="eye" class="w-4 h-4 text-slate-600"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @empty
