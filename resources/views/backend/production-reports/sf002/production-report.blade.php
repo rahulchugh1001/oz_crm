@@ -47,6 +47,7 @@
             <form id="productionReportForm" method="POST" action="{{ route('admin.production-reports.sf002.production-report.store', ['transferId' => $transfer->id, 'type' => request()->query('type', 'ced')]) }}">
                 @csrf
                 <input type="hidden" id="selected_transfer_id" name="selected_transfer_id" value="{{ $transfer->id }}">
+                <input type="hidden" id="transfer_ids" name="transfer_ids" value="{{ $transfer->transfer_ids ?? $transfer->id }}">
                 <input type="hidden" id="report_id" name="report_id" value="{{ isset($existingReport) && $existingReport ? \Illuminate\Support\Facades\Crypt::encryptString((string) $existingReport->id) : '' }}">
 
                 @if(!(isset($existingReport) && $existingReport))
@@ -65,7 +66,7 @@
                             id="item_selector"
                             class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
-                            @foreach($availableTransfers as $row)
+                            @foreach($mergedTransfers as $row)
                                 <option
                                     value="{{ $row->id }}"
                                     data-item-id="{{ $row->item_id }}"
@@ -73,6 +74,7 @@
                                     data-item-name="{{ $row->item_name }}"
                                     data-item-size="{{ $row->item_size }}"
                                     data-quantity="{{ number_format((float) ($row->pending_quantity ?? 0), 0, '.', '') }}"
+                                    data-transfer-ids="{{ $row->transfer_ids }}"
                                     {{ (int) $row->id === (int) $transfer->id ? 'selected' : '' }}
                                 >
                                     {{ $row->item_code }} - {{ $row->item_name }} ({{ $row->item_size }})
@@ -94,7 +96,7 @@
                         <label class="block text-sm font-medium text-slate-700 mb-2">Add Items</label>
                         <div class="flex gap-2">
                             <select id="bulkItemSelector" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                @foreach($availableTransfers as $row)
+                                @foreach($mergedTransfers as $row)
                                     <option
                                         value="{{ $row->id }}"
                                         data-item-id="{{ $row->item_id }}"
@@ -102,6 +104,7 @@
                                         data-item-name="{{ $row->item_name }}"
                                         data-item-size="{{ $row->item_size }}"
                                         data-quantity="{{ number_format((float) ($row->pending_quantity ?? 0), 0, '.', '') }}"
+                                        data-transfer-ids="{{ $row->transfer_ids }}"
                                     >
                                         {{ $row->item_code }} - {{ $row->item_name }} ({{ $row->item_size }})
                                     </option>
@@ -443,6 +446,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (selectedTransferInput) {
             selectedTransferInput.value = selectedOption.value || '';
+        }
+        const transferIdsInput = document.getElementById('transfer_ids');
+        if (transferIdsInput) {
+            transferIdsInput.value = selectedOption.getAttribute('data-transfer-ids') || selectedOption.value || '';
         }
         if (selectedQuantityInput) {
             selectedQuantityInput.value = selectedOption.getAttribute('data-quantity') || '0';

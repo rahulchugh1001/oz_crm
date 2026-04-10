@@ -307,18 +307,52 @@ class SF002Controller extends Controller
 
                 return $row;
             })
+            ->values();
+
+        // Merge transfers with the same item_id: combine quantities, collect all transfer IDs
+        $mergedTransfers = $availableTransfers
+            ->groupBy('item_id')
+            ->map(function ($group) use ($usedByTransfer, $existingReport, $currentReportActualSet) {
+                $first = clone $group->first();
+                $first->total_quantity = $group->sum('total_quantity');
+                $first->transfer_ids = $group->pluck('id')->implode(',');
+
+                // Calculate total used across all transfers for this item
+                $totalUsed = 0;
+                foreach ($group as $row) {
+                    $totalUsed += (float) ($usedByTransfer[$row->id] ?? 0);
+                }
+
+                // In edit mode, exclude current report quantity from "already used"
+                if ($existingReport) {
+                    $transferIds = $group->pluck('id')->map(fn($id) => (int) $id)->all();
+                    if (in_array((int) $existingReport->transfered_id, $transferIds, true)) {
+                        $totalUsed = max($totalUsed - $currentReportActualSet, 0);
+                    }
+                }
+
+                $first->used_quantity = $totalUsed;
+                $first->pending_quantity = max($first->total_quantity - $totalUsed, 0);
+
+                return $first;
+            })
             ->filter(function ($row) use ($transferId) {
-                return (float) ($row->pending_quantity ?? 0) > 0 || (int) $row->id === (int) $transferId;
+                $ids = array_map('intval', explode(',', $row->transfer_ids));
+                return (float) ($row->pending_quantity ?? 0) > 0 || in_array((int) $transferId, $ids, true);
             })
             ->values();
 
-        $transfer = $availableTransfers->firstWhere('id', $transferId) ?? $availableTransfers->first();
+        // Find the merged item that contains the requested transferId
+        $transfer = $mergedTransfers->first(function ($row) use ($transferId) {
+            return in_array($transferId, array_map('intval', explode(',', $row->transfer_ids)));
+        }) ?? $mergedTransfers->first();
 
         if (!$transfer) {
             abort(404, 'No accepted transfer found for selected SF2 type.');
         }
 
-        return view('backend.production-reports.sf002.production-report', compact('transfer', 'availableTransfers', 'existingReport'));
+        return view('backend.production-reports.sf002.production-report', compact('transfer', 'availableTransfers', 'existingReport'))
+            ->with('mergedTransfers', $mergedTransfers);
     }
 
     /**
@@ -391,7 +425,20 @@ class SF002Controller extends Controller
         $selectedTransferId = (int) ($request->input('selected_transfer_id') ?: $transferId);
         $sf2TypeDbValue = strtoupper($sf2Type);
 
-        // Validate basic transfer existence
+        // Parse all transfer IDs for the merged item
+        $transferIdsInput = (string) $request->input('transfer_ids', (string) $selectedTransferId);
+        $allTransferIds = collect(explode(',', $transferIdsInput))
+            ->map(fn($id) => (int) trim($id))
+            ->filter(fn($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($allTransferIds)) {
+            $allTransferIds = [$selectedTransferId];
+        }
+
+        // Validate that at least the selected transfer exists
         $query = DB::table('sf001_stock_transfers')
             ->where('id', $selectedTransferId)
             ->where('is_deleted', false)
@@ -437,10 +484,21 @@ class SF002Controller extends Controller
 
         $actualSetShift = round($hourlyTotal);
 
-        $baseAvailableQuantity = max((float) $transfer->quantity - (float) ($transfer->reject_quantity ?? 0), 0);
+        // Calculate available quantity across ALL transfers for this item
+        $allTransfersData = DB::table('sf001_stock_transfers')
+            ->whereIn('id', $allTransferIds)
+            ->where('is_deleted', false)
+            ->where('is_accept', 1)
+            ->where('assign_sf2', $sf2TypeDbValue)
+            ->get();
+
+        $baseAvailableQuantity = $allTransfersData->sum(function ($t) {
+            return max((float) ($t->quantity ?? 0) - (float) ($t->reject_quantity ?? 0), 0);
+        });
+
         $alreadyUsedQuantityQuery = DB::table('sf2_production_reports')
             ->where('type', $sf2Type)
-            ->where('transfered_id', $selectedTransferId)
+            ->whereIn('transfered_id', $allTransferIds)
             ->where('is_deleted', 0);
 
         if ($reportId > 0) {
@@ -471,12 +529,32 @@ class SF002Controller extends Controller
             }
         }
 
+        // Pick the first transfer with remaining capacity for saving
+        $usedByTransfer = DB::table('sf2_production_reports')
+            ->select('transfered_id', DB::raw('COALESCE(SUM(actual_set_shift), 0) as used_qty'))
+            ->where('type', $sf2Type)
+            ->whereIn('transfered_id', $allTransferIds)
+            ->where('is_deleted', 0)
+            ->when($reportId > 0, fn($q) => $q->where('id', '!=', $reportId))
+            ->groupBy('transfered_id')
+            ->pluck('used_qty', 'transfered_id');
+
+        $bestTransferId = $selectedTransferId;
+        foreach ($allTransfersData as $t) {
+            $capacity = max((float) ($t->quantity ?? 0) - (float) ($t->reject_quantity ?? 0), 0);
+            $used = (float) ($usedByTransfer[$t->id] ?? 0);
+            if ($capacity - $used > 0) {
+                $bestTransferId = (int) $t->id;
+                break;
+            }
+        }
+
         $payload = [
             'type' => $sf2Type,
             'created_by' => Auth::id(),
             'report_date' => $reportDate,
             'shift' => $reportShift,
-            'transfered_id' => $selectedTransferId,
+            'transfered_id' => $bestTransferId,
             'item_id' => $transfer->item_id,
             'set_per_hour' => (float) ($request->input($fieldPrefix . '_set_per_hour') ?? 0),
             'total_set_shift' => $totalSetShift,
