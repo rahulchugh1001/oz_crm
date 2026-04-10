@@ -506,18 +506,12 @@ class SF003Controller extends Controller
      */
     public function process(Request $request): View
     {
-        $lineContext = $this->resolveLineContext((string) $request->query('line', 'l1'));
-        $requestedLine = $lineContext['requestedLine'];
-        $lineCode = $lineContext['lineCode'];
-        $lineLabel = $lineContext['lineLabel'];
-
         if (Auth::user()?->role === 'Admin') {
             $acceptedTransfers = $this->assignedTransfersQuery()
                 ->addSelect('transfers.assign_to', 'accepted_by_user.name as accepted_by_name')
                 ->addSelect(DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as accepted_quantity'))
                 ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
                 ->where('transfers.is_accept', 1)
-                ->where('transfers.sf3_process', $lineCode)
                 ->get();
         } else {
             $role = $this->currentAssignableRole();
@@ -549,7 +543,6 @@ class SF003Controller extends Controller
                 ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
                 ->where('transfers.is_deleted', false)
                 ->where('transfers.is_accept', 1)
-                ->where('transfers.sf3_process', $lineCode)
                 ->when($role, function ($query, $roleValue) {
                     $query->where('transfers.assign_role', $roleValue);
                 }, function ($query) {
@@ -573,7 +566,6 @@ class SF003Controller extends Controller
                 ->leftJoin('items', 'reports.item_id', '=', 'items.id')
                 ->leftJoin('users', 'reports.created_by', '=', 'users.id')
                 ->where('reports.is_deleted', 0)
-                ->where('reports.sf3_process', $lineCode)
                 ->orderByDesc('reports.report_date')
                 ->orderByDesc('reports.created_at');
 
@@ -588,10 +580,7 @@ class SF003Controller extends Controller
 
         return view('backend.production-reports.sf003.process', compact(
             'acceptedTransfers',
-            'sf3ProductionReports',
-            'requestedLine',
-            'lineCode',
-            'lineLabel'
+            'sf3ProductionReports'
         ));
     }
 
@@ -706,12 +695,6 @@ class SF003Controller extends Controller
             abort(500, 'SF3 production reports table is missing. Please run migrations.');
         }
 
-        $lineContext = $this->resolveLineContext((string) $request->query('line', 'l1'));
-        $requestedLine = $lineContext['requestedLine'];
-        $lineCode = $lineContext['lineCode'];
-        $lineLabel = $lineContext['lineLabel'];
-        $lineTitle = $lineContext['lineTitle'];
-
         $encryptedReportId = (string) $request->query('report_id', '');
         $reportId = 0;
         if ($encryptedReportId !== '') {
@@ -726,7 +709,6 @@ class SF003Controller extends Controller
         if ($reportId > 0) {
             $existingQuery = DB::table('sf3_production_reports')
                 ->where('id', $reportId)
-                ->where('sf3_process', $lineCode)
                 ->where('is_deleted', 0);
 
             if (Auth::user()?->role !== 'Admin') {
@@ -735,6 +717,20 @@ class SF003Controller extends Controller
 
             $existingReport = $existingQuery->first();
         }
+
+        // Determine line context from existing report or default
+        $requestedLine = 'l1';
+        if ($existingReport && $existingReport->sf3_process) {
+            $reverseLineMap = [
+                'line_1' => 'l1', 'line_2' => 'l2', 'line_3' => 'l3',
+                'line_4' => 'l4', 'line_5' => 'l5', 'line_6' => 'l6',
+            ];
+            $requestedLine = $reverseLineMap[$existingReport->sf3_process] ?? 'l1';
+        }
+        $lineContext = $this->resolveLineContext($requestedLine);
+        $lineCode = $lineContext['lineCode'];
+        $lineLabel = $lineContext['lineLabel'];
+        $lineTitle = $lineContext['lineTitle'];
 
         $sf3Items = DB::table('items')
             ->where('is_deleted', false)
@@ -773,7 +769,7 @@ class SF003Controller extends Controller
             return back()->with('error', $message);
         }
 
-        $lineContext = $this->resolveLineContext((string) $request->query('line', 'l1'));
+        $lineContext = $this->resolveLineContext((string) $request->input('sf3_line', 'l1'));
         $requestedLine = $lineContext['requestedLine'];
         $lineCode = $lineContext['lineCode'];
 
@@ -801,6 +797,7 @@ class SF003Controller extends Controller
         }
 
         $validated = $request->validate([
+            'sf3_line' => 'required|in:l1,l2,l3,l4,l5,l6',
             'item_id' => 'required|integer|min:1',
             'sf3_report_date' => 'required|date',
             'sf3_shift' => 'required|in:morning,night',
@@ -901,8 +898,7 @@ class SF003Controller extends Controller
         if ($reportId > 0) {
             $editableQuery = DB::table('sf3_production_reports')
                 ->where('id', $reportId)
-                ->where('is_deleted', 0)
-                ->where('sf3_process', $lineCode);
+                ->where('is_deleted', 0);
 
             if (Auth::user()?->role !== 'Admin') {
                 $editableQuery->where('created_by', Auth::id());
@@ -927,7 +923,7 @@ class SF003Controller extends Controller
         }
 
         $successMessage = $reportId > 0 ? 'Production report updated successfully.' : 'Production report saved successfully.';
-        $redirectUrl = route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']);
+        $redirectUrl = route('admin.production-reports.sf003.process', ['tab' => 'production']);
 
         if ($request->expectsJson()) {
             return response()->json([

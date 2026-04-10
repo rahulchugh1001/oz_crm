@@ -3,21 +3,24 @@
 @php
     $activeTab = strtolower((string) request()->query('tab', 'production'));
     $activeTab = in_array($activeTab, ['stock', 'production'], true) ? $activeTab : 'production';
-    $lineBadgeLabel = $lineLabel . ' Production';
     $stockCount = $acceptedTransfers->count();
-    $addProductionUrl = route('admin.production-reports.sf003.production-report', ['line' => $requestedLine]);
+    $addProductionUrl = route('admin.production-reports.sf003.production-report');
+    $lineProcessMap = [
+        'line_1' => 'L1', 'line_2' => 'L2', 'line_3' => 'L3',
+        'line_4' => 'L4', 'line_5' => 'L5', 'line_6' => 'L6',
+    ];
 @endphp
 
-@section('title', 'Assemble SF3 ' . $lineLabel . ' Process')
+@section('title', 'Assemble SF3 Production')
 
-@section('page-title', 'Assemble SF3 ' . $lineLabel . ' Process Management')
+@section('page-title', 'Assemble SF3 Production Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="text-slate-600">Assemble SF3</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="font-medium text-slate-900">{{ $lineLabel }} Process</span>
+    <span class="font-medium text-slate-900">Production</span>
 @endsection
 
 @section('content')
@@ -39,12 +42,12 @@
             <div class="space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Assemble SF3 {{ $lineLabel }} Process</h2>
+                        <h2 class="text-lg font-bold text-slate-900">Assemble SF3 Production</h2>
                         <p class="text-sm text-slate-500">
                             @if($activeTab === 'stock')
-                                Accepted stock list for {{ $lineBadgeLabel }}
+                                Accepted stock list for Production
                             @else
-                                Production list for {{ $lineBadgeLabel }}
+                                Production list for all Assemble Lines
                             @endif
                         </p>
                     </div>
@@ -62,8 +65,8 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 pt-1">
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'production' ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($activeTab === 'production') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>Production</a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'stock']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'stock' ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($activeTab === 'stock') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'production' ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($activeTab === 'production') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>Production</a>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'stock']) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $activeTab === 'stock' ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($activeTab === 'stock') style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
                         <span>Stock</span>
                         <span class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold {{ $activeTab === 'stock' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $stockCount }}</span>
                     </a>
@@ -150,7 +153,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-slate-900">No accepted stock found</p>
-                                    <p class="text-sm text-slate-500 mt-1">There are no accepted transfers in {{ $lineBadgeLabel }} yet.</p>
+                                    <p class="text-sm text-slate-500 mt-1">There are no accepted transfers yet.</p>
                                 </div>
                             </div>
                         </td>
@@ -166,6 +169,7 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">ID</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Item</th>
+                        <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Assemble Line</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Report Date</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Shift</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Actual/Total</th>
@@ -178,6 +182,9 @@
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="px-4 py-3 text-slate-900 font-medium">#{{ $report->id }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ ($report->item_code ?? '-') . ' - ' . ($report->item_name ?? '-') }}</td>
+                        <td class="px-4 py-3 text-slate-700">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700">{{ $lineProcessMap[$report->sf3_process] ?? '-' }}</span>
+                        </td>
                         <td class="px-4 py-3 text-slate-700">{{ $report->report_date ? \Carbon\Carbon::parse($report->report_date)->format('d M Y') : '-' }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ ucfirst($report->shift ?? '-') }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) ($report->actual_set_shift ?? 0), 0) }}/{{ number_format((float) ($report->total_set_shift ?? 0), 0) }}</td>
@@ -185,7 +192,7 @@
                         <td class="px-4 py-3 text-center">
                             <div class="inline-flex items-center gap-1">
                                 <a
-                                    href="{{ route('admin.production-reports.sf003.production-report', ['line' => $requestedLine, 'report_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
+                                    href="{{ route('admin.production-reports.sf003.production-report', ['report_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $report->id)]) }}"
                                     class="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
                                     title="Edit"
                                 >
@@ -203,14 +210,14 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-10 text-center">
+                        <td colspan="8" class="px-4 py-10 text-center">
                             <div class="flex flex-col items-center gap-3">
                                 <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
                                     <i data-lucide="clipboard-list" class="w-8 h-8 text-slate-400"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-slate-900">No production list found</p>
-                                    <p class="text-sm text-slate-500 mt-1">Production records for {{ $lineBadgeLabel }} will appear here.</p>
+                                    <p class="text-sm text-slate-500 mt-1">Production records will appear here.</p>
                                 </div>
                             </div>
                         </td>

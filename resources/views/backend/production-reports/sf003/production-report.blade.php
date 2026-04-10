@@ -4,18 +4,23 @@
     $currentHour = (int) date('G');
     $defaultShift = ($currentHour >= 8 && $currentHour < 20) ? 'morning' : 'night';
     $hasPersistedShift = old('sf3_shift') !== null || !empty($existingReport->shift ?? null);
+    $reverseLineMap = [
+        'line_1' => 'l1', 'line_2' => 'l2', 'line_3' => 'l3',
+        'line_4' => 'l4', 'line_5' => 'l5', 'line_6' => 'l6',
+    ];
+    $currentLine = old('sf3_line', isset($existingReport) && $existingReport ? ($reverseLineMap[$existingReport->sf3_process] ?? '') : '');
 @endphp
 
-@section('title', $lineTitle . ' SF3 Production Report - Hourly')
+@section('title', 'SF3 Production Report - Hourly')
 
-@section('page-title', $lineTitle . ' SF3 Production Report Entry')
+@section('page-title', 'SF3 Production Report Entry')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="text-slate-600">Assemble SF3</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="text-slate-600">{{ $lineTitle }}</span>
+    <span class="text-slate-600">Production</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="font-medium text-slate-900">Report</span>
 @endsection
@@ -26,14 +31,14 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">{{ $lineTitle }} Production Report - Hourly</h2>
+                    <h2 class="text-lg font-bold text-slate-900">SF3 Production Report - Hourly</h2>
                     <p class="text-sm text-slate-500 mt-1">
                         Item: <span id="selectedItemCode" class="font-medium text-slate-700">{{ $selectedItem->code ?? '-' }}</span> -
                         <span id="selectedItemName" class="font-medium text-slate-700">{{ $selectedItem->name ?? '-' }}</span>
                         (<span id="selectedItemSize" class="font-medium text-slate-700">{{ $selectedItem->size ?? '-' }}</span>)
                     </p>
                 </div>
-                <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     Back
                 </a>
@@ -41,11 +46,23 @@
         </div>
 
         <div class="p-6 space-y-6">
-            <form id="productionReportForm" method="POST" action="{{ route('admin.production-reports.sf003.production-report.store', ['line' => $requestedLine]) }}">
+            <form id="productionReportForm" method="POST" action="{{ route('admin.production-reports.sf003.production-report.store') }}">
                 @csrf
                 <input type="hidden" id="report_id" name="report_id" value="{{ isset($existingReport) && $existingReport ? \Illuminate\Support\Facades\Crypt::encryptString((string) $existingReport->id) : '' }}">
 
-                <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="mb-4 grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label for="sf3_line" class="block text-sm font-medium text-slate-700 mb-2">Select Assemble Line</label>
+                        <select id="sf3_line" name="sf3_line" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            <option value="" disabled {{ $currentLine === '' ? 'selected' : '' }}>-- Select Line --</option>
+                            <option value="l1" {{ $currentLine === 'l1' ? 'selected' : '' }}>Assemble Line 1</option>
+                            <option value="l2" {{ $currentLine === 'l2' ? 'selected' : '' }}>Assemble Line 2</option>
+                            <option value="l3" {{ $currentLine === 'l3' ? 'selected' : '' }}>Assemble Line 3</option>
+                            <option value="l4" {{ $currentLine === 'l4' ? 'selected' : '' }}>Assemble Line 4</option>
+                            <option value="l5" {{ $currentLine === 'l5' ? 'selected' : '' }}>Assemble Line 5</option>
+                            <option value="l6" {{ $currentLine === 'l6' ? 'selected' : '' }}>Assemble Line 6</option>
+                        </select>
+                    </div>
                     <div>
                         <label for="item_selector" class="block text-sm font-medium text-slate-700 mb-2">Select Item</label>
                         <select id="item_selector" name="item_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
@@ -119,7 +136,7 @@
                         </thead>
                         <tbody>
                             <tr class="hover:bg-slate-50">
-                                <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">{{ $lineTitle }}</td>
+                                <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900"><span id="lineLabel">{{ $currentLine ? $lineTitle : 'Select Line' }}</span></td>
                                 <td class="border border-slate-300 px-3 py-2"><input type="number" name="sf3_total_set_shift" value="{{ old('sf3_total_set_shift', isset($existingReport) ? (int) $existingReport->total_set_shift : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm" placeholder="-" step="1" min="0"></td>
                                 <td class="border border-slate-300 px-3 py-2"><input type="number" name="sf3_set_per_hour" value="{{ old('sf3_set_per_hour', isset($existingReport) ? number_format((float) $existingReport->set_per_hour, 2, '.', '') : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm bg-slate-50" placeholder="-" step="0.01" min="0" readonly></td>
                                 <td class="border border-slate-300 px-3 py-2"><input type="text" name="sf3_hour_8_9" value="{{ old('sf3_hour_8_9', isset($existingReport) ? ($existingReport->hour_8_9 === null ? '-' : (int) $existingReport->hour_8_9) : '') }}" class="w-full px-2 py-1 border border-slate-200 rounded text-sm sf3-hour-input" placeholder="-"></td>
@@ -177,7 +194,7 @@
                 </div>
 
                 <div class="mt-6 flex items-center justify-end gap-3">
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">Cancel</a>
+                    <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors font-medium">Cancel</a>
                     <button type="submit" class="px-4 py-2 rounded-lg text-white hover:opacity-90 font-medium" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         {{ isset($existingReport) && $existingReport ? 'Update Report' : 'Save Report' }}
                     </button>
@@ -212,6 +229,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const shiftSelect = document.getElementById('sf3_shift');
     const hourLabels = document.querySelectorAll('.hour-label');
     const itemSelector = document.getElementById('item_selector');
+    const lineSelector = document.getElementById('sf3_line');
+    const lineLabelEl = document.getElementById('lineLabel');
     const selectedItemCode = document.getElementById('selectedItemCode');
     const selectedItemName = document.getElementById('selectedItemName');
     const selectedItemSize = document.getElementById('selectedItemSize');
@@ -235,6 +254,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const maxProducibleBottleneck = document.getElementById('maxProducibleBottleneck');
 
     if (!form) return;
+
+    // Update line label when dropdown changes
+    if (lineSelector && lineLabelEl) {
+        lineSelector.addEventListener('change', function () {
+            const opt = lineSelector.options[lineSelector.selectedIndex];
+            lineLabelEl.textContent = opt && opt.value ? opt.textContent.trim() : 'Select Line';
+        });
+    }
 
     function applySaveButtonState() {
         if (!saveButton) return;
@@ -802,7 +829,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchItemProductsStock(itemId) {
-        const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId + '&line_code={{ $lineCode }}';
+        const lineSelect = document.getElementById('sf3_line');
+        const selectedLine = lineSelect ? lineSelect.value : '';
+        const lineCodeMap = {'l1': 'line_1', 'l2': 'line_2', 'l3': 'line_3', 'l4': 'line_4', 'l5': 'line_5', 'l6': 'line_6'};
+        const lineCode = lineCodeMap[selectedLine] || '';
+        const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId + '&line_code=' + lineCode;
         const tbody = document.getElementById('mergedTableBody');
         const loader = document.getElementById('mergedTableLoader');
 
@@ -934,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             await showSubmitSuccess(data.message || 'Production report saved successfully.');
-            window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf003.process', ['line' => $requestedLine, 'tab' => 'production']) }}';
+            window.location.href = data.redirect_url || '{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}';
         } catch (error) {
             showSubmitError('Network error while saving. Please try again.');
         } finally {

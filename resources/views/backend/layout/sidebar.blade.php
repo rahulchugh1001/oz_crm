@@ -43,37 +43,9 @@
 
     $isSf003ProductionContext = request()->routeIs('admin.production-reports.sf003*')
         || request()->is('admin/production-reports/sf003/*');
-    $sf003Line = strtolower((string) request()->query('line', 'l1'));
-    $isSf003L1ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
+    $isSf003ProductionMenuActive = request()->routeIs('admin.production-reports.sf003.process')
         || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l1';
-    $isSf003L2ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
-        || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l2';
-    $isSf003L3ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
-        || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l3';
-    $isSf003L4ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
-        || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l4';
-    $isSf003L5ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
-        || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l5';
-    $isSf003L6ProductionMenuActive = (
-        request()->routeIs('admin.production-reports.sf003.process')
-        || request()->routeIs('admin.production-reports.sf003.production-report*')
-        || request()->is('admin/production-reports/sf003/production-report/*')
-    ) && $sf003Line === 'l6';
+        || request()->is('admin/production-reports/sf003/production-report/*');
     $isSf003FinalStockMenuActive = request()->routeIs('admin.production-reports.sf003.final-stock*');
 
     $canViewMasterData = $isAdmin || $isStock;
@@ -226,29 +198,9 @@
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">SF2 Stock</span>
                     </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l1', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L1ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
+                    <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L1 Production</span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l2', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L2ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L2 Production</span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l3', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L3ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L3 Production</span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l4', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L4ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L4 Production</span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l5', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L5ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L5 Production</span>
-                    </a>
-                    <a href="{{ route('admin.production-reports.sf003.process', ['line' => 'l6', 'tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003L6ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
-                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">L6 Production</span>
+                        <span class="text-sm">Production</span>
                     </a>
                     <a href="{{ route('admin.production-reports.sf003.final-stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003FinalStockMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
