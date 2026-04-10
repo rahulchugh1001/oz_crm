@@ -65,7 +65,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Password::defaults()],
-            'role' => 'required|string|in:Admin,SF001,SF002,SF003,Stock',
+            'role' => 'required|string|in:Admin,SF001,SF002,SF003,Stock,PPC',
             'status' => 'required|boolean',
             'notify_via_email' => 'nullable|boolean',
         ]);
@@ -121,7 +121,7 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|string|in:Admin,SF001,SF002,SF003,Stock',
+            'role' => 'required|string|in:Admin,SF001,SF002,SF003,Stock,PPC',
             'status' => 'required|boolean',
         ]);
 

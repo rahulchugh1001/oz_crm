@@ -75,52 +75,56 @@
                     @enderror
                 </div>
 
-                <!-- Role -->
-                <div>
-                    <label for="role" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Role <span class="text-rose-500">*</span>
-                    </label>
-                    <select 
-                        id="role" 
-                        name="role" 
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('role') border-rose-500 @enderror"
-                    >
-                        <option value="">Select Role</option>
-                        <option value="Admin" {{ old('role') === 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="SF001" {{ old('role') === 'SF001' ? 'selected' : '' }}>SF1</option>
-                        <option value="SF002" {{ old('role') === 'SF002' ? 'selected' : '' }}>SF2</option>
-                        <option value="SF003" {{ old('role') === 'SF003' ? 'selected' : '' }}>SF3</option>
-                        <option value="Stock" {{ old('role') === 'Stock' ? 'selected' : '' }}>Stock</option>
-                    </select>
-                    @error('role')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
-                </div>
 
-                <!-- Status -->
-                <div>
-                    <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Status <span class="text-rose-500">*</span>
-                    </label>
-                    <select 
-                        id="status" 
-                        name="status" 
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
-                    >
-                        <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status') == 0 ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                <!-- Role & Status in one row -->
+                <div class="flex gap-4">
+                    <!-- Role -->
+                    <div class="w-1/2">
+                        <label for="role" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Role <span class="text-rose-500">*</span>
+                        </label>
+                        <select 
+                            id="role" 
+                            name="role" 
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('role') border-rose-500 @enderror"
+                        >
+                            <option value="">Select Role</option>
+                            <option value="Admin" {{ old('role') === 'Admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="SF001" {{ old('role') === 'SF001' ? 'selected' : '' }}>SF1</option>
+                            <option value="SF002" {{ old('role') === 'SF002' ? 'selected' : '' }}>SF2</option>
+                            <option value="SF003" {{ old('role') === 'SF003' ? 'selected' : '' }}>SF3</option>
+                            <option value="Stock" {{ old('role') === 'Stock' ? 'selected' : '' }}>Stock</option>
+                            <option value="PPC" {{ old('role') === 'PPC' ? 'selected' : '' }}>PPC</option>
+                        </select>
+                        @error('role')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <!-- Status -->
+                    <div class="w-1/2">
+                        <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Status <span class="text-rose-500">*</span>
+                        </label>
+                        <select 
+                            id="status" 
+                            name="status" 
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
+                        >
+                            <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status') == 0 ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Password & Confirm Password -->
@@ -235,6 +239,26 @@
 document.addEventListener('DOMContentLoaded', function() {
     lucide.createIcons();
 });
+
+// Disable submit button and show loader on form submit
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action*="users"][method="POST"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                // Optionally add a loader spinner
+                let loader = document.createElement('span');
+                loader.className = 'ml-2 animate-spin';
+                loader.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>';
+                submitBtn.appendChild(loader);
+            }
+        });
+    }
+});
+
+// Optionally, you can enable the button via JS after validation if needed
 
 // Toggle password visibility
 function togglePasswordVisibility(fieldId) {

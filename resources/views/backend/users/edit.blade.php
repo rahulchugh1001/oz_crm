@@ -76,52 +76,56 @@
                     @enderror
                 </div>
 
-                <!-- Role -->
-                <div>
-                    <label for="role" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Role <span class="text-rose-500">*</span>
-                    </label>
-                    <select 
-                        id="role" 
-                        name="role" 
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('role') border-rose-500 @enderror"
-                    >
-                        <option value="">Select Role</option>
-                        <option value="Admin" {{ old('role', $user->role) === 'Admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="SF001" {{ old('role', $user->role) === 'SF001' ? 'selected' : '' }}>SF1</option>
-                        <option value="SF002" {{ old('role', $user->role) === 'SF002' ? 'selected' : '' }}>SF2</option>
-                        <option value="SF003" {{ old('role', $user->role) === 'SF003' ? 'selected' : '' }}>SF3</option>
-                        <option value="Stock" {{ old('role', $user->role) === 'Stock' ? 'selected' : '' }}>Stock</option>
-                    </select>
-                    @error('role')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
-                </div>
 
-                <!-- Status -->
-                <div>
-                    <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
-                        Status <span class="text-rose-500">*</span>
-                    </label>
-                    <select 
-                        id="status" 
-                        name="status" 
-                        required
-                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
-                    >
-                        <option value="1" {{ old('status', $user->status) == 1 ? 'selected' : '' }}>Active</option>
-                        <option value="0" {{ old('status', $user->status) == 0 ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status')
-                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
-                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
+                <!-- Role & Status in one row -->
+                <div class="flex gap-4">
+                    <!-- Role -->
+                    <div class="w-1/2">
+                        <label for="role" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Role <span class="text-rose-500">*</span>
+                        </label>
+                        <select 
+                            id="role" 
+                            name="role" 
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('role') border-rose-500 @enderror"
+                        >
+                            <option value="">Select Role</option>
+                            <option value="Admin" {{ old('role', $user->role) === 'Admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="SF001" {{ old('role', $user->role) === 'SF001' ? 'selected' : '' }}>SF1</option>
+                            <option value="SF002" {{ old('role', $user->role) === 'SF002' ? 'selected' : '' }}>SF2</option>
+                            <option value="SF003" {{ old('role', $user->role) === 'SF003' ? 'selected' : '' }}>SF3</option>
+                            <option value="Stock" {{ old('role', $user->role) === 'Stock' ? 'selected' : '' }}>Stock</option>
+                            <option value="PPC" {{ old('role', $user->role) === 'PPC' ? 'selected' : '' }}>PPC</option>
+                        </select>
+                        @error('role')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <!-- Status -->
+                    <div class="w-1/2">
+                        <label for="status" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Status <span class="text-rose-500">*</span>
+                        </label>
+                        <select 
+                            id="status" 
+                            name="status" 
+                            required
+                            class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all @error('status') border-rose-500 @enderror"
+                        >
+                            <option value="1" {{ old('status', $user->status) == 1 ? 'selected' : '' }}>Active</option>
+                            <option value="0" {{ old('status', $user->status) == 0 ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Password Section -->
