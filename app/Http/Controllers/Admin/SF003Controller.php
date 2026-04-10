@@ -226,7 +226,6 @@ class SF003Controller extends Controller
                 ->select('id', 'item_id', 'quantity', 'reject_quantity', 'used_quantity')
                 ->where('is_deleted', false)
                 ->where('is_accept', 1)
-                ->where('sf3_process', $lineCode)
                 ->whereIn('item_id', $productIds->all())
                 ->orderByDesc('date')
                 ->orderByDesc('time')
@@ -484,10 +483,7 @@ class SF003Controller extends Controller
     public function index(): View
     {
         $assignedTransfers = $this->assignedTransfersQuery()
-            ->addSelect(DB::raw('CASE WHEN sf3_usage.id IS NOT NULL THEN 1 ELSE 0 END as is_used_in_sf3'))
-            ->leftJoin('sf3_production_report_products as sf3_usage', function ($join) {
-                $join->on('transfers.id', '=', 'sf3_usage.transfered_id');
-            })
+            ->addSelect(DB::raw('CASE WHEN EXISTS (SELECT 1 FROM sf3_production_report_products WHERE transfered_id = transfers.id AND is_deleted = 0) THEN 1 ELSE 0 END as is_used_in_sf3'))
             ->get();
 
         $rejectReasons = DB::table('reject_reasons')
