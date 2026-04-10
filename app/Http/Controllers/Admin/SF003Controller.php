@@ -1099,9 +1099,6 @@ class SF003Controller extends Controller
             ->where('transfers.is_deleted', false)
             ->where('transfers.is_accept', 1)
             ->whereIn('transfers.item_id', $productIds->all())
-            ->when($lineCode !== '', function ($query) use ($lineCode) {
-                $query->where('transfers.sf3_process', $lineCode);
-            })
             ->orderByDesc('transfers.date')
             ->orderByDesc('transfers.time')
             ->orderByDesc('transfers.created_at')

@@ -829,11 +829,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function fetchItemProductsStock(itemId) {
-        const lineSelect = document.getElementById('sf3_line');
-        const selectedLine = lineSelect ? lineSelect.value : '';
-        const lineCodeMap = {'l1': 'line_1', 'l2': 'line_2', 'l3': 'line_3', 'l4': 'line_4', 'l5': 'line_5', 'l6': 'line_6'};
-        const lineCode = lineCodeMap[selectedLine] || '';
-        const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId + '&line_code=' + lineCode;
+        const url = '{{ route("admin.production-reports.sf003.item-products-stock") }}?item_id=' + itemId;
         const tbody = document.getElementById('mergedTableBody');
         const loader = document.getElementById('mergedTableLoader');
 
