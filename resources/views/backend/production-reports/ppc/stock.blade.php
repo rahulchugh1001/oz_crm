@@ -126,15 +126,9 @@
                     </div>
 
                     <div>
-                        <label for="transfer_sf3_process" class="block text-sm font-semibold text-slate-700 mb-2">Transfer to Assembly Line (Optional)</label>
+                        <label for="transfer_sf3_process" class="block text-sm font-semibold text-slate-700 mb-2">Transfer to</label>
                         <select id="transfer_sf3_process" name="sf3_process" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sf3_process') border-rose-500 @enderror">
-                            <option value="">Select Assemble Line</option>
-                            <option value="line_1">Assemble Line 1</option>
-                            <option value="line_2">Assemble Line 2</option>
-                            <option value="line_3">Assemble Line 3</option>
-                            <option value="line_4">Assemble Line 4</option>
-                            <option value="line_5">Assemble Line 5</option>
-                            <option value="line_6">Assemble Line 6</option>
+                            <option value="" selected>SF3</option>
                         </select>
                         @error('sf3_process')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
