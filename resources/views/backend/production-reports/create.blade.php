@@ -259,7 +259,7 @@
             if (showErrorPopup) {
                 Swal.fire({
                     title: 'Duplicate Not Allowed',
-                    text: `${machineName}: A report with the same date, shift, machine, and coil already exists.`,
+                    text: `${machineName}: A report with the same date, shift, machine, coil, and item already exists.`,
                     icon: 'error',
                     confirmButtonColor: '#3b82f6',
                     confirmButtonText: 'OK',
@@ -270,6 +270,41 @@
         }
 
         return { allowed: true, reason: null, filled_hours: result.filled_hours };
+    }
+
+    async function onSlideSizeChange(selectElement) {
+        const row = selectElement.closest('tr');
+        if (!row) return;
+
+        const checkbox = row.querySelector('.machine-checkbox');
+        if (!checkbox || !checkbox.checked) return; // Only validate if row is active
+
+        const previousValue = selectElement.dataset.previousValue || '';
+        const result = await canSelectMachineForCurrentFilters(row, true);
+
+        if (!result.allowed) {
+            // Revert to previous value
+            selectElement.value = previousValue;
+        } else {
+            // Store the new value as previous
+            selectElement.dataset.previousValue = selectElement.value;
+            // Unlock all hours first, then re-lock based on new check
+            const hourInputs = row.querySelectorAll('.hour-input');
+            hourInputs.forEach(input => {
+                if (input.getAttribute('data-locked') === '1') {
+                    input.removeAttribute('data-locked');
+                    input.readOnly = false;
+                    input.tabIndex = 0;
+                    input.classList.remove('bg-slate-200', 'cursor-not-allowed');
+                    input.title = '';
+                    input.style.cursor = '';
+                }
+            });
+            // Re-lock hours filled by other reports
+            if (result.filled_hours) {
+                lockFilledHours(row, result.filled_hours);
+            }
+        }
     }
 
     function addMachineRow(machine) {
@@ -321,7 +356,7 @@
                 </div>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input" disabled required>
+                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input slide-size-select" onchange="onSlideSizeChange(this)" disabled required>
                     ${sizeOptions}
                 </select>
             </td>
@@ -420,6 +455,16 @@
             lockFilledHours(row, filledHours);
         }
 
+        // Track slide size previous value for duplicate re-validation
+        const slideSizeSelect = row.querySelector('.slide-size-select');
+        if (slideSizeSelect) {
+            if (isChecked) {
+                slideSizeSelect.dataset.previousValue = slideSizeSelect.value;
+            } else {
+                delete slideSizeSelect.dataset.previousValue;
+            }
+        }
+
         updateSelectAllCheckbox();
         updateTotals();
         evaluateActualSetConstraint(false);
@@ -443,7 +488,6 @@
             'hour_5_6': '5PM–6PM', 'hour_6_7': '6PM–7PM', 'hour_7_8': '7PM–8PM'
         };
 
-        // Only lock hours that individually have data (non-null)
         let lockedCount = 0;
         hourFields.forEach(field => {
             const input = row.querySelector(`input[name="${field}[]"]`);
@@ -453,7 +497,7 @@
                 input.readOnly = true;
                 input.tabIndex = -1;
                 input.classList.add('bg-slate-200', 'cursor-not-allowed');
-                input.title = `${hourLabels[field]} is locked — a record already exists for this machine, date, and shift in this time slot.`;
+                input.title = `${hourLabels[field]} is locked — already reported for this machine, date, and shift.`;
                 input.style.cursor = 'not-allowed';
                 lockedCount++;
             }
@@ -464,10 +508,10 @@
         const machineName = (row.querySelector('td:nth-child(2) div > div')?.textContent || '').trim();
 
         Swal.fire({
-            title: 'Partial Record Found',
-            html: `<p><strong>${machineName}</strong> already has data for ${lockedCount} hour block(s) on this date and shift.</p>
-                   <p class="text-sm text-slate-500 mt-1">Filled hour blocks are locked. Empty blocks are still editable.</p>`,
-            icon: 'warning',
+            title: 'Some Hours Already Reported',
+            html: `<p><strong>${machineName}</strong> already has data for ${lockedCount} hour slot(s) on this date and shift.</p>
+                   <p class="text-sm text-slate-500 mt-1">Those hour slots are locked. Remaining slots are editable.</p>`,
+            icon: 'info',
             confirmButtonColor: '#3b82f6',
             confirmButtonText: 'OK',
         });

@@ -81,6 +81,15 @@
                         <strong>How to use:</strong> The current report's machine is already checked and filled. You can check other machines to add more reports, or update the existing one.
                     </p>
                 </div>
+                <div id="lockedHoursWarning" class="mb-4 p-4 bg-amber-50 border border-amber-300 rounded-lg hidden">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                        <div>
+                            <p class="text-sm font-semibold text-amber-800" id="lockedHoursTitle"></p>
+                            <p class="text-xs text-amber-600 mt-0.5">Those hour slots are locked. Remaining slots are editable.</p>
+                        </div>
+                    </div>
+                </div>
                 <div class="mb-2 flex items-center justify-end gap-2">
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="scrollTableHorizontal('left')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
@@ -147,6 +156,8 @@
     const machines = @json($machines);
     const slideSizes = @json($slideSizes);
     const existingReport = @json($productionReport);
+    const currentReportId = existingReport.id;
+    const duplicateCheckUrl = "{{ route('admin.production-reports.check-duplicate') }}";
 
     function scrollTableHorizontal(direction) {
         const container = document.getElementById('tableScrollContainer');
@@ -165,6 +176,161 @@
         if (reportDateInput) reportDateInput.value = reportDate;
         if (shiftInput) shiftInput.value = shift;
     }
+
+    // ── Duplicate & Hour Validation ──
+
+    async function validateMachineDuplicate(machineId, reportDate, shift, slideSizeId, coilId) {
+        const csrfToken = document.querySelector('input[name="_token"]')?.value;
+
+        const response = await fetch(duplicateCheckUrl, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken || ''
+            },
+            body: JSON.stringify({
+                machine_id: machineId,
+                report_date: reportDate,
+                shift: shift,
+                slide_size_id: slideSizeId || null,
+                coil_id: coilId || null,
+                exclude_id: currentReportId || null,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            return {
+                allowed: false,
+                message: data.message || 'Unable to validate.',
+            };
+        }
+
+        return {
+            allowed: !data.exists,
+            message: data.message,
+            filled_hours: data.filled_hours || {},
+        };
+    }
+
+    function lockFilledHours(row, filledHours) {
+        const hourFields = [
+            'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
+            'hour_12_1', 'hour_1_2', 'hour_2_3', 'hour_3_4',
+            'hour_4_5', 'hour_5_6', 'hour_6_7', 'hour_7_8'
+        ];
+
+        const hourLabels = {
+            'hour_8_9': '8AM–9AM', 'hour_9_10': '9AM–10AM', 'hour_10_11': '10AM–11AM',
+            'hour_11_12': '11AM–12PM', 'hour_12_1': '12PM–1PM', 'hour_1_2': '1PM–2PM',
+            'hour_2_3': '2PM–3PM', 'hour_3_4': '3PM–4PM', 'hour_4_5': '4PM–5PM',
+            'hour_5_6': '5PM–6PM', 'hour_6_7': '6PM–7PM', 'hour_7_8': '7PM–8PM'
+        };
+
+        let lockedCount = 0;
+        hourFields.forEach(field => {
+            const input = row.querySelector(`input[name="${field}[]"]`);
+            if (input && filledHours[field]) {
+                input.value = '';
+                input.setAttribute('data-locked', '1');
+                input.readOnly = true;
+                input.tabIndex = -1;
+                input.classList.add('bg-slate-200', 'cursor-not-allowed');
+                input.title = `${hourLabels[field]} is locked — already reported for this machine, date, and shift.`;
+                input.style.cursor = 'not-allowed';
+                lockedCount++;
+            }
+        });
+
+        if (lockedCount === 0) {
+            document.getElementById('lockedHoursWarning')?.classList.add('hidden');
+            return;
+        }
+
+        const machineName = (row.querySelector('td:first-child')?.textContent || '').trim();
+        const warningDiv = document.getElementById('lockedHoursWarning');
+        const titleEl = document.getElementById('lockedHoursTitle');
+        if (warningDiv && titleEl) {
+            titleEl.textContent = `${machineName} already has data for ${lockedCount} hour slot(s) on this date and shift from other reports.`;
+            warningDiv.classList.remove('hidden');
+        }
+    }
+
+    function unlockAllHours(row) {
+        const hourInputs = row.querySelectorAll('.hour-input');
+        hourInputs.forEach(input => {
+            if (input.getAttribute('data-locked') === '1') {
+                input.removeAttribute('data-locked');
+                input.readOnly = false;
+                input.tabIndex = 0;
+                input.classList.remove('bg-slate-200', 'cursor-not-allowed');
+                input.title = '';
+                input.style.cursor = '';
+            }
+        });
+    }
+
+    async function onSlideSizeChange(selectElement) {
+        const row = selectElement.closest('tr');
+        if (!row) return;
+
+        const previousValue = selectElement.dataset.previousValue || '';
+        const machineId = row.dataset.machineId;
+        const reportDate = document.getElementById('report_date')?.value;
+        const shift = document.getElementById('shift')?.value;
+        const slideSizeId = selectElement.value;
+        const coilIdInput = row.querySelector('input[name="coil_id[]"]');
+        const coilId = coilIdInput ? coilIdInput.value : null;
+
+        if (!reportDate || !shift || !slideSizeId) return;
+
+        const result = await validateMachineDuplicate(machineId, reportDate, shift, slideSizeId, coilId);
+
+        if (!result.allowed) {
+            Swal.fire({
+                title: 'Duplicate Not Allowed',
+                text: 'A report with the same date, shift, machine, coil, and item already exists.',
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
+            selectElement.value = previousValue;
+        } else {
+            selectElement.dataset.previousValue = selectElement.value;
+            unlockAllHours(row);
+            if (result.filled_hours) {
+                lockFilledHours(row, result.filled_hours);
+            }
+        }
+    }
+
+    async function checkAndLockHoursOnLoad(row) {
+        const machineId = row.dataset.machineId;
+        const reportDate = document.getElementById('report_date')?.value;
+        const shift = document.getElementById('shift')?.value;
+        const slideSizeSelect = row.querySelector('select[name="slide_size_id[]"]');
+        const slideSizeId = slideSizeSelect ? slideSizeSelect.value : null;
+        const coilIdInput = row.querySelector('input[name="coil_id[]"]');
+        const coilId = coilIdInput ? coilIdInput.value : null;
+
+        if (!machineId || !reportDate || !shift) return;
+
+        const result = await validateMachineDuplicate(machineId, reportDate, shift, slideSizeId, coilId);
+
+        if (!result.allowed) {
+            // This exact combo already exists (shouldn't happen for current report), no locking needed
+            return;
+        }
+
+        if (result.filled_hours) {
+            lockFilledHours(row, result.filled_hours);
+        }
+    }
+
+    // ── End Duplicate & Hour Validation ──
 
     function addMachineRow(machine, prefillData = null) {
         const tableBody = document.getElementById('tableBody');
@@ -210,7 +376,7 @@
                 ${machine.name}
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input" required>
+                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input slide-size-select" onchange="onSlideSizeChange(this)" required>
                     ${sizeOptions}
                 </select>
             </td>
@@ -239,6 +405,12 @@
         `;
 
         tableBody.appendChild(row);
+
+        // Store initial slide size value for revert on duplicate
+        const slideSizeSelect = row.querySelector('.slide-size-select');
+        if (slideSizeSelect) {
+            slideSizeSelect.dataset.previousValue = slideSizeSelect.value;
+        }
 
         if (typeof feather !== 'undefined') {
             feather.replace();
@@ -292,7 +464,7 @@
     }
 
     // Initialize with all machines as rows
-    window.addEventListener('load', function() {
+    window.addEventListener('load', async function() {
         const reportMachine = machines.find(machine => Number(machine.id) === Number(existingReport.machine_id));
         if (reportMachine) {
             addMachineRow(reportMachine, existingReport);
@@ -308,6 +480,23 @@
 
         document.getElementById('report_date').addEventListener('change', syncCommonFields);
         document.getElementById('shift').addEventListener('change', syncCommonFields);
+
+        // Check and lock hours filled by other reports on page load
+        const row = document.querySelector('.machine-row');
+        if (row) {
+            await checkAndLockHoursOnLoad(row);
+        }
+
+        // Prevent changes on locked hour inputs
+        const editForm = document.getElementById('productionReportEditForm');
+        if (editForm) {
+            editForm.addEventListener('input', function (event) {
+                if (event.target && event.target.getAttribute('data-locked') === '1') {
+                    event.target.value = '';
+                    return;
+                }
+            });
+        }
         
         if (typeof feather !== 'undefined') {
             feather.replace();
@@ -359,7 +548,13 @@
 
         const validation = validateFormSubmission();
         if (!validation.valid) {
-            alert(validation.message);
+            Swal.fire({
+                title: 'Invalid Form',
+                text: validation.message,
+                icon: 'error',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
             return;
         }
 
@@ -382,20 +577,34 @@
 
             if (response.ok) {
                 formSubmitted = true;
-                window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Production report updated successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    window.location.href = data.redirect || "{{ route('admin.production-reports.sf001') }}";
+                });
                 return;
             }
 
             if (response.status === 422) {
                 markValidationErrors(data.errors);
                 const firstError = data.message || (data.errors ? Object.values(data.errors).flat()[0] : 'Validation failed.');
-                alert(firstError);
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: firstError,
+                    icon: 'error',
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'OK',
+                });
                 return;
             }
 
-            alert(data.message || 'Something went wrong. Please try again.');
+            Swal.fire('Error', data.message || 'Something went wrong. Please try again.', 'error');
         } catch (error) {
-            alert('Network error. Please check your connection and try again.');
+            Swal.fire('Network Error', 'Please check your connection and try again.', 'error');
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
