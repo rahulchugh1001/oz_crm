@@ -96,7 +96,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-bold text-slate-900">Transfer SF2 Stock</h3>
-                        <p class="text-xs text-slate-500">Transfer to Assembly (SF3)</p>
+                        <p class="text-xs text-slate-500">Transfer to : PPC</p>
                     </div>
                 </div>
                 <button onclick="closeTransferModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -125,16 +125,11 @@
                     </div>
 
                     <div>
-                        <label for="transfer_sf3_process" class="block text-sm font-semibold text-slate-700 mb-2">SF3 Process <span class="text-rose-500">*</span></label>
-                        <select id="transfer_sf3_process" name="sf3_process" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('sf3_process') border-rose-500 @enderror">
-                            <option value="">Select SF3 Process</option>
-                            <option value="line_1" {{ old('sf3_process') === 'line_1' ? 'selected' : '' }}>Assemble Line 1</option>
-                            <option value="line_2" {{ old('sf3_process') === 'line_2' ? 'selected' : '' }}>Assemble Line 2</option>
-                            <option value="line_3" {{ old('sf3_process') === 'line_3' ? 'selected' : '' }}>Assemble Line 3</option>
-                            <option value="line_4" {{ old('sf3_process') === 'line_4' ? 'selected' : '' }}>Assemble Line 4</option>
-                            <option value="line_5" {{ old('sf3_process') === 'line_5' ? 'selected' : '' }}>Assemble Line 5</option>
-                            <option value="line_6" {{ old('sf3_process') === 'line_6' ? 'selected' : '' }}>Assemble Line 6</option>
+                        <label for="transfer_sf3_process" class="block text-sm font-semibold text-slate-700 mb-2">Transferred to <span class="text-rose-500">*</span></label>
+                        <select id="transfer_sf3_process" name="sf3_process" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 @error('sf3_process') border-rose-500 @enderror" disabled>
+                            <option value="PPC" selected>PPC</option>
                         </select>
+                        <input type="hidden" name="sf3_process" value="PPC">
                         @error('sf3_process')
                             <p class="mt-1 text-xs text-rose-600">{{ $message }}</p>
                         @enderror
@@ -263,7 +258,7 @@
         document.getElementById('transfer_item_name').value = itemName;
         document.getElementById('transfer_item_size').value = itemSize;
         document.getElementById('transfer_available_quantity').value = Math.round(availableStock);
-        document.getElementById('transfer_sf3_process').value = '';
+        document.getElementById('transfer_sf3_process').value = 'PPC';
 
         const quantityInput = document.getElementById('transfer_quantity');
         quantityInput.max = Math.round(availableStock);
@@ -340,7 +335,7 @@
         };
         openTransferModal(fakeBtn);
         document.getElementById('transfer_quantity').value = '{{ old('quantity') }}';
-        document.getElementById('transfer_sf3_process').value = '{{ old('sf3_process') }}';
+        document.getElementById('transfer_sf3_process').value = 'PPC';
         document.getElementById('transfer_remark').value = @json(old('remark', ''));
     });
     @endif
