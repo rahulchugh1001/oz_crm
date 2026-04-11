@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RejectReasonController;
 use App\Http\Controllers\Admin\SF001Controller;
 use App\Http\Controllers\Admin\SF002Controller;
 use App\Http\Controllers\Admin\SF003Controller;
+use App\Http\Controllers\Admin\PPCController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\WeightCapacityController;
 use Illuminate\Support\Facades\Route;
@@ -106,6 +107,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::post('/sf2-stock/transfer', [SF002Controller::class, 'storeSf2Transfer'])->name('sf2-stock.transfer');
         Route::post('/sf2-stock/self-transfer', [SF002Controller::class, 'storeSelfTransfer'])->name('sf2-stock.self-transfer');
         Route::get('/sf2-stock/{itemId}/history', [SF002Controller::class, 'sf2StockHistory'])->name('sf2-stock.history');
+    });
+    Route::prefix('production-reports/ppc')->name('production-reports.ppc.')->group(function () {
+        Route::get('/process', [PPCController::class, 'process'])->name('process');
+        Route::post('/process/{transferId}/status', [PPCController::class, 'updateStatus'])->name('process.status');
+        Route::get('/stock', [PPCController::class, 'stock'])->name('stock');
+        Route::post('/stock/transfer', [PPCController::class, 'storePpcTransfer'])->name('stock.transfer');
     });
     Route::prefix('production-reports/sf003')->name('production-reports.sf003.')->group(function () {
         Route::get('/stock', [SF003Controller::class, 'index'])->name('stock');

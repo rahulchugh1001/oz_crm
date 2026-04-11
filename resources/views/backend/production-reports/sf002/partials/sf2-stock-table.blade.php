@@ -91,6 +91,8 @@
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-50 text-rose-700">Assemble Line 5</span>
                                     @elseif(trim($line) === 'line_6')
                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-teal-50 text-teal-700">Assemble Line 6</span>
+                                    @elseif(trim($line) === 'PPC')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-50 text-orange-700">PPC</span>
                                     @endif
                                 @endforeach
                             </div>

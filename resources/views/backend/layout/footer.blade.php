@@ -11,6 +11,7 @@
             { id: 'sf001-dropdown', chevronId: 'sf001-chevron' },
             { id: 'sf002-dropdown', chevronId: 'sf002-chevron' },
             { id: 'sf003-dropdown', chevronId: 'sf003-chevron' },
+            { id: 'ppc-dropdown', chevronId: 'ppc-chevron' },
             { id: 'profile-dropdown', chevronId: 'profile-chevron' },
             { id: 'masters-dropdown', chevronId: 'masters-chevron' },
         ];
@@ -186,6 +187,11 @@
         // Toggle SF003 Dropdown
         function toggleSF003Dropdown() {
             toggleSidebarDropdown('sf003-dropdown');
+        }
+
+        // Toggle PPC Dropdown
+        function togglePpcDropdown() {
+            toggleSidebarDropdown('ppc-dropdown');
         }
 
         // Toggle Profile Dropdown

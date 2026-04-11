@@ -5,6 +5,7 @@
     $canViewSf001 = $isAdmin || $userRole === 'SF001';
     $canViewSf002 = $isAdmin || $userRole === 'SF002';
     $canViewSf003 = $isAdmin || $userRole === 'SF003';
+    $canViewPpc = $isAdmin || $userRole === 'PPC';
 
     $isSf001CoilStockRoute = request()->routeIs('admin.production-reports.sf001.coil-stock*');
     $isMasterSupplierContext = $isAdmin
@@ -47,6 +48,11 @@
         || request()->routeIs('admin.production-reports.sf003.production-report*')
         || request()->is('admin/production-reports/sf003/production-report/*');
     $isSf003FinalStockMenuActive = request()->routeIs('admin.production-reports.sf003.final-stock*');
+
+    $isPpcContext = request()->routeIs('admin.production-reports.ppc*')
+        || request()->is('admin/production-reports/ppc/*');
+    $isPpcProcessMenuActive = request()->routeIs('admin.production-reports.ppc.process');
+    $isPpcStockMenuActive = request()->routeIs('admin.production-reports.ppc.stock');
 
     $canViewMasterData = $isAdmin || $isStock;
     $isMasterDataContext = $canViewMasterData && (
@@ -176,6 +182,31 @@
                     <a href="{{ route('admin.production-reports.sf002.sf2-stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf002Sf2StockMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
                         <span class="text-sm">Stock</span>
+                    </a>
+                </div>
+            </div>
+            @endif
+
+            @if($canViewPpc)
+            <div class="mt-2">
+                <button onclick="togglePpcDropdown()" class="w-full flex items-center justify-between p-3 rounded-lg transition-all hover-lift {{ $isPpcContext ? 'bg-white/20 text-white' : 'hover:bg-white/10 text-gray-200' }}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg {{ $isPpcContext ? 'gradient-primary' : 'bg-white/5' }} flex items-center justify-center">
+                            <i data-lucide="layers" class="w-4 h-4 {{ $isPpcContext ? 'text-white' : 'text-gray-400' }}"></i>
+                        </div>
+                        <span class="font-medium">Stock (PPC)</span>
+                    </div>
+                    <i data-lucide="chevron-right" id="ppc-chevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+                </button>
+
+                <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isPpcContext ? '' : 'hidden' }}" id="ppc-dropdown">
+                    <a href="{{ route('admin.production-reports.ppc.process') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isPpcProcessMenuActive ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">Pending Transfers</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.ppc.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isPpcStockMenuActive ? 'bg-white/10 text-white' : '' }}">
+                        <i data-lucide="chevrons-right" class="w-3 h-3"></i>
+                        <span class="text-sm">PPC Stock</span>
                     </a>
                 </div>
             </div>

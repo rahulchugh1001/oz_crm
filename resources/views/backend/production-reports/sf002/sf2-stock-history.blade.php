@@ -179,6 +179,8 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Assemble Line 5</span>
                                 @elseif($transfer->sf3_process === 'line_6')
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-50 text-teal-700">Assemble Line 6</span>
+                                @elseif($transfer->sf3_process === 'PPC')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-50 text-orange-700">PPC</span>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif
@@ -397,6 +399,8 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-700">Assemble Line 5</span>
                                 @elseif($transfer->sf3_process === 'line_6')
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-50 text-teal-700">Assemble Line 6</span>
+                                @elseif($transfer->sf3_process === 'PPC')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-orange-50 text-orange-700">PPC</span>
                                 @else
                                     <span class="text-slate-400">-</span>
                                 @endif

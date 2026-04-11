@@ -870,9 +870,19 @@ class SF002Controller extends Controller
         // Note: sf2_self_transfers is a tracking/audit table only.
         // Actual stock movement between CED/ZINC is handled via sf001_stock_transfers in storeSelfTransfer.
 
-        $cedTransferStats = DB::table('sf002_stock_transfers')
+        $cedTransferQuery = DB::table('sf002_stock_transfers')
             ->where('is_deleted', false)
             ->where('type', 'ced')
+            ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', 'sf3_process as process')
+            ->unionAll(
+                DB::table('sf002_to_ppc_transfers')
+                    ->where('is_deleted', false)
+                    ->where('type', 'ced')
+                    ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', DB::raw("'PPC' as process"))
+            );
+
+        $cedTransferStats = DB::query()
+            ->fromSub($cedTransferQuery, 'combined')
             ->select(
                 'item_id',
                 DB::raw("COALESCE(SUM(CASE
@@ -885,7 +895,7 @@ class SF002Controller extends Controller
                     WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
                     ELSE 0
                 END), 0) as rejected_quantity"),
-                DB::raw("GROUP_CONCAT(DISTINCT sf3_process ORDER BY sf3_process) as sf3_process_lines")
+                DB::raw("GROUP_CONCAT(DISTINCT process ORDER BY process) as sf3_process_lines")
             )
             ->groupBy('item_id');
 
@@ -914,9 +924,19 @@ class SF002Controller extends Controller
             ->orderBy('items.name')
             ->get();
 
-        $zincTransferStats = DB::table('sf002_stock_transfers')
+        $zincTransferQuery = DB::table('sf002_stock_transfers')
             ->where('is_deleted', false)
             ->where('type', 'zinc')
+            ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', 'sf3_process as process')
+            ->unionAll(
+                DB::table('sf002_to_ppc_transfers')
+                    ->where('is_deleted', false)
+                    ->where('type', 'zinc')
+                    ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', DB::raw("'PPC' as process"))
+            );
+
+        $zincTransferStats = DB::query()
+            ->fromSub($zincTransferQuery, 'combined')
             ->select(
                 'item_id',
                 DB::raw("COALESCE(SUM(CASE
@@ -929,7 +949,7 @@ class SF002Controller extends Controller
                     WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
                     ELSE 0
                 END), 0) as rejected_quantity"),
-                DB::raw("GROUP_CONCAT(DISTINCT sf3_process ORDER BY sf3_process) as sf3_process_lines")
+                DB::raw("GROUP_CONCAT(DISTINCT process ORDER BY process) as sf3_process_lines")
             )
             ->groupBy('item_id');
 
@@ -969,7 +989,7 @@ class SF002Controller extends Controller
         $validated = $request->validate([
             'item_id'  => 'required|integer|exists:items,id',
             'type'     => 'required|string|in:ced,zinc',
-            'sf3_process' => 'required|string|in:line_1,line_2,line_3,line_4,line_5,line_6',
+            'sf3_process' => 'required|string|in:PPC',
             'quantity' => 'required|numeric|gt:0',
             'date'     => 'required|date',
             'time'     => 'required|date_format:H:i:s',
@@ -982,7 +1002,7 @@ class SF002Controller extends Controller
             ->where('is_deleted', 0)
             ->sum('actual_set_shift');
 
-        $totalTransferred = (float) DB::table('sf002_stock_transfers')
+        $totalTransferredLegacy = (float) DB::table('sf002_stock_transfers')
             ->where('item_id', $validated['item_id'])
             ->where('type', $validated['type'])
             ->where('is_deleted', false)
@@ -993,7 +1013,20 @@ class SF002Controller extends Controller
             END), 0) as transferred_quantity")
             ->value('transferred_quantity') ?? 0;
 
-        $totalRejected = (float) DB::table('sf002_stock_transfers')
+        $totalTransferredPpc = (float) DB::table('sf002_to_ppc_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['type'])
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN 0
+                WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                ELSE quantity
+            END), 0) as transferred_quantity")
+            ->value('transferred_quantity') ?? 0;
+
+        $totalTransferred = $totalTransferredLegacy + $totalTransferredPpc;
+
+        $totalRejectedLegacy = (float) DB::table('sf002_stock_transfers')
             ->where('item_id', $validated['item_id'])
             ->where('type', $validated['type'])
             ->where('is_deleted', false)
@@ -1004,6 +1037,19 @@ class SF002Controller extends Controller
             END), 0) as rejected_quantity")
             ->value('rejected_quantity') ?? 0;
 
+        $totalRejectedPpc = (float) DB::table('sf002_to_ppc_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', $validated['type'])
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN quantity
+                WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                ELSE 0
+            END), 0) as rejected_quantity")
+            ->value('rejected_quantity') ?? 0;
+
+        $totalRejected = $totalRejectedLegacy + $totalRejectedPpc;
+
         // Note: sf2_self_transfers is tracking only, not used in stock calculation
         $availableStock = max($totalProduced - $totalTransferred - $totalRejected, 0);
 
@@ -1013,12 +1059,11 @@ class SF002Controller extends Controller
             ])->withInput();
         }
 
-        DB::table('sf002_stock_transfers')->insert([
+        DB::table('sf002_to_ppc_transfers')->insert([
             'item_id'      => $validated['item_id'],
             'type'         => $validated['type'],
             'transfer_by'  => Auth::id(),
-            'assign_role'  => 'SF003',
-            'sf3_process'  => $validated['sf3_process'],
+            'assign_role'  => 'PPC',
             'assign_to'    => null,
             'quantity'     => $validated['quantity'],
             'date'         => $validated['date'],
@@ -1212,7 +1257,7 @@ class SF002Controller extends Controller
             ->orderByDesc('reports.created_at')
             ->get();
 
-        $cedTransferHistory = DB::table('sf002_stock_transfers as transfers')
+        $cedTransferHistoryLegacy = DB::table('sf002_stock_transfers as transfers')
             ->select(
                 'transfers.id',
                 'transfers.quantity',
@@ -1245,11 +1290,51 @@ class SF002Controller extends Controller
             ->where('transfers.item_id', $itemId)
             ->where('transfers.type', 'ced')
             ->where('transfers.is_deleted', false)
-            ->orderByDesc('transfers.date')
-            ->orderByDesc('transfers.created_at')
             ->get();
 
-        $zincTransferHistory = DB::table('sf002_stock_transfers as transfers')
+        $cedTransferHistoryPpc = DB::table('sf002_to_ppc_transfers as transfers')
+            ->select(
+                'transfers.id',
+                'transfers.quantity',
+                'transfers.reject_quantity',
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
+                DB::raw("'PPC' as sf3_process"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN 0
+                    WHEN transfers.is_accept = 1 THEN GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0)
+                    ELSE transfers.quantity
+                END as accepted_quantity"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN transfers.quantity
+                    WHEN transfers.is_accept = 1 THEN COALESCE(transfers.reject_quantity, 0)
+                    ELSE 0
+                END as rejected_quantity"),
+                'transfers.date',
+                'transfers.time',
+                'transfers.is_accept',
+                'transfers.remark',
+                'transfers.ppc_remark as sf003_remark',
+                'transfers.created_at',
+                'transfer_by_user.name as transfer_by_name',
+                'assign_to_user.name as assign_to_name'
+            )
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
+            ->where('transfers.item_id', $itemId)
+            ->where('transfers.type', 'ced')
+            ->where('transfers.is_deleted', false)
+            ->get();
+
+        $cedTransferHistory = collect($cedTransferHistoryLegacy)
+            ->merge($cedTransferHistoryPpc)
+            ->sortByDesc('created_at')
+            ->sortByDesc('time')
+            ->sortByDesc('date')
+            ->values();
+
+        $zincTransferHistoryLegacy = DB::table('sf002_stock_transfers as transfers')
             ->select(
                 'transfers.id',
                 'transfers.quantity',
@@ -1282,9 +1367,49 @@ class SF002Controller extends Controller
             ->where('transfers.item_id', $itemId)
             ->where('transfers.type', 'zinc')
             ->where('transfers.is_deleted', false)
-            ->orderByDesc('transfers.date')
-            ->orderByDesc('transfers.created_at')
             ->get();
+
+        $zincTransferHistoryPpc = DB::table('sf002_to_ppc_transfers as transfers')
+            ->select(
+                'transfers.id',
+                'transfers.quantity',
+                'transfers.reject_quantity',
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
+                DB::raw("'PPC' as sf3_process"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN 0
+                    WHEN transfers.is_accept = 1 THEN GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0)
+                    ELSE transfers.quantity
+                END as accepted_quantity"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN transfers.quantity
+                    WHEN transfers.is_accept = 1 THEN COALESCE(transfers.reject_quantity, 0)
+                    ELSE 0
+                END as rejected_quantity"),
+                'transfers.date',
+                'transfers.time',
+                'transfers.is_accept',
+                'transfers.remark',
+                'transfers.ppc_remark as sf003_remark',
+                'transfers.created_at',
+                'transfer_by_user.name as transfer_by_name',
+                'assign_to_user.name as assign_to_name'
+            )
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
+            ->where('transfers.item_id', $itemId)
+            ->where('transfers.type', 'zinc')
+            ->where('transfers.is_deleted', false)
+            ->get();
+
+        $zincTransferHistory = collect($zincTransferHistoryLegacy)
+            ->merge($zincTransferHistoryPpc)
+            ->sortByDesc('created_at')
+            ->sortByDesc('time')
+            ->sortByDesc('date')
+            ->values();
 
         return view('backend.production-reports.sf002.sf2-stock-history', compact(
             'item', 'cedHistory', 'zincHistory', 'cedTransferHistory', 'zincTransferHistory'
