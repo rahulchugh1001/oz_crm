@@ -159,7 +159,7 @@
                                 <a href="{{ route('admin.users.edit', $user) }}" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-all" title="Edit">
                                     <i data-lucide="edit" class="w-3.5 h-3.5"></i>
                                 </a>
-                                @if($user->id !== auth()->id())
+                                @if($user->id !== auth()->id() && strtolower((string) $user->role) !== 'admin')
                                     @if(!$user->is_deleted)
                                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="inline js-swal-delete-form" data-item-name="{{ $user->name }}">
                                             @csrf
