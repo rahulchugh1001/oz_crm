@@ -189,7 +189,7 @@ class RejectReasonController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('reject_reasons', 'name')],
-            'category' => ['required', Rule::in(['SF1', 'SF2', 'Both'])],
+            'category' => ['required', Rule::in(['SF1', 'SF2', 'SF3', 'PPC', 'Both'])],
             'status' => ['required', 'boolean'],
         ]);
 
@@ -225,7 +225,7 @@ class RejectReasonController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('reject_reasons', 'name')->ignore($rejectReason->id)],
-            'category' => ['required', Rule::in(['SF1', 'SF2', 'Both'])],
+            'category' => ['required', Rule::in(['SF1', 'SF2', 'SF3', 'PPC', 'Both'])],
             'status' => ['required', 'boolean'],
         ]);
 

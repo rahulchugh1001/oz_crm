@@ -59,10 +59,10 @@ class PPCController extends Controller
         }
 
         $pendingTransfers = $query->orderBy('transfers.created_at', 'asc')->get();
-        // Get Reject Reasons
         $rejectReasons = DB::table('reject_reasons')
             ->where('status', 1)
             ->where('is_deleted', false)
+            ->whereIn('category', ['SF2', 'Both'])
             ->orderBy('name')
             ->get();
 

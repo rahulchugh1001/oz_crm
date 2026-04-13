@@ -227,7 +227,7 @@
                 <div class="ml-10 mt-1 space-y-1 border-l border-white/10 pl-3 {{ $isSf003ProductionContext ? '' : 'hidden' }}" id="sf003-dropdown">
                     <a href="{{ route('admin.production-reports.sf003.stock') }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ request()->routeIs('admin.production-reports.sf003.stock') ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>
-                        <span class="text-sm">SF2 Stock</span>
+                        <span class="text-sm">PPC Stock</span>
                     </a>
                     <a href="{{ route('admin.production-reports.sf003.process', ['tab' => 'production']) }}" class="w-full flex items-center gap-2 p-2 rounded-lg transition-all hover:bg-white/10 text-gray-200 {{ $isSf003ProductionMenuActive ? 'bg-white/10 text-white' : '' }}">
                         <i data-lucide="chevrons-right" class="w-3 h-3"></i>

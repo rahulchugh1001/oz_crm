@@ -1,15 +1,15 @@
 @extends('backend.layout.app')
 
-@section('title', 'Assembly (SF3) SF2 Production - Assigned Transfers')
+@section('title', 'Assembly (SF3) PPC Production - Assigned Transfers')
 
-@section('page-title', 'Assembly (SF3) SF2 Production Management')
+@section('page-title', 'Assembly (SF3) PPC Production Management')
 
 @section('breadcrumb')
     <span class="text-slate-600">Production Reports</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
     <span class="text-slate-600">Assembly (SF3)</span>
     <i data-lucide="chevron-right" class="w-4 h-4 mx-1 text-slate-400"></i>
-    <span class="font-medium text-slate-900">SF2 Production</span>
+    <span class="font-medium text-slate-900">PPC Production</span>
 @endsection
 
 @section('content')
@@ -30,8 +30,8 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Assigned SF2 Production Transfers</h2>
-                    <p class="text-sm text-slate-500">SF2 production transfers assigned to this Assemble SF3 user</p>
+                    <h2 class="text-lg font-bold text-slate-900">Assigned PPC Production Transfers</h2>
+                    <p class="text-sm text-slate-500">PPC production transfers assigned to this Assemble SF3 user</p>
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-500">Total Records:</span>
@@ -56,7 +56,7 @@
                         <th class="w-[130px] px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Rejected Quantity</th>
                         <th class="w-[170px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Reject Reason</th>
                         <th class="w-[160px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Transfer By</th>
-                        <th class="w-[220px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">CED &amp; Zinc (SF2) Remark</th>
+                        <th class="w-[220px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">CED &amp; Zinc (PPC) Remark</th>
                         <th class="w-[220px] px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Assembly (SF3) Remark</th>
                     </tr>
                 </thead>
@@ -221,8 +221,8 @@
                                     <i data-lucide="inbox" class="w-8 h-8 text-slate-400"></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-medium text-slate-900">No assigned SF2 production found</p>
-                                    <p class="text-sm text-slate-500 mt-1">There are no SF2 production transfers assigned to you yet.</p>
+                                    <p class="text-sm font-medium text-slate-900">No assigned PPC production found</p>
+                                    <p class="text-sm text-slate-500 mt-1">There are no PPC production transfers assigned to you yet.</p>
                                 </div>
                             </div>
                         </td>
@@ -238,8 +238,8 @@
     <div class="mx-auto mt-8 w-full max-w-4xl rounded-2xl bg-white shadow-xl border border-slate-200">
         <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <div>
-                <h3 class="text-base font-bold text-slate-900">SF2 Production Transfer Details</h3>
-                <p class="text-sm text-slate-500 mt-1">Complete information of the selected SF2 production record</p>
+                <h3 class="text-base font-bold text-slate-900">PPC Production Transfer Details</h3>
+                <p class="text-sm text-slate-500 mt-1">Complete information of the selected PPC production record</p>
             </div>
             <button type="button" onclick="closeDetailsModal()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">
                 <i data-lucide="x" class="w-4 h-4"></i>
@@ -264,7 +264,7 @@
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer Date</p><p id="detailTransferDate" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Transfer Time</p><p id="detailTransferTime" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Last Updated</p><p id="detailUpdatedAt" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
-                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">CED &amp; Zinc (SF2) Remark</p><p id="detailSf001Remark" class="text-sm text-slate-800 mt-1 break-words">-</p></div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">CED &amp; Zinc (PPC) Remark</p><p id="detailSf001Remark" class="text-sm text-slate-800 mt-1 break-words">-</p></div>
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 md:col-span-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Assembly (SF3) Remark</p><p id="detailSf003Remark" class="text-sm text-slate-800 mt-1 break-words">-</p></div>
             </div>
         </div>

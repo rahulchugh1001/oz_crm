@@ -58,6 +58,8 @@
                     >
                         <option value="SF1" {{ old('category', $rejectReason->category ?? 'SF1') === 'SF1' ? 'selected' : '' }}>SF1</option>
                         <option value="SF2" {{ old('category', $rejectReason->category) === 'SF2' ? 'selected' : '' }}>SF2</option>
+                        {{-- <option value="SF3" {{ old('category', $rejectReason->category) === 'SF3' ? 'selected' : '' }}>SF3</option> --}}
+                        <option value="PPC" {{ old('category', $rejectReason->category) === 'PPC' ? 'selected' : '' }}>PPC</option>
                         <option value="Both" {{ old('category', $rejectReason->category) === 'Both' ? 'selected' : '' }}>Both</option>
                     </select>
                     @error('category')

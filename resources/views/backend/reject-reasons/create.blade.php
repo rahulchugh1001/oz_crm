@@ -51,6 +51,8 @@
                     >
                         <option value="SF1" {{ old('category', 'SF1') === 'SF1' ? 'selected' : '' }}>SF1</option>
                         <option value="SF2" {{ old('category') === 'SF2' ? 'selected' : '' }}>SF2</option>
+                        {{-- <option value="SF3" {{ old('category') === 'SF3' ? 'selected' : '' }}>SF3</option> --}}
+                        <option value="PPC" {{ old('category') === 'PPC' ? 'selected' : '' }}>PPC</option>
                         <option value="Both" {{ old('category') === 'Both' ? 'selected' : '' }}>Both</option>
                     </select>
                     @error('category')

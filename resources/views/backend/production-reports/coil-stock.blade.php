@@ -65,6 +65,7 @@
                 <thead class="border-b border-slate-200" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                     <tr>
                         <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Supplier</th>
+                        <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Coil Name</th>
                         <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Thickness</th>
                         <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Net Weight (KG)</th>
                         <th class="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-white whitespace-nowrap">Loaded Machine</th>
@@ -91,6 +92,7 @@
                     @endphp
                     <tr class="hover:bg-slate-50">
                         <td class="px-4 py-3 text-slate-700">{{ $coil->manufacture->name ?? '-' }}</td>
+                        <td class="px-4 py-3 text-slate-700 font-medium">{{ $coil->coil_no ?: '-' }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) $coil->thickness, 3) }}</td>
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
                         <td class="px-4 py-3 text-slate-700">
@@ -236,6 +238,7 @@
             </button>
         </div>
         <div class="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Coil Name</p><p id="viewCoilName" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Coil Size</p><p id="viewCoilSize" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Supplier</p><p id="viewSupplier" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-[11px] uppercase tracking-wider text-slate-500">Thickness</p><p id="viewThickness" class="text-sm font-semibold text-slate-900 mt-1">-</p></div>
@@ -425,6 +428,12 @@
                 </div>
 
                 <div>
+                    <label for="coil_no" class="block text-sm font-semibold text-slate-700 mb-2">Coil Name</label>
+                    <input type="text" id="coil_no" name="coil_no" value="{{ old('coil_no') }}" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('coil_no') border-rose-500 @enderror" placeholder="Enter coil name or number">
+                    @error('coil_no')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
                     <label for="coil_size" class="block text-sm font-semibold text-slate-700 mb-2">Coil Size <span class="text-rose-500">*</span></label>
                     <input type="text" id="coil_size" name="coil_size" value="{{ old('coil_size') }}" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('coil_size') border-rose-500 @enderror" placeholder="53.10 X 1 mm">
                     @error('coil_size')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
@@ -539,6 +548,11 @@
                         <option value="completed" {{ old('process') === 'completed' ? 'selected' : '' }}>Completed</option>
                         <option value="out_of_stock" {{ old('process') === 'out_of_stock' ? 'selected' : '' }}>Out Of Stock</option>
                     </select>
+                </div>
+
+                <div>
+                    <label for="edit_coil_no" class="block text-sm font-semibold text-slate-700 mb-2">Coil Name</label>
+                    <input type="text" id="edit_coil_no" name="coil_no" value="{{ old('coil_no') }}" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter coil name or number">
                 </div>
 
                 <div>
@@ -1087,7 +1101,7 @@
     }
 
     function openViewCoilModal(button) {
-        // coil_no hidden
+        document.getElementById('viewCoilName').textContent = button.getAttribute('data-coil-no') || '-';
         document.getElementById('viewCoilSize').textContent = button.getAttribute('data-coil-size') || '-';
         document.getElementById('viewSupplier').textContent = button.getAttribute('data-supplier-name') || '-';
         document.getElementById('viewThickness').textContent = button.getAttribute('data-thickness') || '-';
@@ -1459,6 +1473,7 @@
         }
 
         document.getElementById('edit_id').value = button.getAttribute('data-edit-id') || '';
+        document.getElementById('edit_coil_no').value = button.getAttribute('data-coil-no') || '';
         document.getElementById('edit_manufacture_id').value = button.getAttribute('data-manufacture-id') || '';
         document.getElementById('edit_coil_size').value = button.getAttribute('data-coil-size') || '';
         document.getElementById('edit_thickness').value = button.getAttribute('data-thickness') || '';

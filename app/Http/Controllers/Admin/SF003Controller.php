@@ -490,7 +490,7 @@ class SF003Controller extends Controller
             ->select('id', 'name')
             ->where('is_deleted', 0)
             ->where('status', 1)
-            ->whereIn('category', ['SF2', 'Both'])
+            ->whereIn('category', ['PPC', 'Both'])
             ->orderBy('name')
             ->get();
 

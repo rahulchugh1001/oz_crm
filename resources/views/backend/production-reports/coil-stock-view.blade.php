@@ -34,6 +34,10 @@
                 <p class="mt-1 text-base font-semibold text-slate-900">{{ $coil->manufacture->name ?? '-' }}</p>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-[11px] uppercase tracking-wide text-slate-500">Coil Name</p>
+                <p class="mt-1 text-base font-semibold text-slate-900">{{ $coil->coil_no ?: '-' }}</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-[11px] uppercase tracking-wide text-slate-500">Coil Size</p>
                 <p class="mt-1 text-base font-semibold text-slate-900">{{ $coil->coil_size }}</p>
             </div>
