@@ -241,7 +241,7 @@
                                         <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
                                         <select
                                             name="sf3_products[{{ $index }}][product]"
-                                            class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                            class="sf3-product-select w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                         >
                                             <option value="">Select product</option>
                                             @foreach ($groupedProductItems as $productCategory => $items)
@@ -414,7 +414,63 @@
 </div>
 @endsection
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .select2-container .select2-selection--single {
+        height: 46px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 0.5rem !important;
+        display: flex;
+        align-items: center;
+        background-color: transparent;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 44px !important;
+        right: 8px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #334155;
+        padding-left: 1rem;
+        padding-right: 2rem;
+        line-height: normal;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border-radius: 0.25rem;
+        border: 1px solid #cbd5e1;
+        padding: 0.5rem;
+        outline: none;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+    .select2-dropdown {
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        z-index: 50;
+    }
+    .select2-results__option {
+        padding: 8px 16px;
+    }
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background-color: #f8fafc;
+        color: #3b82f6;
+        font-weight: 500;
+    }
+    .select2-container--default .select2-results__group {
+        padding: 8px 16px;
+        background-color: #f1f5f9;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
  
     lucide.createIcons();
@@ -481,7 +537,7 @@
                     <label class="block text-xs font-semibold text-slate-600 mb-1">Product</label>
                     <select
                         name="sf3_products[${index}][product]"
-                        class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        class="sf3-product-select w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     >
                         ${buildProductOptions()}
                     </select>
@@ -526,13 +582,28 @@
         const addSf3Row = () => {
             if (!sf3Rows) return;
             const nextIndex = sf3Rows.querySelectorAll('.sf3-row').length;
-            sf3Rows.appendChild(buildSf3Row(nextIndex));
+            const newRow = buildSf3Row(nextIndex);
+            sf3Rows.appendChild(newRow);
+            
+            if (typeof $.fn.select2 !== 'undefined') {
+                $(newRow).find('.sf3-product-select').select2({
+                    placeholder: "Select product",
+                    width: '100%'
+                });
+            }
         };
 
         const ensureAtLeastOneSf3Row = () => {
             if (!sf3Rows) return;
             if (sf3Rows.querySelectorAll('.sf3-row').length === 0) {
-                sf3Rows.appendChild(buildSf3Row(0));
+                const newRow = buildSf3Row(0);
+                sf3Rows.appendChild(newRow);
+                if (typeof $.fn.select2 !== 'undefined') {
+                    $(newRow).find('.sf3-product-select').select2({
+                        placeholder: "Select product",
+                        width: '100%'
+                    });
+                }
             }
             updateSf3InputNames();
         };
@@ -602,6 +673,14 @@
             category.addEventListener('change', toggleCategoryFields);
         }
         toggleCategoryFields();
+
+        // Initialize Select2 on existing rows
+        if (typeof $.fn.select2 !== 'undefined') {
+            $('.sf3-product-select').select2({
+                placeholder: "Select product",
+                width: '100%'
+            });
+        }
     })();
 
     (() => {
