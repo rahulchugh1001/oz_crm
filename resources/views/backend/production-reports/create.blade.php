@@ -631,49 +631,8 @@
     }
 
     function evaluateActualSetConstraint(showAlert = false) {
-        const checkedRows = getCheckedMachineRows();
-        const submitBtn = document.getElementById('createSubmitBtn');
-        let invalidRowInfo = null;
-
-        document.querySelectorAll('tr.machine-row.actual-set-invalid').forEach(row => {
-            row.classList.remove('actual-set-invalid', 'bg-rose-50');
-        });
-
-        checkedRows.forEach(row => {
-            const totalSetInput = row.querySelector('input[name="total_set_shift[]"]');
-            const actualSetInput = row.querySelector('input[name="actual_set_shift[]"]');
-            const machineName = row.querySelector('td:nth-child(2) div > div')?.textContent?.trim() || 'Selected machine';
-
-            const totalSet = Math.max(parseFloat(totalSetInput?.value) || 0, 0);
-            const actualSet = Math.max(parseFloat(actualSetInput?.value) || 0, 0);
-
-            if (actualSet > totalSet) {
-                row.classList.add('actual-set-invalid', 'bg-rose-50');
-
-                if (!invalidRowInfo) {
-                    invalidRowInfo = { machineName, totalSet, actualSet };
-                }
-            }
-        });
-
-        const hasInvalidRow = !!invalidRowInfo;
-        if (submitBtn) {
-            submitBtn.disabled = hasInvalidRow;
-            submitBtn.classList.toggle('opacity-60', hasInvalidRow);
-            submitBtn.classList.toggle('cursor-not-allowed', hasInvalidRow);
-        }
-
-        if (showAlert && hasInvalidRow) {
-            showAlertMessage({
-                title: 'Invalid Actual Set',
-                text: `${invalidRowInfo.machineName}: Actual Set (${Math.round(invalidRowInfo.actualSet)}) cannot be greater than Total Set/Shift (${Math.round(invalidRowInfo.totalSet)}).`,
-                icon: 'error',
-                confirmButtonColor: '#3b82f6',
-                confirmButtonText: 'OK',
-            });
-        }
-
-        return !hasInvalidRow;
+        // No constraint — Actual Set is allowed to exceed Total Set/Shift
+        return true;
     }
 
     let previousShiftValue = '';
@@ -941,9 +900,7 @@
             return { valid: false, message: 'Please select slide size for all selected machines.' };
         }
 
-        if (!evaluateActualSetConstraint(false)) {
-            return { valid: false, message: 'Actual Set cannot be greater than Total Set/Shift for selected machines.' };
-        }
+        // No constraint on Actual Set vs Total Set/Shift
 
         return { valid: true, message: '' };
     }
