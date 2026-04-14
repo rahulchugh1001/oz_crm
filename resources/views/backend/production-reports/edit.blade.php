@@ -710,10 +710,10 @@
             showCancelButton: true,
             showDenyButton: true,
             confirmButtonText: 'Save as Draft',
-            denyButtonText: 'Discard & Leave',
+            denyButtonText: 'Discard',
             cancelButtonText: 'Stay',
             confirmButtonColor: '#d97706',
-            denyButtonColor: '#64748b',
+            denyButtonColor: '#dc2626',
         }).then((result) => {
             if (result.isConfirmed) {
                 saveAsDraft();

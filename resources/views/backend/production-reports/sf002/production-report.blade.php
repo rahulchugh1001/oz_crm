@@ -1072,12 +1072,18 @@ document.addEventListener('click', function (e) {
         text: 'You have unsaved data. Would you like to save it as a draft?',
         icon: 'question',
         showCancelButton: true,
+        showDenyButton: true,
         confirmButtonText: 'Save as Draft',
+        denyButtonText: 'Discard',
         cancelButtonText: 'Stay',
         confirmButtonColor: '#d97706',
+        denyButtonColor: '#dc2626',
     }).then(function (result) {
         if (result.isConfirmed) {
             saveAsDraft();
+        } else if (result.isDenied) {
+            formSubmitted = true;
+            window.location.href = targetUrl;
         }
     });
 });
