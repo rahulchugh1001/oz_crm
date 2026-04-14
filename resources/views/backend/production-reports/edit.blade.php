@@ -106,6 +106,7 @@
                 <table class="w-full border-collapse" id="productionTable">
                     <thead class="text-white" style="background: linear-gradient(to right, #141d30, #2d3a52);">
                         <tr>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap" title="Is Ballcage?">Ballcage</th>
                             <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-44 whitespace-nowrap">Machine</th>
                             <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-40 whitespace-nowrap">Slide Size</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">Total Set/Shift</th>
@@ -371,7 +372,18 @@
         const workmanCount = prefillData ? toVal(prefillData.workman_count) : '';
         const staffCount = prefillData ? toVal(prefillData.staff_count) : '';
 
+        const isBallcageChecked = prefillData && prefillData.is_ballcage ? 'checked' : '';
+
         row.innerHTML = `
+            <td class="border border-slate-300 px-3 py-2 text-center">
+                <label class="inline-flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" name="is_ballcage[]" value="1" class="sr-only machine-toggle is-ballcage-checkbox" ${isBallcageChecked}>
+                        <div class="toggle-bg"></div>
+                        <input type="hidden" name="is_ballcage_hidden[]" value="0">
+                    </div>
+                </label>
+            </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
                 ${machine.name}
             </td>
@@ -728,6 +740,53 @@
 <style>
     table {
         border-collapse: collapse;
+    }
+    /* Toggle Switch Styles */
+    .machine-toggle + .toggle-bg {
+        display: block;
+        width: 44px;
+        height: 24px;
+        background-color: #cbd5e1;
+        border-radius: 9999px;
+        position: relative;
+        transition: background-color 0.2s ease;
+    }
+
+    .machine-toggle + .toggle-bg:after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 20px;
+        height: 20px;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .machine-toggle:checked + .toggle-bg {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .machine-toggle:checked + .toggle-bg:after {
+        transform: translateX(20px);
+    }
+
+    .machine-toggle:focus + .toggle-bg {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
     }
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {

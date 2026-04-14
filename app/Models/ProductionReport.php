@@ -37,7 +37,12 @@ class ProductionReport extends Model
         'staff_count',
         'status',
         'is_deleted',
-        'is_draft'
+        'is_draft',
+        'is_ballcage'
+    ];
+ 
+    protected $casts = [
+        'is_ballcage' => 'boolean',
     ];
 
     public function slideSize()

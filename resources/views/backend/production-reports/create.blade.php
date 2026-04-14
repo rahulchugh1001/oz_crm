@@ -107,6 +107,22 @@
                     </p>
                 </div>
                 <div class="mb-2 flex items-center justify-end gap-2">
+                    <!-- Is Ballcage Global Toggle -->
+                    <div class="flex items-center gap-2 mr-3 pr-3 border-r border-slate-200">
+                        <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wider">All Ballcage</span>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <div class="relative">
+                                <input
+                                    type="checkbox"
+                                    id="global_ballcage_toggle"
+                                    class="sr-only machine-toggle"
+                                    onchange="toggleAllBallcage(this.checked)"
+                                >
+                                <div class="toggle-bg"></div>
+                            </div>
+                        </label>
+                    </div>
+
                     <!-- Horizontal Scroll Buttons -->
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="scrollTableHorizontal('left')" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
@@ -141,6 +157,9 @@
                                         </div>
                                     </label>
                                 </div>
+                            </th>
+                            <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 sticky top-0 z-20 whitespace-nowrap" style="background: #172134;" title="Is Ballcage?">
+                                Ballcage
                             </th>
                             <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-44 sticky top-0 z-20 whitespace-nowrap" style="background: #1a2538;">Machine</th>
                             <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-40 sticky top-0 z-20 whitespace-nowrap" style="background: #1e2d42;">Slide Size</th>
@@ -349,6 +368,16 @@
                 <input type="hidden" name="coil_id[]" value="${machine.coil && machine.coil.id ? machine.coil.id : ''}" class="row-input" disabled>
                 <input type="hidden" name="coil_number_id[]" value="${machine.load_coil_number_id || ''}" class="row-input" disabled>
             </td>
+            <td class="border border-slate-300 px-3 py-2 text-center">
+                <label class="inline-flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" name="is_ballcage[]" value="1" class="sr-only machine-toggle is-ballcage-checkbox row-input" onchange="updateGlobalBallcageCheckbox();" disabled>
+                        <div class="toggle-bg"></div>
+                        <!-- Hidden field for false value -->
+                        <input type="hidden" name="is_ballcage_hidden[]" value="0" class="ballcage-hidden-input">
+                    </div>
+                </label>
+            </td>
             <td class="border border-slate-300 px-3 py-2 font-medium text-slate-900">
                 <div class="leading-tight">
                     <div>${machine.name}</div>
@@ -429,6 +458,7 @@
         }
 
         const inputs = row.querySelectorAll('.row-input, .hour-input, .calc-input');
+        const isBallcageCheckbox = row.querySelector('.is-ballcage-checkbox');
         const selectedInput = row.querySelector('.selected-machine-input');
         const isChecked = checkbox.checked;
 
@@ -444,6 +474,11 @@
                 input.title = '';
             }
         });
+
+        // Ensure the ballcage checkbox is specifically handled if it's not caught by .row-input
+        if (isBallcageCheckbox) {
+            isBallcageCheckbox.disabled = !isChecked;
+        }
 
         if (selectedInput) {
             selectedInput.disabled = !isChecked;
@@ -633,6 +668,46 @@
     function evaluateActualSetConstraint(showAlert = false) {
         // No constraint — Actual Set is allowed to exceed Total Set/Shift
         return true;
+    }
+
+    function toggleAllBallcage(isChecked) {
+        const ballcageCheckboxes = document.querySelectorAll('.is-ballcage-checkbox');
+        ballcageCheckboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            const machineCheckbox = row.querySelector('.machine-checkbox');
+            
+            // Only toggle ballcage if the machine is selected
+            if (machineCheckbox && machineCheckbox.checked) {
+                cb.checked = isChecked;
+            }
+        });
+    }
+
+    function updateGlobalBallcageCheckbox() {
+        const selectedMachineRows = Array.from(document.querySelectorAll('.machine-row')).filter(row => {
+            const mc = row.querySelector('.machine-checkbox');
+            return mc && mc.checked;
+        });
+        
+        if (selectedMachineRows.length === 0) {
+            const globalToggle = document.getElementById('global_ballcage_toggle');
+            if (globalToggle) {
+                globalToggle.checked = false;
+                globalToggle.indeterminate = false;
+            }
+            return;
+        }
+
+        const ballcageCheckedCount = selectedMachineRows.filter(row => {
+            const bc = row.querySelector('.is-ballcage-checkbox');
+            return bc && bc.checked;
+        }).length;
+
+        const globalToggle = document.getElementById('global_ballcage_toggle');
+        if (globalToggle) {
+            globalToggle.checked = ballcageCheckedCount > 0 && ballcageCheckedCount === selectedMachineRows.length;
+            globalToggle.indeterminate = ballcageCheckedCount > 0 && ballcageCheckedCount < selectedMachineRows.length;
+        }
     }
 
     let previousShiftValue = '';

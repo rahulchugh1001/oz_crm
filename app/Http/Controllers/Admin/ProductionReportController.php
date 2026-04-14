@@ -35,6 +35,8 @@ class ProductionReportController extends Controller
             $query->where('is_deleted', false)->where('is_draft', true);
         } elseif ($mode === 'all') {
             // no filter
+        } elseif ($mode === 'ballcage') {
+            $query->where('is_deleted', false)->where('is_ballcage', true);
         } else {
             $mode = 'active';
             $query->where('is_deleted', false)->where('is_draft', false);
@@ -73,6 +75,8 @@ class ProductionReportController extends Controller
             $query->where('is_deleted', false)->where('is_draft', true);
         } elseif ($mode === 'all') {
             // no filter
+        } elseif ($mode === 'ballcage') {
+            $query->where('is_deleted', false)->where('is_ballcage', true);
         } else {
             $mode = 'active';
             $query->where('is_deleted', false)->where('is_draft', false);
@@ -326,6 +330,8 @@ class ProductionReportController extends Controller
             'hour_6_7.*' => 'nullable|numeric|min:0',
             'hour_7_8' => 'nullable|array',
             'hour_7_8.*' => 'nullable|numeric|min:0',
+            'is_ballcage' => 'nullable|array',
+            'is_ballcage.*' => 'nullable|boolean',
         ]);
 
         $selectedMachines = $validated['selected_machines'] ?? [];
@@ -383,6 +389,7 @@ class ProductionReportController extends Controller
                 'status' => true,
                 'is_deleted' => false,
                 'is_draft' => $isDraft,
+                'is_ballcage' => isset($validated['is_ballcage'][$i]) ? (bool) $validated['is_ballcage'][$i] : false,
             ];
 
             ProductionReport::create($data);
@@ -491,6 +498,8 @@ class ProductionReportController extends Controller
             'workman_count.*' => 'nullable|numeric|min:0',
             'staff_count' => 'nullable|array',
             'staff_count.*' => 'nullable|numeric|min:0',
+            'is_ballcage' => 'nullable|array',
+            'is_ballcage.*' => 'nullable|boolean',
         ]);
 
         $selectedMachines = $validated['selected_machines'] ?? [];
@@ -542,6 +551,7 @@ class ProductionReportController extends Controller
                 'status' => 1,
                 'is_deleted' => false,
                 'is_draft' => $isDraft,
+                'is_ballcage' => isset($validated['is_ballcage'][$i]) ? (bool) $validated['is_ballcage'][$i] : false,
             ];
 
             // If this is the original report's machine, update it

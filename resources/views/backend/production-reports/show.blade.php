@@ -59,6 +59,22 @@
                         <p class="text-base font-semibold text-slate-900">{{ $productionReport->slideSize->name }} ({{ $productionReport->slideSize->size }})</p>
                     </div>
                     <div class="bg-slate-50 rounded-lg p-4">
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Is Ballcage</label>
+                        <p class="text-base font-semibold">
+                            @if($productionReport->is_ballcage)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                    <i data-lucide="check" class="w-3.5 h-3.5 mr-1"></i>
+                                    Yes
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                    <i data-lucide="minus" class="w-3.5 h-3.5 mr-1"></i>
+                                    No
+                                </span>
+                            @endif
+                        </p>
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-4">
                         <label class="block text-xs font-medium text-slate-500 mb-1">Report Date</label>
                         <p class="text-base font-semibold text-slate-900">{{ \Carbon\Carbon::parse($productionReport->report_date)->format('d M, Y') }}</p>
                     </div>
