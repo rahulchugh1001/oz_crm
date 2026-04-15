@@ -162,7 +162,7 @@
                                 Ballcage
                             </th>
                             <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-44 sticky top-0 z-20 whitespace-nowrap" style="background: #1a2538;">Machine</th>
-                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-40 sticky top-0 z-20 whitespace-nowrap" style="background: #1e2d42;">Slide Size</th>
+                            <th class="border border-slate-300 px-3 py-2 text-left text-[10px] font-semibold text-white min-w-64 sticky top-0 z-20 whitespace-nowrap" style="background: #1e2d42;">Slide Size</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 sticky top-0 z-20 whitespace-nowrap" style="background: #22334a;">Total Set/Shift</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 sticky top-0 z-20 whitespace-nowrap" style="background: #263950;">Set/Hour</th>
                             <!-- Hourly Columns -->
@@ -340,8 +340,11 @@
         let sizeOptions = '<option value="">Select Size</option>';
         slideSizes.forEach(size => {
             const sizeLabel = `${size.name} (${size.size || '-'})`;
-            sizeOptions += `<option value="${size.id}">${sizeLabel}</option>`;
+            sizeOptions += `<option value="${size.id}" data-label="${sizeLabel}">${sizeLabel}</option>`;
         });
+
+        // Build searchable dropdown HTML for this machine
+        const searchDropdownHtml = buildSearchableDropdownHtml(machine.id);
 
         const hourFields = [
             'hour_8_9', 'hour_9_10', 'hour_10_11', 'hour_11_12',
@@ -385,9 +388,14 @@
                 </div>
             </td>
             <td class="border border-slate-300 px-3 py-2">
-                <select name="slide_size_id[]" class="w-full px-2 py-1 border border-slate-200 rounded text-sm focus:ring-1 focus:ring-blue-400 row-input slide-size-select" onchange="onSlideSizeChange(this)" disabled required>
-                    ${sizeOptions}
-                </select>
+                <div class="slide-size-wrapper" data-machine-id="${machine.id}">
+                    <!-- Hidden native select for form submission & JS reads -->
+                    <select name="slide_size_id[]" class="row-input slide-size-select" onchange="onSlideSizeChange(this)" disabled required style="display:none;">
+                        ${sizeOptions}
+                    </select>
+                    <!-- Searchable dropdown widget -->
+                    ${searchDropdownHtml}
+                </div>
             </td>
             <td class="border border-slate-300 px-3 py-2">
                 <input type="number" name="total_set_shift[]" step="1" min="0" value="" placeholder="-" class="w-full px-2 py-1 border border-slate-200 rounded text-center text-sm focus:ring-1 focus:ring-blue-400 row-input total-set-shift" onchange="calculateSetPerHour(this)" onfocus="this.select()" disabled>
@@ -406,6 +414,12 @@
         `;
 
         tableBody.appendChild(row);
+
+        // Wire up the searchable dropdown for this machine's row
+        const addedRow = document.getElementById(`row-${machine.id}`);
+        if (addedRow) {
+            initSearchableDropdown(addedRow);
+        }
 
         if (typeof feather !== 'undefined') {
             feather.replace();
@@ -474,6 +488,9 @@
                 input.title = '';
             }
         });
+
+        // Sync searchable dropdown enabled/disabled state
+        updateSlideSizeSelectState(row, isChecked);
 
         // Ensure the ballcage checkbox is specifically handled if it's not caught by .row-input
         if (isBallcageCheckbox) {
@@ -1262,9 +1279,323 @@
         });
     });
 
+
+    /* ============================================================
+     * Searchable Dropdown Helpers for Slide Size
+     * ============================================================ */
+
+    function buildSearchableDropdownHtml(machineId) {
+        return `
+            <div class="ss-dropdown" id="ss-dropdown-${machineId}" data-open="false">
+                <div class="ss-trigger" tabindex="0">
+                    <span class="ss-display-text">Select Size</span>
+                    <svg class="ss-arrow" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <div class="ss-panel">
+                    <div class="ss-search-wrap">
+                        <svg class="ss-search-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" class="ss-search-input" placeholder="Search size..." autocomplete="off">
+                    </div>
+                    <ul class="ss-list"></ul>
+                </div>
+            </div>`;
+    }
+
+    function initSearchableDropdown(row) {
+        const wrapper = row.querySelector('.slide-size-wrapper');
+        if (!wrapper) return;
+
+        const hiddenSelect = wrapper.querySelector('.slide-size-select');
+        const dropdown    = wrapper.querySelector('.ss-dropdown');
+        if (!hiddenSelect || !dropdown) return;
+
+        const trigger     = dropdown.querySelector('.ss-trigger');
+        const displayText = dropdown.querySelector('.ss-display-text');
+        const panel       = dropdown.querySelector('.ss-panel');
+        const searchInput = dropdown.querySelector('.ss-search-input');
+        const list        = dropdown.querySelector('.ss-list');
+
+        // Populate list from hidden select options
+        function populateList(filter) {
+            list.innerHTML = '';
+            const options = Array.from(hiddenSelect.options);
+            const q = (filter || '').toLowerCase();
+            let hasResults = false;
+
+            options.forEach(opt => {
+                const label = opt.text;
+                if (q && !label.toLowerCase().includes(q)) return;
+                if (!opt.value && !q) {
+                    const li = document.createElement('li');
+                    li.className = 'ss-option ss-option-placeholder';
+                    li.textContent = label;
+                    li.dataset.value = '';
+                    list.appendChild(li);
+                    hasResults = true;
+                    return;
+                }
+                if (!opt.value) return; // skip placeholder when searching
+                const li = document.createElement('li');
+                li.className = 'ss-option' + (opt.selected ? ' ss-selected' : '');
+                li.textContent = label;
+                li.dataset.value = opt.value;
+                list.appendChild(li);
+                hasResults = true;
+            });
+
+            if (!hasResults) {
+                const li = document.createElement('li');
+                li.className = 'ss-no-results';
+                li.textContent = 'No results found';
+                list.appendChild(li);
+            }
+        }
+
+        function openDropdown() {
+            if (hiddenSelect.disabled) return;
+            dropdown.dataset.open = 'true';
+            dropdown.classList.add('ss-open');
+            // Position panel using fixed coords to escape overflow clipping
+            const panel = dropdown.querySelector('.ss-panel');
+            if (panel) {
+                const rect = trigger.getBoundingClientRect();
+                panel.style.top  = (rect.bottom + 3) + 'px';
+                panel.style.left = rect.left + 'px';
+                panel.style.width = Math.max(rect.width, 280) + 'px';
+            }
+            populateList('');
+            searchInput.value = '';
+            searchInput.focus();
+        }
+
+        function closeDropdown() {
+            dropdown.dataset.open = 'false';
+            dropdown.classList.remove('ss-open');
+        }
+
+        function selectOption(value, label) {
+            hiddenSelect.value = value;
+            displayText.textContent = label || 'Select Size';
+            displayText.classList.toggle('ss-placeholder', !value);
+            closeDropdown();
+            // Trigger the existing onSlideSizeChange handler
+            hiddenSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        trigger.addEventListener('click', () => {
+            if (dropdown.dataset.open === 'true') closeDropdown();
+            else openDropdown();
+        });
+
+        trigger.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDropdown(); }
+            if (e.key === 'Escape') closeDropdown();
+        });
+
+        searchInput.addEventListener('input', () => populateList(searchInput.value));
+        searchInput.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeDropdown();
+        });
+
+        list.addEventListener('click', e => {
+            const li = e.target.closest('.ss-option');
+            if (!li || li.classList.contains('ss-no-results')) return;
+            selectOption(li.dataset.value, li.textContent);
+        });
+
+        // Close on outside click
+        document.addEventListener('click', e => {
+            if (!dropdown.contains(e.target)) closeDropdown();
+        });
+
+        // Initial state: disabled
+        updateSlideSizeSelectState(row, false);
+    }
+
+    function updateSlideSizeSelectState(row, enabled) {
+        const dropdown = row.querySelector('.ss-dropdown');
+        const hiddenSelect = row.querySelector('.slide-size-select');
+        if (!dropdown) return;
+
+        if (enabled) {
+            dropdown.classList.remove('ss-disabled');
+            const trigger = dropdown.querySelector('.ss-trigger');
+            if (trigger) trigger.setAttribute('tabindex', '0');
+        } else {
+            dropdown.classList.add('ss-disabled');
+            dropdown.classList.remove('ss-open');
+            dropdown.dataset.open = 'false';
+            const trigger = dropdown.querySelector('.ss-trigger');
+            if (trigger) trigger.setAttribute('tabindex', '-1');
+        }
+    }
+
 </script>
 
 <style>
+    /* ============================================================
+     * Searchable Dropdown (Slide Size) Styles
+     * ============================================================ */
+    .slide-size-wrapper {
+        position: relative;
+    }
+
+    .ss-dropdown {
+        position: relative;
+        width: 100%;
+        font-size: 0.8125rem;
+        user-select: none;
+    }
+
+    .ss-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        min-height: 30px;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        outline: none;
+        color: #334155;
+    }
+
+    .ss-trigger:hover:not(.ss-disabled *) {
+        border-color: #94a3b8;
+    }
+
+    .ss-dropdown.ss-open .ss-trigger {
+        border-color: #60a5fa;
+        box-shadow: 0 0 0 2px rgba(96,165,250,0.25);
+    }
+
+    .ss-display-text {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ss-display-text.ss-placeholder {
+        color: #94a3b8;
+    }
+
+    .ss-arrow {
+        flex-shrink: 0;
+        color: #64748b;
+        transition: transform 0.2s ease;
+    }
+
+    .ss-dropdown.ss-open .ss-arrow {
+        transform: rotate(180deg);
+    }
+
+    .ss-panel {
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        box-shadow: 0 8px 24px -4px rgba(15,23,42,0.18), 0 2px 6px -2px rgba(15,23,42,0.10);
+        overflow: visible;
+        min-width: 280px;
+    }
+
+    .ss-dropdown.ss-open .ss-panel {
+        display: block;
+    }
+
+    .ss-search-wrap {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .ss-search-icon {
+        flex-shrink: 0;
+        color: #94a3b8;
+    }
+
+    .ss-search-input {
+        width: 100%;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 0.8rem;
+        color: #1e293b;
+        padding: 0;
+    }
+
+    .ss-search-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .ss-list {
+        list-style: none;
+        margin: 0;
+        padding: 4px 0;
+        max-height: 200px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+    }
+
+    .ss-option {
+        padding: 6px 12px;
+        cursor: pointer;
+        color: #334155;
+        font-size: 0.8rem;
+        transition: background 0.1s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ss-option:hover {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .ss-option.ss-selected {
+        background: #dbeafe;
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+
+    .ss-option-placeholder {
+        color: #94a3b8;
+        font-style: italic;
+    }
+
+    .ss-no-results {
+        padding: 8px 12px;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        text-align: center;
+        cursor: default;
+    }
+
+    /* Disabled state */
+    .ss-dropdown.ss-disabled .ss-trigger {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        cursor: not-allowed;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .ss-dropdown.ss-disabled .ss-arrow {
+        color: #cbd5e1;
+    }
+
     .negative-warning-toast {
         position: fixed;
         top: 24px;
