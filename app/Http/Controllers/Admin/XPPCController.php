@@ -108,7 +108,7 @@ class PPCController extends Controller
         if (!$acceptAllQuantity && $rejectQuantity > 0) {
             $rejectReasonId = $validated['reject_reason_id'] ?? null;
             if (!$rejectReasonId) {
-                return back()->withErrors(['reject_reason_id' => 'Please select a reject reason when rejecting partial quantity.'])->withInput();
+                 return back()->withErrors(['reject_reason_id' => 'Please select a reject reason when rejecting partial quantity.'])->withInput();
             }
         }
 
@@ -118,15 +118,15 @@ class PPCController extends Controller
 
         $status = (int) $validated['status'];
         if ($status === 1 && $rejectQuantity == $currentQuantity) {
-            return back()->withErrors(['reject_quantity' => 'Cannot accept transfer if rejecting the entire quantity. Please change status to Reject instead.'])->withInput();
+             return back()->withErrors(['reject_quantity' => 'Cannot accept transfer if rejecting the entire quantity. Please change status to Reject instead.'])->withInput();
         }
 
         if ($status === 2) {
-            $rejectQuantity = $currentQuantity;
-            if (!$validated['reject_reason_id']) {
-                return back()->withErrors(['reject_reason_id' => 'Please select a reject reason when rejecting the entire transfer.'])->withInput();
-            }
-            $rejectReasonId = $validated['reject_reason_id'];
+             $rejectQuantity = $currentQuantity;
+             if (!$validated['reject_reason_id']) {
+                 return back()->withErrors(['reject_reason_id' => 'Please select a reject reason when rejecting the entire transfer.'])->withInput();
+             }
+             $rejectReasonId = $validated['reject_reason_id'];
         }
 
         DB::table('sf002_to_ppc_transfers')
@@ -136,7 +136,7 @@ class PPCController extends Controller
                 'reject_quantity' => $rejectQuantity,
                 'reject_reason_id' => $rejectReasonId,
                 'ppc_remark' => $validated['ppc_remark'] ?? null,
-                'assign_to' => Auth::id(),
+                'assign_to' => Auth::id(), 
                 'updated_at' => now()
             ]);
 
@@ -192,7 +192,7 @@ class PPCController extends Controller
             })
             ->leftJoinSub($ppcOutbound, 'outbound', function ($join) {
                 $join->on('items.id', '=', 'outbound.item_id')
-                    ->on('inbound.type', '=', 'outbound.type');
+                     ->on('inbound.type', '=', 'outbound.type');
             })
             ->where('items.is_deleted', 0)
             ->having('pending_quantity', '>', 0)
@@ -212,13 +212,13 @@ class PPCController extends Controller
     public function storePpcTransfer(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'item_id' => 'required|integer|exists:items,id',
-            'type' => 'required|string|in:ced,zinc,ballcage',
+            'item_id'  => 'required|integer|exists:items,id',
+            'type'     => 'required|string|in:ced,zinc,ballcage',
             'sf3_process' => 'nullable|string|in:line_1,line_2,line_3,line_4,line_5,line_6',
             'quantity' => 'required|numeric|gt:0',
-            'date' => 'required|date',
-            'time' => 'required|date_format:H:i:s',
-            'remark' => 'nullable|string|max:500',
+            'date'     => 'required|date',
+            'time'     => 'required|date_format:H:i:s',
+            'remark'   => 'nullable|string|max:500',
         ]);
 
         $totalAccepted = (float) DB::table('sf002_to_ppc_transfers')
@@ -249,20 +249,20 @@ class PPCController extends Controller
         }
 
         DB::table('sf002_stock_transfers')->insert([
-            'item_id' => $validated['item_id'],
-            'type' => $validated['type'],
-            'transfer_by' => Auth::id(),
-            'assign_role' => 'SF003',
-            'sf3_process' => $validated['sf3_process'],
-            'assign_to' => null,
-            'quantity' => $validated['quantity'],
-            'date' => $validated['date'],
-            'time' => $validated['time'],
-            'is_accept' => 0,
-            'remark' => $validated['remark'] ?? null,
-            'is_deleted' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'item_id'      => $validated['item_id'],
+            'type'         => $validated['type'],
+            'transfer_by'  => Auth::id(),
+            'assign_role'  => 'SF003',
+            'sf3_process'  => $validated['sf3_process'],
+            'assign_to'    => null,
+            'quantity'     => $validated['quantity'],
+            'date'         => $validated['date'],
+            'time'         => $validated['time'],
+            'is_accept'    => 0,
+            'remark'       => $validated['remark'] ?? null,
+            'is_deleted'   => false,
+            'created_at'   => now(),
+            'updated_at'   => now(),
         ]);
 
         return back()->with('success', 'Stock transferred to Assembly Line successfully.');
