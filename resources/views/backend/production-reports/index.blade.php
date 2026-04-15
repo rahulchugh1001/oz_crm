@@ -115,10 +115,13 @@
                 <tbody class="divide-y divide-slate-200">
                     @forelse($productionReports as $report)
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium">
+                        <td class="px-3 py-2.5 text-xs text-slate-900 font-medium whitespace-nowrap">
                             #{{ $report->id }}
                             @if($report->is_draft)
                                 <span class="ml-1 inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Draft</span>
+                            @endif
+                            @if($report->is_ballcage)
+                                <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 border border-emerald-200">Ballcage</span>
                             @endif
                         </td>
                         <td class="px-3 py-2.5 text-xs text-slate-900 font-semibold">{{ $report->machine->name ?? '-' }}</td>

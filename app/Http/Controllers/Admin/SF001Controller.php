@@ -704,8 +704,19 @@ class SF001Controller extends Controller
      */
     public function stock(): View
     {
-        $transferStatsSubQuery = DB::table('sf001_stock_transfers')
-            ->where('is_deleted', false)
+        $sf1Transfers = DB::table('sf001_stock_transfers')
+            ->select('item_id', 'quantity', 'reject_quantity', 'is_accept')
+            ->where('is_deleted', false);
+
+        $ppcTransfers = DB::table('sf002_to_ppc_transfers')
+            ->select('item_id', 'quantity', 'reject_quantity', 'is_accept')
+            ->where('type', 'ballcage')
+            ->where('is_deleted', false);
+
+        $combinedTransfers = $sf1Transfers->unionAll($ppcTransfers);
+
+        $transferStatsSubQuery = DB::table(DB::raw("({$combinedTransfers->toSql()}) as combined"))
+            ->mergeBindings($combinedTransfers)
             ->select(
                 'item_id',
                 DB::raw("COALESCE(SUM(CASE
@@ -734,7 +745,8 @@ class SF001Controller extends Controller
                 DB::raw('COALESCE(MAX(sf001_transfers.rejected_quantity), 0) as rejected_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0) - COALESCE(MAX(sf001_transfers.rejected_quantity), 0), 0) as pending_quantity'),
                 DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0) - COALESCE(MAX(sf001_transfers.rejected_quantity), 0), 0) as total_stock'),
-                DB::raw('MAX(production_reports.created_at) as last_stock_update')
+                DB::raw('MAX(production_reports.created_at) as last_stock_update'),
+                DB::raw('MAX(CAST(production_reports.is_ballcage AS UNSIGNED)) as has_ballcage')
             )
             ->join('production_reports', function ($join) {
                 $join->on('items.id', '=', 'production_reports.slide_size_id')
@@ -757,9 +769,17 @@ class SF001Controller extends Controller
      */
     public function storeTransfer(Request $request): RedirectResponse
     {
+        $itemId = $request->input('item_id');
+        $hasBallcage = ProductionReport::where('slide_size_id', $itemId)
+            ->where('is_deleted', false)
+            ->where('is_ballcage', true)
+            ->exists();
+            
+        $allowedProcesses = $hasBallcage ? 'CED,ZINC,PPC' : 'CED,ZINC';
+
         $validated = $request->validate([
             'item_id' => 'required|integer|exists:items,id',
-            'assign_sf2' => 'required|string|in:CED,ZINC',
+            'assign_sf2' => 'required|string|in:' . $allowedProcesses,
             'quantity' => 'required|numeric|gt:0',
             'date' => 'required|date',
             'time' => 'required|date_format:H:i:s',
@@ -771,7 +791,7 @@ class SF001Controller extends Controller
             ->where('is_deleted', false)
             ->sum('actual_set_shift');
 
-        $totalTransferredStock = DB::table('sf001_stock_transfers')
+        $totalTransferredSF1 = (float) DB::table('sf001_stock_transfers')
             ->where('item_id', $validated['item_id'])
             ->where('is_deleted', false)
             ->selectRaw("COALESCE(SUM(CASE
@@ -781,6 +801,19 @@ class SF001Controller extends Controller
             END), 0) as transferred_quantity")
             ->value('transferred_quantity');
 
+        $totalTransferredPPC = (float) DB::table('sf002_to_ppc_transfers')
+            ->where('item_id', $validated['item_id'])
+            ->where('type', 'ballcage')
+            ->where('is_deleted', false)
+            ->selectRaw("COALESCE(SUM(CASE
+                WHEN is_accept = 2 THEN 0
+                WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                ELSE quantity
+            END), 0) as transferred_quantity")
+            ->value('transferred_quantity');
+
+        $totalTransferredStock = $totalTransferredSF1 + $totalTransferredPPC;
+
         $availableStock = max((float) $totalProducedStock - (float) $totalTransferredStock, 0);
 
         if ((float) $validated['quantity'] > $availableStock) {
@@ -789,21 +822,39 @@ class SF001Controller extends Controller
             ])->withInput();
         }
 
-        DB::table('sf001_stock_transfers')->insert([
-            'item_id' => $validated['item_id'],
-            'transfer_by' => Auth::id(),
-            'assign_role' => 'SF002',
-            'assign_sf2' => $validated['assign_sf2'],
-            'assign_to' => null,
-            'quantity' => $validated['quantity'],
-            'date' => $validated['date'],
-            'time' => $validated['time'],
-            'is_accept' => 0,
-            'remark' => $validated['remark'] ?? null,
-            'is_deleted' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        if ($validated['assign_sf2'] === 'PPC') {
+            DB::table('sf002_to_ppc_transfers')->insert([
+                'item_id' => $validated['item_id'],
+                'transfer_by' => Auth::id(),
+                'assign_role' => 'PPC',
+                'type' => 'ballcage',
+                'assign_to' => null,
+                'quantity' => $validated['quantity'],
+                'date' => $validated['date'],
+                'time' => $validated['time'],
+                'is_accept' => 0,
+                'remark' => $validated['remark'] ?? null,
+                'is_deleted' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            DB::table('sf001_stock_transfers')->insert([
+                'item_id' => $validated['item_id'],
+                'transfer_by' => Auth::id(),
+                'assign_role' => 'SF002',
+                'assign_sf2' => $validated['assign_sf2'],
+                'assign_to' => null,
+                'quantity' => $validated['quantity'],
+                'date' => $validated['date'],
+                'time' => $validated['time'],
+                'is_accept' => 0,
+                'remark' => $validated['remark'] ?? null,
+                'is_deleted' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         ProductionReport::query()
             ->where('slide_size_id', $validated['item_id'])
@@ -839,7 +890,7 @@ class SF001Controller extends Controller
             ->orderBy('production_reports.created_at', 'desc')
             ->get();
 
-        $stockManageHistory = DB::table('sf001_stock_transfers as transfers')
+        $sf1Transfers = DB::table('sf001_stock_transfers as transfers')
             ->select(
                 'transfers.id',
                 DB::raw("CASE
@@ -878,10 +929,52 @@ class SF001Controller extends Controller
             ->leftJoin('sf001_stock_transfers as parent_transfer', 'transfers.self_transferred_parent_id', '=', 'parent_transfer.id')
             ->leftJoin('users as parent_transfer_by_user', 'parent_transfer.transfer_by', '=', 'parent_transfer_by_user.id')
             ->where('transfers.item_id', $itemId)
-            ->where('transfers.is_deleted', false)
-            ->orderByDesc('transfers.date')
-            ->orderByDesc('transfers.time')
-            ->orderByDesc('transfers.created_at')
+            ->where('transfers.is_deleted', false);
+
+        $ppcTransfers = DB::table('sf002_to_ppc_transfers as transfers')
+            ->select(
+                'transfers.id',
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN 0
+                    WHEN transfers.is_accept = 1 THEN GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0)
+                    ELSE transfers.quantity
+                END as quantity"),
+                DB::raw("CASE
+                    WHEN transfers.is_accept = 2 THEN transfers.quantity
+                    WHEN transfers.is_accept = 1 THEN COALESCE(transfers.reject_quantity, 0)
+                    ELSE 0
+                END as rejected_quantity"),
+                'transfers.reject_reason_id',
+                'reject_reasons.name as reject_reason_name',
+                'transfers.date',
+                'transfers.time',
+                'transfers.is_accept',
+                'transfers.assign_role',
+                'transfers.type as assign_sf2',
+                'transfers.remark',
+                'transfers.ppc_remark as sf002_remark',
+                DB::raw("NULL as is_self_transferred"),
+                DB::raw("NULL as self_transferred_parent_id"),
+                DB::raw("NULL as parent_assign_sf2"),
+                DB::raw("NULL as parent_quantity"),
+                DB::raw("NULL as parent_date"),
+                DB::raw("NULL as parent_time"),
+                DB::raw("NULL as parent_transfer_by_name"),
+                'transfers.created_at',
+                'transfer_by_user.name as transfer_by_name',
+                'assign_to_user.name as assign_to_name'
+            )
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as assign_to_user', 'transfers.assign_to', '=', 'assign_to_user.id')
+            ->leftJoin('reject_reasons', 'transfers.reject_reason_id', '=', 'reject_reasons.id')
+            ->where('transfers.item_id', $itemId)
+            ->where('transfers.type', 'ballcage')
+            ->where('transfers.is_deleted', false);
+
+        $stockManageHistory = $sf1Transfers->unionAll($ppcTransfers)
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->orderByDesc('created_at')
             ->get();
 
         return view('backend.production-reports.sf001.stock-history', compact('item', 'history', 'stockManageHistory'));

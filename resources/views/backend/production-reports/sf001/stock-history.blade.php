@@ -185,6 +185,8 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-50 text-indigo-700">CED</span>
                             @elseif($transfer->assign_sf2 === 'ZINC')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-cyan-50 text-cyan-700">ZINC</span>
+                            @elseif($transfer->assign_sf2 === 'ballcage')
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-50 text-green-700">BALLCAGE</span>
                             @else
                                 <span class="text-sm text-slate-400">-</span>
                             @endif

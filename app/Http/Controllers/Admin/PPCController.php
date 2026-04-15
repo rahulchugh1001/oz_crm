@@ -201,8 +201,9 @@ class PPCController extends Controller
 
         $cedStocks = $stocks->where('type', 'ced')->values();
         $zincStocks = $stocks->where('type', 'zinc')->values();
+        $ballcageStocks = $stocks->where('type', 'ballcage')->values();
 
-        return view('backend.production-reports.ppc.stock', compact('cedStocks', 'zincStocks'));
+        return view('backend.production-reports.ppc.stock', compact('cedStocks', 'zincStocks', 'ballcageStocks'));
     }
 
     /**
@@ -212,7 +213,7 @@ class PPCController extends Controller
     {
         $validated = $request->validate([
             'item_id'  => 'required|integer|exists:items,id',
-            'type'     => 'required|string|in:ced,zinc',
+            'type'     => 'required|string|in:ced,zinc,ballcage',
             'sf3_process' => 'nullable|string|in:line_1,line_2,line_3,line_4,line_5,line_6',
             'quantity' => 'required|numeric|gt:0',
             'date'     => 'required|date',

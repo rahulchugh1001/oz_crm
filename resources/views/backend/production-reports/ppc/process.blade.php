@@ -38,8 +38,8 @@
         <div class="p-6 border-b border-slate-200">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-900">Pending Transfers from SF2</h2>
-                    <p class="text-sm text-slate-500">Transfers arriving from CED or ZINC awaiting PPC verification</p>
+                    <h2 class="text-lg font-bold text-slate-900">Pending Transfers</h2>
+                    <p class="text-sm text-slate-500">Incoming transfers awaiting PPC verification and acceptance</p>
                 </div>
                 <div class="text-sm">
                     <span class="text-slate-500">Total Pending:</span>

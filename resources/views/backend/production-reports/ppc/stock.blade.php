@@ -64,6 +64,15 @@
                 <span>ZINC Stock</span>
                 <span class="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">{{ collect($zincStocks)->count() }}</span>
             </button>
+            <button
+                id="tab-btn-ballcage"
+                onclick="switchTab('ballcage')"
+                class="flex items-center gap-2 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors tab-btn-inactive"
+            >
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">BALLCAGE</span>
+                <span>Ballcage Stock</span>
+                <span class="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold">{{ collect($ballcageStocks)->count() }}</span>
+            </button>
         </div>
     </div>
 
@@ -82,6 +91,15 @@
             'stocks'   => $zincStocks,
             'tabType'  => 'zinc',
             'tabLabel' => 'ZINC',
+        ])
+    </div>
+
+    <!-- BALLCAGE Tab Panel -->
+    <div id="panel-ballcage" class="hidden">
+        @include('backend.production-reports.ppc.partials.ppc-stock-table', [
+            'stocks'   => $ballcageStocks,
+            'tabType'  => 'ballcage',
+            'tabLabel' => 'BALLCAGE',
         ])
     </div>
 </div>
@@ -186,8 +204,8 @@
     let transferSubmitting = false;
 
     function switchTab(tab) {
-        const panels  = { ced: 'panel-ced',  zinc: 'panel-zinc'  };
-        const buttons = { ced: 'tab-btn-ced', zinc: 'tab-btn-zinc' };
+        const panels  = { ced: 'panel-ced',  zinc: 'panel-zinc', ballcage: 'panel-ballcage'  };
+        const buttons = { ced: 'tab-btn-ced', zinc: 'tab-btn-zinc', ballcage: 'tab-btn-ballcage' };
 
         Object.keys(panels).forEach(key => {
             const panel = document.getElementById(panels[key]);
