@@ -43,7 +43,12 @@
                         <p class="text-sm text-slate-500 mb-1">Machine ID</p>
                         <p class="text-2xl font-bold text-slate-900">#{{ $machine->id }}</p>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-3">
+                        @if($machine->is_ballcage)
+                            <span class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-semibold bg-violet-100 text-violet-700">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Ballcage
+                            </span>
+                        @endif
                         <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold {{ $machine->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
                             {{ $machine->status ? 'Active' : 'Inactive' }}
                         </span>
@@ -69,6 +74,20 @@
                             <div>
                                 <p class="text-sm font-medium text-blue-600">RF Set</p>
                                 <p class="text-2xl font-bold text-blue-900">{{ $machine->rf_set ?: '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 {{ $machine->is_ballcage ? 'bg-violet-50 border-violet-100' : 'bg-slate-50 border-slate-100' }} rounded-xl border">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-lg {{ $machine->is_ballcage ? 'bg-violet-100' : 'bg-slate-100' }} flex items-center justify-center">
+                                <i data-lucide="layers" class="w-6 h-6 {{ $machine->is_ballcage ? 'text-violet-600' : 'text-slate-400' }}"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium {{ $machine->is_ballcage ? 'text-violet-600' : 'text-slate-500' }}">Is Ballcage</p>
+                                <p class="text-2xl font-bold {{ $machine->is_ballcage ? 'text-violet-900' : 'text-slate-500' }}">
+                                    {{ $machine->is_ballcage ? 'Yes' : 'No' }}
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -167,7 +167,37 @@
                     @enderror
                 </div>
 
+                <div>
+                    <label for="ballcage-toggle-create" class="block text-sm font-semibold text-slate-700 mb-2">
+                        Is Ballcage
+                    </label>
+                    <div class="px-4 py-3 rounded-lg">
+                        <input type="hidden" name="is_ballcage" value="0">
+                        <label class="status-toggle" for="ballcage-toggle-create">
+                            <input
+                                type="checkbox"
+                                id="ballcage-toggle-create"
+                                name="is_ballcage"
+                                value="1"
+                                data-ballcage-toggle
+                                data-ballcage-text-id="ballcage-toggle-text-create"
+                                {{ old('is_ballcage', '0') === '1' ? 'checked' : '' }}
+                            >
+                            <span class="status-toggle-track">
+                                <span class="status-toggle-thumb"></span>
+                            </span>
+                            <span id="ballcage-toggle-text-create" class="status-toggle-text">No</span>
+                        </label>
+                    </div>
+                    @error('is_ballcage')
+                        <p class="mt-2 text-sm text-rose-600 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
+
+                </div>{{-- end grid --}}
 
                 <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-200">
                     <a href="{{ route('admin.machines.index') }}" class="px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 transition-all">
@@ -187,6 +217,16 @@
 @push('scripts')
 <script>
     lucide.createIcons();
+
+    // Sync ballcage toggle label text (Yes / No)
+    (() => {
+        const toggle = document.getElementById('ballcage-toggle-create');
+        const label  = document.getElementById('ballcage-toggle-text-create');
+        if (!toggle || !label) return;
+        const sync = () => { label.textContent = toggle.checked ? 'Yes' : 'No'; };
+        toggle.addEventListener('change', sync);
+        sync();
+    })();
 
     (() => {
         const form = document.getElementById('machine-create-form');
@@ -243,6 +283,10 @@
                 const statusToggle = form.querySelector('[data-status-toggle]');
                 if (statusToggle instanceof HTMLInputElement) {
                     formData.set('status', statusToggle.checked ? '1' : '0');
+                }
+                const ballcageToggle = form.querySelector('[data-ballcage-toggle]');
+                if (ballcageToggle instanceof HTMLInputElement) {
+                    formData.set('is_ballcage', ballcageToggle.checked ? '1' : '0');
                 }
 
                 const response = await fetch(form.action, {

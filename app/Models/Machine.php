@@ -32,7 +32,14 @@ class Machine extends Model
         'rf_set',
         'coil_id',
         'status',
+        'is_ballcage',
         'is_deleted',
+    ];
+
+    protected $casts = [
+        'status'      => 'boolean',
+        'is_ballcage' => 'boolean',
+        'is_deleted'  => 'boolean',
     ];
 
     public function weight_capacities()

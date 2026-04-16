@@ -84,6 +84,7 @@
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Name</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Machine Code</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">RF Set</th>
+                        <th class="px-4 py-2 text-center text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Is Ballcage</th>
                         <th class="px-4 py-2 text-left text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Status</th>
                         <th class="px-4 py-2 text-right text-[10px] font-semibold text-white uppercase tracking-wider whitespace-nowrap">Actions</th>
                     </tr>
@@ -95,6 +96,15 @@
                         <td class="px-4 py-3 text-xs text-slate-900 font-semibold">{{ $machine->name }}</td>
                         <td class="px-4 py-3 text-xs text-slate-600">{{ $machine->machine_code }}</td>
                         <td class="px-4 py-3 text-xs text-slate-900">{{ $machine->rf_set ?: '-' }}</td>
+                        <td class="px-4 py-3 text-center">
+                            @if($machine->is_ballcage)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-700">
+                                    <i data-lucide="check" class="w-3 h-3 mr-1"></i> Yes
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-500">No</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ $machine->status ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700' }}">
                                 {{ $machine->status ? 'Active' : 'Inactive' }}
@@ -122,7 +132,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center">
+                        <td colspan="7" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-2">
                                 <i data-lucide="inbox" class="w-12 h-12 text-slate-300"></i>
                                 <p class="text-slate-500">No machines found</p>

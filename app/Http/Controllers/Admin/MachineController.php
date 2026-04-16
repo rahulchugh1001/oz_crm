@@ -65,10 +65,10 @@ class MachineController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'         => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code',
-            'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => ['nullable', 'array'],
+            'rf_set'       => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
+            'weight_capacity'   => ['nullable', 'array'],
             'weight_capacity.*' => [
                 'string',
                 'max:50',
@@ -76,8 +76,11 @@ class MachineController extends Controller
                     $q->where('is_deleted', 0)->where('status', 1);
                 }),
             ],
-            'status' => 'required|boolean',
+            'status'      => 'required|boolean',
+            'is_ballcage' => 'boolean',
         ]);
+
+        $validated['is_ballcage'] = $request->boolean('is_ballcage');
 
         $validated['is_deleted'] = false;
         $weightCapacities = $validated['weight_capacity'] ?? [];
@@ -127,10 +130,10 @@ class MachineController extends Controller
     public function update(Request $request, Machine $machine): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'         => 'required|string|max:255',
             'machine_code' => 'required|string|max:255|unique:machines,machine_code,' . $machine->id,
-            'rf_set' => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
-            'weight_capacity' => ['nullable', 'array'],
+            'rf_set'       => ['nullable', Rule::in(Machine::RF_SET_OPTIONS)],
+            'weight_capacity'   => ['nullable', 'array'],
             'weight_capacity.*' => [
                 'string',
                 'max:50',
@@ -138,8 +141,11 @@ class MachineController extends Controller
                     $q->where('is_deleted', 0)->where('status', 1);
                 }),
             ],
-            'status' => 'required|boolean',
+            'status'      => 'required|boolean',
+            'is_ballcage' => 'boolean',
         ]);
+
+        $validated['is_ballcage'] = $request->boolean('is_ballcage');
 
         $weightCapacities = $validated['weight_capacity'] ?? [];
         unset($validated['weight_capacity']);

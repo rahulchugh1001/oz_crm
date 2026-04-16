@@ -374,7 +374,7 @@
             <td class="border border-slate-300 px-3 py-2 text-center">
                 <label class="inline-flex items-center cursor-pointer">
                     <div class="relative">
-                        <input type="checkbox" name="is_ballcage[]" value="1" class="sr-only machine-toggle is-ballcage-checkbox row-input" onchange="updateGlobalBallcageCheckbox();" disabled>
+                        <input type="checkbox" name="is_ballcage[]" value="1" data-is-ballcage-default="${machine.is_ballcage ? '1' : '0'}" class="sr-only machine-toggle is-ballcage-checkbox row-input" onchange="handleBallcageToggle(this);" disabled ${machine.is_ballcage ? 'checked' : ''}>
                         <div class="toggle-bg"></div>
                         <!-- Hidden field for false value -->
                         <input type="hidden" name="is_ballcage_hidden[]" value="0" class="ballcage-hidden-input">
@@ -689,15 +689,34 @@
 
     function toggleAllBallcage(isChecked) {
         const ballcageCheckboxes = document.querySelectorAll('.is-ballcage-checkbox');
+        let nonBallcagecount = 0;
+
         ballcageCheckboxes.forEach(cb => {
             const row = cb.closest('tr');
             const machineCheckbox = row.querySelector('.machine-checkbox');
             
             // Only toggle ballcage if the machine is selected
             if (machineCheckbox && machineCheckbox.checked) {
+                const wasChecked = cb.checked;
                 cb.checked = isChecked;
+                
+                if (isChecked && !wasChecked && cb.dataset.isBallcageDefault === '0') {
+                    nonBallcagecount++;
+                }
             }
         });
+
+        if (nonBallcagecount > 0) {
+            Swal.fire({
+                title: 'Non-Ballcage Machines Detected',
+                text: `You have enabled ballcage production for ${nonBallcagecount} machine(s) that are not designated as ballcage machines.`,
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
+        }
+
+        updateGlobalBallcageCheckbox();
     }
 
     function updateGlobalBallcageCheckbox() {
@@ -725,6 +744,19 @@
             globalToggle.checked = ballcageCheckedCount > 0 && ballcageCheckedCount === selectedMachineRows.length;
             globalToggle.indeterminate = ballcageCheckedCount > 0 && ballcageCheckedCount < selectedMachineRows.length;
         }
+    }
+
+    function handleBallcageToggle(checkbox) {
+        if (checkbox.checked && checkbox.dataset.isBallcageDefault === '0') {
+            Swal.fire({
+                title: 'Non-Ballcage Machine',
+                text: 'You are enabling ballcage production for a machine that is not designated as a ballcage machine.',
+                icon: 'warning',
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'OK',
+            });
+        }
+        updateGlobalBallcageCheckbox();
     }
 
     let previousShiftValue = '';
