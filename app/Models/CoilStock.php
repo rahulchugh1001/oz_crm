@@ -48,4 +48,9 @@ class CoilStock extends Model
     {
         return $this->hasMany(CoilLoadNumber::class, 'coil_id');
     }
+
+    public function allocations()
+    {
+        return $this->hasMany(CoilLoadAllocation::class, 'coil_id');
+    }
 }

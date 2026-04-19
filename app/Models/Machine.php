@@ -85,4 +85,9 @@ class Machine extends Model
             return null;
         }
     }
+
+    public function allocations()
+    {
+        return $this->hasMany(CoilLoadAllocation::class, 'machine_id');
+    }
 }

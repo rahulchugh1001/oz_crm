@@ -85,6 +85,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::get('/production-reports/sf001', [ProductionReportController::class, 'sf001'])->name('production-reports.sf001');
     Route::get('/production-reports/sf001/coil-stock', [SF001Controller::class, 'coilStock'])->name('production-reports.sf001.coil-stock');
     Route::get('/production-reports/sf001/coil-stock/{coilId}/view', [SF001Controller::class, 'viewCoilStock'])->name('production-reports.sf001.coil-stock.view');
+    Route::get('/production-reports/sf001/coil-stock/{coilId}/multi-load', [SF001Controller::class, 'multiLoadCoil'])->name('production-reports.sf001.coil-stock.multi-load');
+    Route::post('/production-reports/sf001/coil-stock/{coilId}/multi-load', [SF001Controller::class, 'storeMultiLoadAllocation'])->name('production-reports.sf001.coil-stock.multi-load.store');
+    Route::post('/production-reports/sf001/coil-stock/{coilId}/multi-load/{allocationId}/unload', [SF001Controller::class, 'unloadMultiLoadAllocation'])->name('production-reports.sf001.coil-stock.multi-load.unload');
+    Route::post('/production-reports/sf001/coil-stock/{coilId}/multi-load/{allocationId}/update', [SF001Controller::class, 'updateMultiLoadAllocation'])->name('production-reports.sf001.coil-stock.multi-load.update');
     Route::post('/production-reports/sf001/coil-stock', [SF001Controller::class, 'storeCoilStock'])->name('production-reports.sf001.coil-stock.store');
     Route::post('/production-reports/sf001/coil-stock/load-machine', [SF001Controller::class, 'loadCoilToMachine'])->name('production-reports.sf001.coil-stock.load-machine');
     Route::put('/production-reports/sf001/coil-stock/{coilId}', [SF001Controller::class, 'updateCoilStock'])->name('production-reports.sf001.coil-stock.update');

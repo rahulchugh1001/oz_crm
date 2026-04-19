@@ -97,30 +97,38 @@
                         <td class="px-4 py-3 text-slate-700">{{ number_format((float) $coil->net_weight_kg, 0) }}</td>
                         <td class="px-4 py-3 text-slate-700">
                             @if(!empty($loadedMachinesByCoil[$coil->id]))
-                                <div class="space-y-1.5 min-w-[180px]">
-                                    @foreach($loadedMachinesByCoil[$coil->id] as $loadedMachine)
-                                        <div class="flex items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5">
-                                            <div>
-                                                <p class="text-xs font-semibold text-emerald-900 leading-4">{{ $loadedMachine['name'] }}</p>
-                                                <p class="text-[10px] uppercase tracking-[0.14em] text-emerald-700">Machine</p>
-                                                @if(!empty($loadedMachine['active_load_coil_no']))
-                                                    <p class="text-[10px] text-emerald-800 mt-0.5">Coil: <span class="font-semibold">{{ $loadedMachine['active_load_coil_no'] }}</span></p>
-                                                @endif
+                                @php $mCount = count($loadedMachinesByCoil[$coil->id]); @endphp
+                                <div class="relative group/carousel max-w-[240px]">
+                                    @if($mCount > 1)
+                                        <button type="button" onclick="scrollMachineCarousel('{{ $coil->id }}', 'left')" class="absolute -left-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded-full bg-white border border-slate-200 shadow-sm text-slate-400 hover:text-indigo-600 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                                            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                        <button type="button" onclick="scrollMachineCarousel('{{ $coil->id }}', 'right')" class="absolute -right-2 top-1/2 -translate-y-1/2 z-10 h-6 w-6 flex items-center justify-center rounded-full bg-white border border-slate-200 shadow-sm text-slate-400 hover:text-indigo-600 opacity-0 group-hover/carousel:opacity-100 transition-opacity">
+                                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    @endif
+                                    
+                                    <div id="carousel-{{ $coil->id }}" class="flex overflow-x-auto no-scrollbar scroll-smooth gap-2 snap-x px-1">
+                                        @foreach($loadedMachinesByCoil[$coil->id] as $loadedMachine)
+                                            <div class="flex-shrink-0 w-[180px] snap-center p-2 rounded-xl border border-indigo-100 bg-indigo-50/30">
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <span class="text-[10px] font-bold text-slate-800 truncate">{{ $loadedMachine['name'] }}</span>
+                                                    <span class="text-[9px] font-bold text-indigo-600 bg-white px-1.5 py-0.5 rounded border border-indigo-50 leading-none">
+                                                        {{ $loadedMachine['machine_code'] ?: 'N/A' }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[9px] font-semibold text-slate-400">Allocated</span>
+                                                    <span class="text-[10px] font-bold text-indigo-500">{{ number_format($loadedMachine['allocated_weight'], 0) }} KG</span>
+                                                </div>
                                             </div>
-                                            <span class="inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
-                                                {{ $loadedMachine['machine_code'] ?: 'No Code' }}
-                                            </span>
-                                        </div>
-                                    @endforeach
+                                        @endforeach
+                                    </div>
                                 </div>
                             @else
-                                <div class="inline-flex min-w-[150px] items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5">
-                                    <span class="inline-flex h-7 w-7 items-center justify-center rounded-md bg-white text-rose-600 border border-rose-200">
-                                        <i data-lucide="circle-off" class="w-3.5 h-3.5"></i>
-                                    </span>
-                                    <div>
-                                        <p class="text-xs font-semibold leading-4 text-rose-700">Not Loaded</p>
-                                    </div>
+                                <div class="inline-flex items-center gap-1.5 rounded-lg border border-rose-100 bg-rose-50 px-2.5 py-1 text-rose-600">
+                                    <i data-lucide="circle-off" class="w-3.5 h-3.5"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider">Not Loaded</span>
                                 </div>
                             @endif
                         </td>
@@ -194,19 +202,29 @@
                                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                                 </button>
 
-                                <button
-                                    type="button"
-                                    onclick="openManageCoilModal(this)"
-                                    title="Manage Load/Unload"
-                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-1.5 text-indigo-700 hover:bg-indigo-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck-bg' : '' }}"
-                                    data-coil-id="{{ $coil->id }}"
-                                    data-coil-no="{{ $coil->coil_no }}"
-                                    data-net-weight="{{ (float) $coil->net_weight_kg }}"
-                                    data-assigned-machines='@json($assignedMachinesForManage)'
-                                    data-loaded-machines='@json($loadedMachinesByCoil[$coil->id] ?? [])'
+{{-- 
+                                <button 
+                                    type="button" 
+                                    onclick="openManageCoilModal(this)" 
+                                    title="Manage Load/Unload" 
+                                    class="inline-flex items-center justify-center rounded-lg bg-indigo-100 p-1.5 text-indigo-700 hover:bg-indigo-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck-bg' : '' }}" 
+                                    data-coil-id="{{ $coil->id }}" 
+                                    data-coil-no="{{ $coil->coil_no }}" 
+                                    data-net-weight="{{ (float) $coil->net_weight_kg }}" 
+                                    data-assigned-machines='@json($assignedMachinesForManage)' 
+                                    data-loaded-machines='@json($loadedMachinesByCoil[$coil->id] ?? [])' 
                                 >
                                     <i data-lucide="truck" class="w-3.5 h-3.5 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'loaded-truck' : '' }}"></i>
                                 </button>
+                                --}}
+
+                                <a
+                                    href="{{ route('admin.production-reports.sf001.coil-stock.multi-load', $coil->id) }}"
+                                    title="Multi-Machine Loading"
+                                    class="inline-flex items-center justify-center rounded-lg bg-purple-100 p-1.5 text-purple-700 hover:bg-purple-200 {{ !empty($loadedMachinesByCoil[$coil->id]) ? 'multi-load-active' : '' }}"
+                                >
+                                    <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                                </a>
 
                                 <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline js-swal-delete-form" data-delete-title="Delete coil stock?" data-delete-text="Are you sure you want to delete coil {{ $coil->coil_no }}?">
                                     @csrf
@@ -1709,5 +1727,45 @@
         document.getElementById('editSupplierSection').classList.add('hidden');
         document.getElementById('editSupplierForm').action = '#';
     }
+    function scrollMachineCarousel(coilId, direction) {
+        const container = document.getElementById(`carousel-${coilId}`);
+        if (!container) return;
+        
+        const scrollAmount = 188; // card width + gap
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        
+        if (direction === 'right') {
+            if (container.scrollLeft >= maxScroll - 5) {
+                container.scrollTo({ left: 0, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+            }
+        } else {
+            if (container.scrollLeft <= 5) {
+                container.scrollTo({ left: maxScroll, behavior: 'smooth' });
+            } else {
+                container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+            }
+        }
+    }
+
+    // Auto-swipe logic
+    document.addEventListener('DOMContentLoaded', function() {
+        setInterval(() => {
+            const carousels = document.querySelectorAll('[id^="carousel-"]');
+            carousels.forEach(container => {
+                // Only auto-swipe if there is content to scroll
+                if (container.scrollWidth > container.clientWidth) {
+                    const coilId = container.id.replace('carousel-', '');
+                    scrollMachineCarousel(coilId, 'right');
+                }
+            });
+        }, 3000); // Swipe every 3 seconds
+    });
 </script>
+
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
 @endpush

@@ -11,6 +11,7 @@ use App\Models\CoilStock;
 use App\Models\Item;
 use App\Models\Machine;
 use App\Models\ProductionReport;
+use App\Models\CoilLoadAllocation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,59 +51,26 @@ class SF001Controller extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $loadedMachineNames = Machine::query()
-            ->where('is_deleted', 0)
-            ->whereNotNull('coil_id')
-            ->get(['coil_id', 'name'])
+        $loadedMachinesByCoil = CoilLoadAllocation::query()
+            ->with(['machine:id,name,machine_code'])
+            ->where('status', 'active')
+            ->get()
             ->groupBy('coil_id')
-            ->map(function ($rows) {
-                return $rows->pluck('name')->unique()->implode(', ');
-            });
-
-        $loadedMachinesByCoil = Machine::query()
-            ->where('is_deleted', 0)
-            ->whereNotNull('coil_id')
-            ->get(['id', 'coil_id', 'name', 'machine_code'])
-            ->map(function ($machine) {
-                $activeLoadTrack = CoilMachineTrack::query()
-                    ->where('machine_id', $machine->id)
-                    ->where('coil_id', $machine->coil_id)
-                    ->where('type', CoilMachineTrack::ACTION_LOAD)
-                    ->where('is_deleted', 0)
-                    ->whereNotExists(function ($query) {
-                        $query->select(DB::raw(1))
-                            ->from('coil_machine_track as unload_tracks')
-                            ->whereColumn('unload_tracks.reference_track_id', 'coil_machine_track.id')
-                            ->where('unload_tracks.type', CoilMachineTrack::ACTION_UNLOAD)
-                            ->where('unload_tracks.is_deleted', 0);
-                    })
-                    ->orderByDesc('id')
-                    ->first(['id', 'load_weight']);
-
-                $machine->active_load_weight = $activeLoadTrack ? (float) $activeLoadTrack->load_weight : null;
-
-                $machine->active_load_coil_no = null;
-                if ($activeLoadTrack) {
-                    $loadNumber = CoilLoadNumber::query()
-                        ->where('coil_machine_track_id', $activeLoadTrack->id)
-                        ->first(['coil_no']);
-                    $machine->active_load_coil_no = $loadNumber ? $loadNumber->coil_no : null;
-                }
-
-                return $machine;
-            })
-            ->groupBy('coil_id')
-            ->map(function ($rows) {
-                return $rows->map(function ($row) {
+            ->map(function ($allocations) {
+                return $allocations->map(function ($allocation) {
                     return [
-                        'id' => $row->id,
-                        'name' => $row->name,
-                        'machine_code' => $row->machine_code,
-                        'active_load_weight' => $row->active_load_weight,
-                        'active_load_coil_no' => $row->active_load_coil_no,
+                        'id' => $allocation->machine->id,
+                        'name' => $allocation->machine->name,
+                        'machine_code' => $allocation->machine->machine_code,
+                        'allocated_weight' => $allocation->allocated_weight,
+                        'remaining_weight' => $allocation->remaining_weight,
                     ];
-                })->values()->all();
+                });
             });
+
+        $loadedMachineNames = $loadedMachinesByCoil->map(function ($machines) {
+            return $machines->pluck('name')->implode(', ');
+        });
 
         $coilTrackLogs = CoilMachineTrack::query()
             ->with([
@@ -202,6 +170,259 @@ class SF001Controller extends Controller
             'productionReports',
             'coilLoadNumbers'
         ));
+    }
+
+    /**
+     * Display multi-machine loading management page for a specific coil.
+     */
+    public function multiLoadCoil(int $coilId): View
+    {
+        $coil = CoilStock::query()
+            ->with(['manufacture:id,name'])
+            ->where('id', $coilId)
+            ->where('is_deleted', 0)
+            ->firstOrFail();
+
+        $allocatedMachines = CoilLoadAllocation::query()
+            ->with(['machine:id,name,machine_code'])
+            ->where('coil_id', $coil->id)
+            ->where('status', 'active')
+            ->get();
+
+        $allocatedMachineIds = $allocatedMachines->pluck('machine_id')->toArray();
+
+        $allMachines = $coil->machines()
+            ->where('machines.is_deleted', 0)
+            ->where('machines.status', 1)
+            ->whereNotIn('machines.id', $allocatedMachineIds)
+            ->orderBy('name')
+            ->get(['machines.id', 'machines.name', 'machines.machine_code']);
+
+        $transitions = CoilMachineTrack::query()
+            ->with(['machine:id,name,machine_code'])
+            ->where('coil_id', $coil->id)
+            ->orderByDesc('created_at')
+            ->take(10)
+            ->get();
+
+        $unloadedHistory = CoilLoadAllocation::query()
+            ->with(['machine:id,name,machine_code'])
+            ->where('coil_id', $coil->id)
+            ->where('status', 'unloaded')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $suppliers = CoilManufacture::query()
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('backend.production-reports.sf001.multi-load', compact('coil', 'allocatedMachines', 'allMachines', 'transitions', 'unloadedHistory', 'suppliers'));
+    }
+
+    /**
+     * Store weight allocation for a specific machine in multi-load mode.
+     */
+    public function storeMultiLoadAllocation(Request $request, int $coilId): RedirectResponse
+    {
+        $validated = $request->validate([
+            'machine_id' => 'required|exists:machines,id',
+            'allocated_weight' => 'required|numeric|min:1',
+            'remark' => 'nullable|string|max:255',
+        ]);
+
+        $coil = CoilStock::query()
+            ->where('id', $coilId)
+            ->where('is_deleted', 0)
+            ->firstOrFail();
+
+        $machine = Machine::query()
+            ->where('id', $validated['machine_id'])
+            ->where('is_deleted', 0)
+            ->where('status', 1)
+            ->firstOrFail();
+
+        // 1. Check if machine is assigned to this coil
+        $isAssigned = $coil->machines()->where('machines.id', $machine->id)->exists();
+        if (!$isAssigned) {
+            return back()->with('error', 'Selected machine is not assigned to this coil.');
+        }
+
+        // 2. Check if machine already has an active load
+        if (!empty($machine->coil_id)) {
+             // In multi-load, we might allow loading same coil again if needed? 
+             // But usually it's one active coil per machine.
+             return back()->with('error', 'Machine already has a loaded coil. Please unload first.');
+        }
+
+        // 3. Check weight availability
+        $loadWeight = (float) $validated['allocated_weight'];
+        if ($loadWeight > (float) $coil->net_weight_kg) {
+            return back()->with('error', 'Allocation weight exceeds available coil weight.');
+        }
+
+        DB::transaction(function () use ($coil, $machine, $loadWeight, $validated) {
+            $remainingCoilWeight = max((float) $coil->net_weight_kg - $loadWeight, 0);
+
+            // Update Coil Stock
+            $coil->update([
+                'net_weight_kg' => $remainingCoilWeight,
+                'process' => $remainingCoilWeight > 0 ? 'in_use' : 'out_of_stock',
+                'process_type' => 'load',
+            ]);
+
+            // Update Machine
+            $machine->update(['coil_id' => $coil->id]);
+
+            // Create Track
+            $track = CoilMachineTrack::query()->create([
+                'machine_id' => $machine->id,
+                'coil_id' => $coil->id,
+                'load_weight' => $loadWeight,
+                'type' => 'load',
+                'event_at' => now(),
+                'remark' => $validated['remark'] ?? 'Multi-machine allocation',
+                'created_by' => Auth::id(),
+                'status' => 1,
+            ]);
+
+            // Create Allocation State
+            CoilLoadAllocation::query()->create([
+                'coil_id' => $coil->id,
+                'machine_id' => $machine->id,
+                'allocated_weight' => $loadWeight,
+                'consumed_weight' => 0,
+                'remaining_weight' => $loadWeight,
+                'status' => 'active',
+                'load_track_id' => $track->id,
+            ]);
+
+            // Optional: Log History
+            CoilMachineTrackLog::query()->create([
+                'coil_machine_track_id' => $track->id,
+                'action_type' => 'load',
+                'payload' => json_encode([
+                    'machine_id' => $machine->id,
+                    'coil_id' => $coil->id,
+                    'load_weight' => $loadWeight,
+                ]),
+                'description' => 'Multi-machine load allocation created.',
+            ]);
+        });
+
+        return back()->with('success', "Weight allocated to {$machine->name} successfully.");
+    }
+
+    /**
+     * Update/Adjust weight for an active allocation.
+     */
+    public function updateMultiLoadAllocation(Request $request, int $coilId, int $allocationId): RedirectResponse
+    {
+        $validated = $request->validate([
+            'allocated_weight' => 'required|numeric|min:1',
+        ]);
+
+        $allocation = CoilLoadAllocation::query()
+            ->where('id', $allocationId)
+            ->where('coil_id', $coilId)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $coil = CoilStock::findOrFail($coilId);
+        $diff = (float) $validated['allocated_weight'] - (float) $allocation->allocated_weight;
+
+        // Check if coil has enough stock if we are increasing allocation
+        if ($diff > 0 && $coil->net_weight_kg < $diff) {
+            return back()->with('error', "Not enough stock in coil to increase allocation by " . number_format($diff, 0) . " KG.");
+        }
+
+        DB::transaction(function () use ($allocation, $coil, $diff, $validated) {
+            // 1. Update Coil Stock
+            $coil->update([
+                'net_weight_kg' => (float) $coil->net_weight_kg - $diff,
+            ]);
+
+            // 2. Update Allocation
+            $newRemaining = (float) $allocation->remaining_weight + $diff;
+            $allocation->update([
+                'allocated_weight' => $validated['allocated_weight'],
+                'remaining_weight' => $newRemaining > 0 ? $newRemaining : 0,
+            ]);
+
+            // 3. Log the adjustment
+            CoilMachineTrack::query()->create([
+                'machine_id' => $allocation->machine_id,
+                'coil_id' => $coil->id,
+                'load_weight' => abs($diff),
+                'type' => $diff > 0 ? 'load' : 'unload',
+                'event_at' => now(),
+                'remark' => 'Weight allocation adjusted manually',
+                'created_by' => Auth::id(),
+                'status' => 1,
+            ]);
+        });
+
+        return back()->with('success', "Allocation weight adjusted successfully.");
+    }
+
+    /**
+     * Unload a specific machine allocation and return remaining weight to coil stock.
+     */
+    public function unloadMultiLoadAllocation(Request $request, int $coilId, int $allocationId): RedirectResponse
+    {
+        $validated = $request->validate([
+            'return_weight' => 'required|numeric|min:0',
+        ]);
+
+        $allocation = CoilLoadAllocation::query()
+            ->where('id', $allocationId)
+            ->where('coil_id', $coilId)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $machine = Machine::findOrFail($allocation->machine_id);
+        $coil = CoilStock::findOrFail($coilId);
+
+        DB::transaction(function () use ($allocation, $machine, $coil, $validated) {
+            $returnWeight = (float) $validated['return_weight'];
+            $originalAllocated = (float) $allocation->allocated_weight;
+            $consumedInThisProcess = $originalAllocated - $returnWeight;
+
+            // 1. Update Coil Stock (Return specified weight)
+            $newCoilWeight = (float) $coil->net_weight_kg + $returnWeight;
+            $coil->update([
+                'net_weight_kg' => $newCoilWeight,
+                'process' => $newCoilWeight > 0 ? 'in_use' : 'out_of_stock',
+            ]);
+
+            // 2. Clear Machine
+            $machine->update(['coil_id' => null]);
+
+            // 3. Complete Allocation and update final consumed weight
+            $allocation->update([
+                'status' => 'unloaded',
+                'consumed_weight' => $consumedInThisProcess > 0 ? $consumedInThisProcess : 0,
+                'remaining_weight' => 0,
+                'unload_track_id' => null, 
+            ]);
+
+            // 4. Create Track entry for Unload
+            $track = CoilMachineTrack::query()->create([
+                'machine_id' => $machine->id,
+                'coil_id' => $coil->id,
+                'load_weight' => $returnWeight, // Log how much was returned
+                'type' => 'unload',
+                'event_at' => now(),
+                'remark' => 'Multi-machine allocation unloaded (Manual weight)',
+                'created_by' => Auth::id(),
+                'status' => 1,
+            ]);
+
+            $allocation->update(['unload_track_id' => $track->id]);
+        });
+
+        return back()->with('success', "Machine {$machine->name} unloaded. " . number_format($validated['return_weight'], 0) . " KG returned to coil stock.");
     }
 
     /**
