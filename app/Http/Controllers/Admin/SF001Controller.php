@@ -199,7 +199,7 @@ class SF001Controller extends Controller
             ->get(['machines.id', 'machines.name', 'machines.machine_code']);
 
         $transitions = CoilMachineTrack::query()
-            ->with(['machine:id,name,machine_code'])
+            ->with(['machine:id,name,machine_code', 'loadNumber'])
             ->where('coil_id', $coil->id)
             ->orderByDesc('created_at')
             ->take(10)
@@ -228,6 +228,7 @@ class SF001Controller extends Controller
     {
         $validated = $request->validate([
             'machine_id' => 'required|exists:machines,id',
+            'coil_no' => 'required|string|max:120',
             'allocated_weight' => 'required|numeric|min:1',
             'remark' => 'nullable|string|max:255',
         ]);
@@ -291,11 +292,20 @@ class SF001Controller extends Controller
             CoilLoadAllocation::query()->create([
                 'coil_id' => $coil->id,
                 'machine_id' => $machine->id,
+                'coil_no' => trim((string) $validated['coil_no']),
                 'allocated_weight' => $loadWeight,
                 'consumed_weight' => 0,
                 'remaining_weight' => $loadWeight,
                 'status' => 'active',
                 'load_track_id' => $track->id,
+            ]);
+
+            // Create Coil Load Number link
+            CoilLoadNumber::query()->create([
+                'coil_id' => $coil->id,
+                'coil_machine_track_id' => $track->id,
+                'coil_no' => trim((string) $validated['coil_no']),
+                'created_by' => Auth::id(),
             ]);
 
             // Optional: Log History
@@ -305,6 +315,7 @@ class SF001Controller extends Controller
                 'payload' => json_encode([
                     'machine_id' => $machine->id,
                     'coil_id' => $coil->id,
+                    'coil_no' => $validated['coil_no'] ?? null,
                     'load_weight' => $loadWeight,
                 ]),
                 'description' => 'Multi-machine load allocation created.',

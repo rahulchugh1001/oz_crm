@@ -12,6 +12,7 @@ class CoilLoadAllocation extends Model
     protected $fillable = [
         'coil_id',
         'machine_id',
+        'coil_no',
         'allocated_weight',
         'consumed_weight',
         'remaining_weight',

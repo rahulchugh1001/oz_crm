@@ -199,6 +199,10 @@
                         </div>
                     </div>
                     <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Coil No. <span class="text-rose-500">*</span></label>
+                        <input type="text" name="coil_no" required placeholder="Enter Coil Number" class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200/50 outline-none transition-all">
+                    </div>
+                    <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">Allocation Weight (KG)</label>
                         <div class="relative">
                             <input type="number" name="allocated_weight" required min="1" max="{{ $coil->net_weight_kg }}" placeholder="Max: {{ number_format($coil->net_weight_kg, 0) }} KG" class="w-full rounded-xl border border-slate-300 pl-4 pr-12 py-2.5 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200/50 outline-none transition-all">
@@ -238,6 +242,7 @@
                         <thead>
                             <tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                 <th class="px-6 py-4">Machine</th>
+                                <th class="px-6 py-4">Coil No</th>
                                 <th class="px-6 py-4 text-center">Allocated</th>
                                 <th class="px-6 py-4 text-center text-indigo-600">Remaining</th>
                                 <th class="px-6 py-4">Status</th>
@@ -250,6 +255,9 @@
                                 <td class="px-6 py-4">
                                     <p class="text-sm font-bold text-slate-800">{{ $allocation->machine->name }}</p>
                                     <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{{ $allocation->machine->machine_code }}</p>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <span class="text-sm font-semibold text-slate-600">{{ $allocation->coil_no ?: 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-sm font-bold text-slate-700">{{ number_format($allocation->allocated_weight, 0) }} KG</span>
@@ -313,6 +321,7 @@
                         <thead>
                             <tr class="bg-slate-50 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                 <th class="px-6 py-4">Machine</th>
+                                <th class="px-6 py-4">Coil No</th>
                                 <th class="px-6 py-4 text-center">Was Allocated</th>
                                 <th class="px-6 py-4 text-center text-rose-600 font-black">Actual Consumed</th>
                                 <th class="px-6 py-4">Unloaded At</th>
@@ -324,6 +333,9 @@
                                 <td class="px-6 py-4">
                                     <p class="text-sm font-bold text-slate-600">{{ $history->machine->name }}</p>
                                     <p class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">{{ $history->machine->machine_code }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-semibold text-slate-500">{{ $history->coil_no ?: 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="text-sm font-bold text-slate-500 line-through decoration-slate-300">{{ number_format($history->allocated_weight, 0) }} KG</span>
@@ -368,6 +380,10 @@
                                 </div>
                                 <p class="text-xs text-slate-500 mt-0.5">
                                     Weight: <span class="font-bold {{ $track->type === 'load' ? 'text-indigo-600' : 'text-rose-600' }}">{{ number_format($track->load_weight, 0) }} KG</span>
+                                    @if($track->loadNumber)
+                                        <span class="mx-2 text-slate-300">|</span>
+                                        <span class="font-semibold text-slate-600">Coil: {{ $track->loadNumber->coil_no }}</span>
+                                    @endif
                                     @if($track->remark)
                                         <span class="mx-2 text-slate-300">|</span>
                                         <span>{{ $track->remark }}</span>
