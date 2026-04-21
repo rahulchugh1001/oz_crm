@@ -38,6 +38,7 @@ class PPCController extends Controller
                 'transfers.type',
                 'items.code as item_code',
                 'items.name as item_name',
+                'items.category as item_category',
                 'items.code_sf2 as item_code_sf2',
                 'items.name_sf2 as item_name_sf2',
                 'items.size as item_size',
