@@ -981,6 +981,147 @@ class SF002Controller extends Controller
         return view('backend.production-reports.sf002.sf2-stock', compact('cedStocks', 'zincStocks'));
     }
 
+    public function exportSf2Stock(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        // --- Fetch CED Stocks (using same logic as sf2Stock) ---
+        $cedTransferQuery = DB::table('sf002_stock_transfers')
+            ->where('is_deleted', false)
+            ->where('type', 'ced')
+            ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', 'sf3_process as process')
+            ->unionAll(
+                DB::table('sf002_to_ppc_transfers')
+                    ->where('is_deleted', false)
+                    ->where('type', 'ced')
+                    ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', DB::raw("'PPC' as process"))
+            );
+
+        $cedTransferStats = DB::query()
+            ->fromSub($cedTransferQuery, 'combined')
+            ->select(
+                'item_id',
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN 0
+                    WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                    ELSE quantity
+                END), 0) as transferred_quantity"),
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN quantity
+                    WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                    ELSE 0
+                END), 0) as rejected_quantity"),
+                DB::raw("GROUP_CONCAT(DISTINCT process ORDER BY process) as sf3_process_lines")
+            )
+            ->groupBy('item_id');
+
+        $cedStocks = DB::table('sf2_production_reports as reports')
+            ->select(
+                'items.code',
+                'items.name',
+                'items.size',
+                DB::raw("'CED' as type"),
+                DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
+                DB::raw('COALESCE(MAX(ced_transfers.transferred_quantity), 0) as transferred_quantity'),
+                DB::raw('COALESCE(MAX(ced_transfers.rejected_quantity), 0) as rejected_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(ced_transfers.transferred_quantity), 0) - COALESCE(MAX(ced_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('MAX(reports.created_at) as last_stock_update')
+            )
+            ->join('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoinSub($cedTransferStats, 'ced_transfers', function ($join) {
+                $join->on('items.id', '=', 'ced_transfers.item_id');
+            })
+            ->where('reports.is_deleted', 0)
+            ->where('reports.type', 'ced')
+            ->groupBy('items.id', 'items.code', 'items.name', 'items.size')
+            ->get();
+
+        // --- Fetch ZINC Stocks (using same logic as sf2Stock) ---
+        $zincTransferQuery = DB::table('sf002_stock_transfers')
+            ->where('is_deleted', false)
+            ->where('type', 'zinc')
+            ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', 'sf3_process as process')
+            ->unionAll(
+                DB::table('sf002_to_ppc_transfers')
+                    ->where('is_deleted', false)
+                    ->where('type', 'zinc')
+                    ->select('item_id', 'is_accept', 'quantity', 'reject_quantity', DB::raw("'PPC' as process"))
+            );
+
+        $zincTransferStats = DB::query()
+            ->fromSub($zincTransferQuery, 'combined')
+            ->select(
+                'item_id',
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN 0
+                    WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                    ELSE quantity
+                END), 0) as transferred_quantity"),
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN quantity
+                    WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                    ELSE 0
+                END), 0) as rejected_quantity"),
+                DB::raw("GROUP_CONCAT(DISTINCT process ORDER BY process) as sf3_process_lines")
+            )
+            ->groupBy('item_id');
+
+        $zincStocks = DB::table('sf2_production_reports as reports')
+            ->select(
+                'items.code',
+                'items.name',
+                'items.size',
+                DB::raw("'ZINC' as type"),
+                DB::raw('COALESCE(SUM(reports.actual_set_shift), 0) as total_produced_stock'),
+                DB::raw('COALESCE(MAX(zinc_transfers.transferred_quantity), 0) as transferred_quantity'),
+                DB::raw('COALESCE(MAX(zinc_transfers.rejected_quantity), 0) as rejected_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(reports.actual_set_shift), 0) - COALESCE(MAX(zinc_transfers.transferred_quantity), 0) - COALESCE(MAX(zinc_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('MAX(reports.created_at) as last_stock_update')
+            )
+            ->join('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoinSub($zincTransferStats, 'zinc_transfers', function ($join) {
+                $join->on('items.id', '=', 'zinc_transfers.item_id');
+            })
+            ->where('reports.is_deleted', 0)
+            ->where('reports.type', 'zinc')
+            ->groupBy('items.id', 'items.code', 'items.name', 'items.size')
+            ->get();
+
+        $filename = "sf2_item_wise_stock_" . date('Y-m-d') . ".csv";
+        $columns = ['Item Code', 'Item Name', 'Size', 'Type', 'Total Produced', 'Transferred', 'Rejected', 'Available Stock', 'Last Update'];
+
+        $callback = function() use ($cedStocks, $zincStocks, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            // Export CED items
+            foreach ($cedStocks as $row) {
+                fputcsv($file, [
+                    $row->code, $row->name, $row->size, $row->type,
+                    $row->total_produced_stock, $row->transferred_quantity, $row->rejected_quantity,
+                    $row->pending_quantity, $row->last_stock_update
+                ]);
+            }
+
+            // Export ZINC items
+            foreach ($zincStocks as $row) {
+                fputcsv($file, [
+                    $row->code, $row->name, $row->size, $row->type,
+                    $row->total_produced_stock, $row->transferred_quantity, $row->rejected_quantity,
+                    $row->pending_quantity, $row->last_stock_update
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ]);
+    }
+
     /**
      * Store a new SF2 → SF3 stock transfer.
      */

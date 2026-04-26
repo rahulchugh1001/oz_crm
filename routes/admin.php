@@ -110,6 +110,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
         Route::get('/production/show/{encryptedId}', [SF002Controller::class, 'showProductionReport'])->name('production.show');
         Route::delete('/production/{id}', [SF002Controller::class, 'destroyProductionReport'])->name('production.destroy');
         Route::get('/sf2-stock', [SF002Controller::class, 'sf2Stock'])->name('sf2-stock');
+        Route::get('/sf2-stock/export', [SF002Controller::class, 'exportSf2Stock'])->name('sf2-stock.export');
         Route::post('/sf2-stock/transfer', [SF002Controller::class, 'storeSf2Transfer'])->name('sf2-stock.transfer');
         Route::post('/sf2-stock/self-transfer', [SF002Controller::class, 'storeSelfTransfer'])->name('sf2-stock.self-transfer');
         Route::get('/sf2-stock/{itemId}/history', [SF002Controller::class, 'sf2StockHistory'])->name('sf2-stock.history');

@@ -39,6 +39,20 @@
                         <p class="text-xs text-slate-500">View aggregated SF2 stock quantities by item (CED and ZINC)</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-3">
+                    @if($cedStocks->isNotEmpty() || $zincStocks->isNotEmpty())
+                    <a href="{{ route('admin.production-reports.sf002.sf2-stock.export') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export to Excel</span>
+                    </a>
+                    @else
+                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-300 text-slate-500 text-xs font-semibold rounded-lg cursor-not-allowed opacity-70" title="No data available to export" disabled>
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export to Excel</span>
+                    </button>
+                    @endif
+                </div>
             </div>
         </div>
 
