@@ -997,6 +997,102 @@ class SF001Controller extends Controller
     }
 
     /**
+     * Export SF001 item stock to CSV.
+     */
+    public function exportStock()
+    {
+        $sf1Transfers = DB::table('sf001_stock_transfers')
+            ->select('item_id', 'quantity', 'reject_quantity', 'is_accept')
+            ->where('is_deleted', false);
+
+        $ppcTransfers = DB::table('sf002_to_ppc_transfers')
+            ->select('item_id', 'quantity', 'reject_quantity', 'is_accept')
+            ->where('type', 'ballcage')
+            ->where('is_deleted', false);
+
+        $combinedTransfers = $sf1Transfers->unionAll($ppcTransfers);
+
+        $transferStatsSubQuery = DB::table(DB::raw("({$combinedTransfers->toSql()}) as combined"))
+            ->mergeBindings($combinedTransfers)
+            ->select(
+                'item_id',
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN 0
+                    WHEN is_accept = 1 THEN GREATEST(quantity - COALESCE(reject_quantity, 0), 0)
+                    ELSE quantity
+                END), 0) as transferred_quantity"),
+                DB::raw("COALESCE(SUM(CASE
+                    WHEN is_accept = 2 THEN quantity
+                    WHEN is_accept = 1 THEN COALESCE(reject_quantity, 0)
+                    ELSE 0
+                END), 0) as rejected_quantity")
+            )
+            ->groupBy('item_id');
+
+        $itemStocks = Item::query()
+            ->select(
+                'items.id',
+                'items.name',
+                'items.code',
+                'items.size',
+                'items.weight',
+                DB::raw('COALESCE(SUM(production_reports.actual_set_shift), 0) as total_produced_stock'),
+                DB::raw('COALESCE(MAX(sf001_transfers.transferred_quantity), 0) as transferred_quantity'),
+                DB::raw('COALESCE(MAX(sf001_transfers.rejected_quantity), 0) as rejected_quantity'),
+                DB::raw('GREATEST(COALESCE(SUM(production_reports.actual_set_shift), 0) - COALESCE(MAX(sf001_transfers.transferred_quantity), 0) - COALESCE(MAX(sf001_transfers.rejected_quantity), 0), 0) as pending_quantity'),
+                DB::raw('MAX(production_reports.created_at) as last_stock_update'),
+                DB::raw('MAX(CAST(production_reports.is_ballcage AS UNSIGNED)) as has_ballcage')
+            )
+            ->join('production_reports', function ($join) {
+                $join->on('items.id', '=', 'production_reports.slide_size_id')
+                    ->where('production_reports.is_deleted', '=', false);
+            })
+            ->leftJoinSub($transferStatsSubQuery, 'sf001_transfers', function ($join) {
+                $join->on('items.id', '=', 'sf001_transfers.item_id');
+            })
+            ->where('items.is_deleted', false)
+            ->where('items.status', true)
+            ->groupBy('items.id', 'items.name', 'items.code', 'items.size', 'items.weight')
+            ->orderBy('items.name')
+            ->get();
+
+        $filename = "sf001_item_stock_" . date('Y-m-d_H-i-s') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = ['Item Code', 'Item Name', 'Size', 'Total Production', 'In Stock', 'Transferred', 'Rejected', 'Ballcage', 'Last Stock Update'];
+
+        $callback = function() use($itemStocks, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($itemStocks as $item) {
+                fputcsv($file, [
+                    $item->code,
+                    $item->name,
+                    $item->size,
+                    $item->total_produced_stock,
+                    $item->pending_quantity,
+                    $item->transferred_quantity,
+                    $item->rejected_quantity,
+                    $item->has_ballcage ? 'Yes' : 'No',
+                    $item->last_stock_update ? \Carbon\Carbon::parse($item->last_stock_update)->format('Y-m-d H:i:s') : 'N/A'
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
      * Store SF001 stock transfer to target role.
      */
     public function storeTransfer(Request $request): RedirectResponse

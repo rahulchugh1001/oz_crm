@@ -99,6 +99,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::get('/production-reports/sf001/stock', [SF001Controller::class, 'stock'])->name('production-reports.sf001.stock');
     Route::post('/production-reports/sf001/stock/transfer', [SF001Controller::class, 'storeTransfer'])->name('production-reports.sf001.stock.transfer');
     Route::get('/production-reports/sf001/stock/{itemId}/history', [SF001Controller::class, 'stockHistory'])->name('production-reports.sf001.stock.history');
+    Route::get('/production-reports/sf001/stock/export', [SF001Controller::class, 'exportStock'])->name('production-reports.sf001.stock.export');
     Route::prefix('production-reports/sf002')->name('production-reports.sf002.')->group(function () {
         Route::get('/stock', [SF002Controller::class, 'index'])->name('stock');
         Route::get('/process', [SF002Controller::class, 'process'])->name('process');

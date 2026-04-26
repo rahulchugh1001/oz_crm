@@ -28,6 +28,11 @@
                                 reports</p>
                         </div>
                     </div>
+                    <a href="{{ route('admin.production-reports.sf001.stock.export') }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export to Excel</span>
+                    </a>
                 </div>
             </div>
         </div>
