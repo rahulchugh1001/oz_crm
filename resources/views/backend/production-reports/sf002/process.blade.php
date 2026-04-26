@@ -9,6 +9,8 @@
     $mode = in_array($mode, ['active', 'draft'], true) ? $mode : 'active';
     $firstAcceptedTransfer = $acceptedTransfers->first();
     $stockCount = $acceptedTransfers->count();
+    $productionCount = $sf2ProductionReports->count();
+    $hasData = ($activeTab === 'stock' && $stockCount > 0) || ($activeTab === 'production' && $productionCount > 0);
 @endphp
 
 @section('title', $sf2TypeLabel . ' SF2 Process - Accepted Transfers')
@@ -47,16 +49,23 @@
                             @if($activeTab === 'stock')
                                 Stock list assigned to this {{ $sf2TypeLabel }} SF2 process (view only)
                             @else
-                                Production list for this {{ $sf2TypeLabel }} SF2 process (currently empty)
+                                Production list for this {{ $sf2TypeLabel }} SF2 process
                             @endif
                         </p>
                     </div>
                     <div class="flex items-center gap-3">
+                        @if($hasData)
                         <a href="{{ route('admin.production-reports.sf002.process.export', ['type' => $sf2Type, 'tab' => $activeTab, 'mode' => $mode]) }}"
                             class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
                             <i data-lucide="download" class="w-4 h-4"></i>
                             <span>Export to Excel</span>
                         </a>
+                        @else
+                        <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-300 text-slate-500 text-sm font-medium rounded-lg cursor-not-allowed opacity-70" title="No data available to export" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Export to Excel</span>
+                        </button>
+                        @endif
                         @if($activeTab === 'stock')
                         <div class="text-sm">
                             <span class="text-slate-500">Total Records:</span>
