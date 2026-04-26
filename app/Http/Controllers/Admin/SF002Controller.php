@@ -1508,4 +1508,141 @@ class SF002Controller extends Controller
 
         return back()->with('success', 'Transfer status updated successfully.');
     }
+
+    /**
+     * Export SF002 process data (Production or Stock) to CSV.
+     */
+    public function exportProcess(Request $request)
+    {
+        $activeTab = $request->query('tab', 'production');
+        $sf2Type = strtoupper((string) $request->query('type', 'CED'));
+        if (!in_array($sf2Type, ['CED', 'ZINC'], true)) {
+            $sf2Type = 'CED';
+        }
+
+        if ($activeTab === 'stock') {
+            return $this->exportStock($sf2Type);
+        } else {
+            return $this->exportProduction($sf2Type, $request->query('mode', 'active'));
+        }
+    }
+
+    protected function exportStock(string $sf2Type)
+    {
+        $role = $this->currentAssignableRole();
+        $query = DB::table('sf001_stock_transfers as transfers')
+            ->select(
+                'transfers.date',
+                'transfers.time',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.size as item_size',
+                'transfers.assign_sf2',
+                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as accepted_quantity'),
+                'transfer_by_user.name as transfer_by_name',
+                'accepted_by_user.name as accepted_by_name',
+                'transfers.remark',
+                'transfers.sf002_remark'
+            )
+            ->join('items', 'transfers.item_id', '=', 'items.id')
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
+            ->where('transfers.is_deleted', false)
+            ->where('transfers.is_accept', 1)
+            ->where('transfers.assign_sf2', $sf2Type);
+
+        if (Auth::user()?->role !== 'Admin') {
+            if ($role) {
+                $query->where('transfers.assign_role', $role);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $results = $query->orderByDesc('transfers.date')->orderByDesc('transfers.time')->get();
+
+        $filename = "sf002_{$sf2Type}_stock_" . date('Y-m-d') . ".csv";
+        $columns = ['Date', 'Time', 'Item Code', 'Item Name', 'Size', 'SF2 Type', 'Accepted Quantity', 'Transfer By', 'Accepted By', 'SF001 Remark', 'SF002 Remark'];
+
+        $callback = function() use ($results, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($results as $row) {
+                fputcsv($file, [
+                    $row->date, $row->time, $row->item_code, $row->item_name, $row->item_size,
+                    $row->assign_sf2, $row->accepted_quantity, $row->transfer_by_name,
+                    $row->accepted_by_name, $row->remark, $row->sf002_remark
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ]);
+    }
+
+    protected function exportProduction(string $sf2Type, string $mode)
+    {
+        $query = DB::table('sf2_production_reports as reports')
+            ->select(
+                'reports.id',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.size as item_size',
+                'reports.report_date',
+                'reports.shift',
+                'reports.total_set_shift',
+                'reports.actual_set_shift',
+                'reports.manpower_workman',
+                'reports.staff_count',
+                'users.name as created_by_name',
+                'reports.hour_8_9', 'reports.hour_9_10', 'reports.hour_10_11', 'reports.hour_11_12',
+                'reports.hour_12_1', 'reports.hour_1_2', 'reports.hour_2_3', 'reports.hour_3_4',
+                'reports.hour_4_5', 'reports.hour_5_6', 'reports.hour_6_7', 'reports.hour_7_8'
+            )
+            ->leftJoin('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoin('users', 'reports.created_by', '=', 'users.id')
+            ->where('reports.is_deleted', 0)
+            ->where('reports.type', strtolower($sf2Type));
+
+        if ($mode === 'draft') {
+            $query->where('reports.is_draft', true);
+        } else {
+            $query->where('reports.is_draft', false);
+        }
+
+        if (Auth::user()?->role !== 'Admin') {
+            $query->where('reports.created_by', Auth::id());
+        }
+
+        $results = $query->orderByDesc('reports.report_date')->orderByDesc('reports.created_at')->get();
+
+        $filename = "sf002_{$sf2Type}_production_" . date('Y-m-d') . ".csv";
+        $columns = [
+            'ID', 'Item Code', 'Item Name', 'Size', 'Date', 'Shift', 'Total Set', 'Actual Set', 'Workman', 'Staff', 'Created By',
+            '7 to 8', '8 to 9', '9 to 10', '10 to 11', '11 to 12', '12 to 1', '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '6 to 7'
+        ];
+
+        $callback = function() use ($results, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($results as $row) {
+                fputcsv($file, [
+                    $row->id, $row->item_code, $row->item_name, $row->item_size, $row->report_date, $row->shift,
+                    $row->total_set_shift, $row->actual_set_shift, $row->manpower_workman, $row->staff_count, $row->created_by_name,
+                    $row->hour_8_9, $row->hour_9_10, $row->hour_10_11, $row->hour_11_12, $row->hour_12_1,
+                    $row->hour_1_2, $row->hour_2_3, $row->hour_3_4, $row->hour_4_5, $row->hour_5_6,
+                    $row->hour_6_7, $row->hour_7_8
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ]);
+    }
 }

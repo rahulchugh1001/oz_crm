@@ -51,24 +51,31 @@
                             @endif
                         </p>
                     </div>
-                    @if($activeTab === 'stock')
-                    <div class="text-sm">
-                        <span class="text-slate-500">Total Records:</span>
-                        <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('admin.production-reports.sf002.process.export', ['type' => $sf2Type, 'tab' => $activeTab, 'mode' => $mode]) }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Export to Excel</span>
+                        </a>
+                        @if($activeTab === 'stock')
+                        <div class="text-sm">
+                            <span class="text-slate-500">Total Records:</span>
+                            <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
+                        </div>
+                        @else
+                        @if($firstAcceptedTransfer)
+                        <a href="{{ route('admin.production-reports.sf002.production-report', ['transferId' => $firstAcceptedTransfer->id, 'type' => $sf2Type]) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);" title="Add Production">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Production
+                        </a>
+                        @else
+                        <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-300 text-slate-600 text-sm font-medium cursor-not-allowed" title="No accepted stock available" disabled>
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Production
+                        </button>
+                        @endif
+                        @endif
                     </div>
-                    @else
-                    @if($firstAcceptedTransfer)
-                    <a href="{{ route('admin.production-reports.sf002.production-report', ['transferId' => $firstAcceptedTransfer->id, 'type' => $sf2Type]) }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);" title="Add Production">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        Add Production
-                    </a>
-                    @else
-                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-300 text-slate-600 text-sm font-medium cursor-not-allowed" title="No accepted stock available" disabled>
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        Add Production
-                    </button>
-                    @endif
-                    @endif
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 pt-1">

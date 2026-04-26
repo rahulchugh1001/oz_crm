@@ -788,8 +788,8 @@ class ProductionReportController extends Controller
         $columns = [
             'ID', 'Ballcage', 'Machine', 'Slide Size', 'Date', 'Shift', 
             'Total Set/Shift', 'Set/Hour', 
-            'Hour 1', 'Hour 2', 'Hour 3', 'Hour 4', 'Hour 5', 'Hour 6', 
-            'Hour 7', 'Hour 8', 'Hour 9', 'Hour 10', 'Hour 11', 'Hour 12', 
+            '7 to 8', '8 to 9', '9 to 10', '10 to 11', '11 to 12', '12 to 1', 
+            '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '6 to 7', 
             'Actual Set', 'Workman', 'Staff'
         ];
 
