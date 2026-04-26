@@ -5,7 +5,7 @@
     $sf2Prefix = $sf2Type === 'zinc' ? 'zinc' : 'ced';
     $sf2Label = strtoupper($sf2Prefix);
     $currentHour = (int) date('G');
-    $defaultShift = ($currentHour >= 8 && $currentHour < 20) ? 'morning' : 'night';
+    $defaultShift = ($currentHour >= 7 && $currentHour < 19) ? 'morning' : 'night';
     $hasPersistedShift = old($sf2Prefix . '_shift') !== null || !empty($existingReport->shift ?? null);
 @endphp
 
@@ -163,6 +163,7 @@
 
                 @php
                     $slots = [
+                        '7AM to 8AM',
                         '8AM to 9AM',
                         '9AM to 10AM',
                         '10AM to 11AM',
@@ -174,7 +175,6 @@
                         '4PM to 5PM',
                         '5PM to 6PM',
                         '6PM to 7PM',
-                        '7PM to 8PM',
                     ];
                 @endphp
 
@@ -196,18 +196,18 @@
                                 <th class="border border-slate-300 px-3 py-2 text-left font-semibold text-slate-900">Type</th>
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Total Set/Shift</th>
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Set/Hour</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="8-9">8AM to 9AM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="9-10">9AM to 10AM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="10-11">10AM to 11AM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="11-12">11AM to 12PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="12-1">12PM to 1PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="1-2">1PM to 2PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="2-3">2PM to 3PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="3-4">3PM to 4PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="4-5">4PM to 5PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="5-6">5PM to 6PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="6-7">6PM to 7PM</th>
-                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="7-8">7PM to 8PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="8-9">7AM to 8AM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="9-10">8AM to 9AM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="10-11">9AM to 10AM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="11-12">10AM to 11AM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="12-1">11AM to 12PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="1-2">12PM to 1PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="2-3">1PM to 2PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="3-4">2PM to 3PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="4-5">3PM to 4PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="5-6">4PM to 5PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="6-7">5PM to 6PM</th>
+                                <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900 hour-label" data-hour="7-8">6PM to 7PM</th>
                                 <th class="border border-slate-300 px-3 py-2 text-center font-semibold text-slate-900">Actual / Set / Shift</th>
                             </tr>
                         </thead>
@@ -472,8 +472,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateShiftLabels(shift) {
         const labels = shift === 'night'
-            ? ['8PM to 9PM', '9PM to 10PM', '10PM to 11PM', '11PM to 12AM', '12AM to 1AM', '1AM to 2AM', '2AM to 3AM', '3AM to 4AM', '4AM to 5AM', '5AM to 6AM', '6AM to 7AM', '7AM to 8AM']
-            : ['8AM to 9AM', '9AM to 10AM', '10AM to 11AM', '11AM to 12PM', '12PM to 1PM', '1PM to 2PM', '2PM to 3PM', '3PM to 4PM', '4PM to 5PM', '5PM to 6PM', '6PM to 7PM', '7PM to 8PM'];
+            ? ['7PM to 8PM', '8PM to 9PM', '9PM to 10PM', '10PM to 11PM', '11PM to 12AM', '12AM to 1AM', '1AM to 2AM', '2AM to 3AM', '3AM to 4AM', '4AM to 5AM', '5AM to 6AM', '6AM to 7AM']
+            : ['7AM to 8AM', '8AM to 9AM', '9AM to 10AM', '10AM to 11AM', '11AM to 12PM', '12PM to 1PM', '1PM to 2PM', '2PM to 3PM', '3PM to 4PM', '4PM to 5PM', '5PM to 6PM', '6PM to 7PM'];
 
         hourLabels.forEach(function (label, index) {
             if (labels[index]) {
@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function detectShiftByCurrentTime() {
         const hour = new Date().getHours();
-        return (hour >= 8 && hour < 20) ? 'morning' : 'night';
+        return (hour >= 7 && hour < 19) ? 'morning' : 'night';
     }
 
     if (shiftSelect) {

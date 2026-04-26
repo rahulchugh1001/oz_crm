@@ -239,11 +239,13 @@
                         
                         <!-- Submit Button -->
                         <button 
+                            id="login-button"
                             type="submit"
-                            class="w-full gradient-primary text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                            class="w-full gradient-primary text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
                         >
-                            <span>Sign In</span>
-                            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            <span id="button-text">Sign In</span>
+                            <i data-lucide="arrow-right" id="button-icon" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            <i data-lucide="loader-2" id="button-loader" class="w-5 h-5 animate-spin hidden"></i>
                         </button>
                     </form>
                 </div>
@@ -279,6 +281,18 @@
             
             lucide.createIcons();
         }
+        // Form submission loading state
+        document.querySelector('form').addEventListener('submit', function() {
+            const button = document.getElementById('login-button');
+            const text = document.getElementById('button-text');
+            const icon = document.getElementById('button-icon');
+            const loader = document.getElementById('button-loader');
+            
+            button.disabled = true;
+            text.textContent = 'Signing in...';
+            icon.classList.add('hidden');
+            loader.classList.remove('hidden');
+        });
     </script>
 </body>
 </html>

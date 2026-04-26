@@ -112,18 +112,18 @@
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">Total Set/Shift</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-24 whitespace-nowrap">Set/Hour</th>
                             <!-- Hourly Columns -->
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="8-9">8AM-9AM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="9-10">9AM-10AM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="10-11">10AM-11AM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="11-12">11AM-12PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="12-1">12PM-1PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="1-2">1PM-2PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="2-3">2PM-3PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="3-4">3PM-4PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="4-5">4PM-5PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="5-6">5PM-6PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="6-7">6PM-7PM</th>
-                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="7-8">7PM-8PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="8-9">7AM-8AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="9-10">8AM-9AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="10-11">9AM-10AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="11-12">10AM-11AM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="12-1">11AM-12PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="1-2">12PM-1PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="2-3">1PM-2PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="3-4">2PM-3PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="4-5">3PM-4PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="5-6">4PM-5PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="6-7">5PM-6PM</th>
+                            <th class="border border-slate-300 px-2 py-2 text-center text-[10px] font-semibold text-white min-w-20 hour-label whitespace-nowrap" data-hour="7-8">6PM-7PM</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Actual Set</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Workman</th>
                             <th class="border border-slate-300 px-3 py-2 text-center text-[10px] font-semibold text-white min-w-20 whitespace-nowrap">Staff</th>
@@ -225,10 +225,10 @@
         ];
 
         const hourLabels = {
-            'hour_8_9': '8AM–9AM', 'hour_9_10': '9AM–10AM', 'hour_10_11': '10AM–11AM',
-            'hour_11_12': '11AM–12PM', 'hour_12_1': '12PM–1PM', 'hour_1_2': '1PM–2PM',
-            'hour_2_3': '2PM–3PM', 'hour_3_4': '3PM–4PM', 'hour_4_5': '4PM–5PM',
-            'hour_5_6': '5PM–6PM', 'hour_6_7': '6PM–7PM', 'hour_7_8': '7PM–8PM'
+            'hour_8_9': '7AM–8AM', 'hour_9_10': '8AM–9AM', 'hour_10_11': '9AM–10AM',
+            'hour_11_12': '10AM–11AM', 'hour_12_1': '11AM–12PM', 'hour_1_2': '12PM–1PM',
+            'hour_2_3': '1PM–2PM', 'hour_3_4': '2PM–3PM', 'hour_4_5': '3PM–4PM',
+            'hour_5_6': '4PM–5PM', 'hour_6_7': '5PM–6PM', 'hour_7_8': '6PM–7PM'
         };
 
         let lockedCount = 0;
@@ -478,8 +478,8 @@
         const labels = document.querySelectorAll('.hour-label');
         
         const timeLabels = {
-            'Morning': ['8AM-9AM', '9AM-10AM', '10AM-11AM', '11AM-12PM', '12PM-1PM', '1PM-2PM', '2PM-3PM', '3PM-4PM', '4PM-5PM', '5PM-6PM', '6PM-7PM', '7PM-8PM'],
-            'Night': ['8PM-9PM', '9PM-10PM', '10PM-11PM', '11PM-12AM', '12AM-1AM', '1AM-2AM', '2AM-3AM', '3AM-4AM', '4AM-5AM', '5AM-6AM', '6AM-7AM', '7AM-8AM']
+            'Morning': ['7AM-8AM', '8AM-9AM', '9AM-10AM', '10AM-11AM', '11AM-12PM', '12PM-1PM', '1PM-2PM', '2PM-3PM', '3PM-4PM', '4PM-5PM', '5PM-6PM', '6PM-7PM'],
+            'Night': ['7PM-8PM', '8PM-9PM', '9PM-10PM', '10PM-11PM', '11PM-12AM', '12AM-1AM', '1AM-2AM', '2AM-3AM', '3AM-4AM', '4AM-5AM', '5AM-6AM', '6AM-7AM']
         };
 
         const selectedLabels = timeLabels[shift] || timeLabels['Morning'];
