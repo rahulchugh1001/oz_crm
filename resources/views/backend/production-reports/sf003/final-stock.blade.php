@@ -32,12 +32,28 @@
                 <h2 class="text-lg font-bold text-slate-900">SF3 Final Stock List</h2>
                 <p class="text-sm text-slate-500 mt-1">Data source: sf3_production_reports table</p>
             </div>
-            <div class="flex items-center gap-2 flex-wrap">
-                @foreach($lineFilterOptions as $lineKey => $lineLabel)
-                    <a href="{{ route('admin.production-reports.sf003.final-stock', ['line' => $lineKey]) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $selectedLine === $lineKey ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($selectedLine === $lineKey) style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
-                        {{ $lineLabel }}
+            <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                    @foreach($lineFilterOptions as $lineKey => $lineLabel)
+                        <a href="{{ route('admin.production-reports.sf003.final-stock', ['line' => $lineKey]) }}" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all {{ $selectedLine === $lineKey ? 'text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}" @if($selectedLine === $lineKey) style="background: linear-gradient(to right, #141d30, #2d3a52);" @endif>
+                            {{ $lineLabel }}
+                        </a>
+                    @endforeach
+                </div>
+                <div class="flex items-center gap-3 ml-auto">
+                    @if($finalStockReports->isNotEmpty())
+                    <a href="{{ route('admin.production-reports.sf003.final-stock.export', ['line' => $selectedLine]) }}"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export to Excel</span>
                     </a>
-                @endforeach
+                    @else
+                    <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-300 text-slate-500 text-xs font-semibold rounded-lg cursor-not-allowed opacity-70" title="No data available to export" disabled>
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export to Excel</span>
+                    </button>
+                    @endif
+                </div>
             </div>
         </div>
 

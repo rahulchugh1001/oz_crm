@@ -581,6 +581,154 @@ class SF003Controller extends Controller
     }
 
     /**
+     * Export SF003 process data (Production or Stock list) to Excel.
+     */
+    public function exportProcess(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $tab = strtolower((string) $request->query('tab', 'production'));
+
+        if ($tab === 'stock') {
+            return $this->exportStock($request);
+        }
+
+        return $this->exportProduction($request);
+    }
+
+    protected function exportStock(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $role = $this->currentAssignableRole();
+
+        $query = DB::table('sf002_stock_transfers as transfers')
+            ->select(
+                'transfers.id',
+                'transfers.item_id',
+                'transfers.quantity',
+                'transfers.used_quantity',
+                'transfers.date',
+                'transfers.time',
+                'transfers.is_accept',
+                'transfers.type',
+                'transfers.sf3_process',
+                'transfers.reject_quantity',
+                DB::raw('GREATEST(transfers.quantity - COALESCE(transfers.reject_quantity, 0), 0) as accepted_quantity'),
+                'transfers.remark',
+                'transfers.sf003_remark',
+                'transfers.assign_to',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.size as item_size',
+                'transfer_by_user.name as transfer_by_name',
+                'accepted_by_user.name as accepted_by_name'
+            )
+            ->join('items', 'transfers.item_id', '=', 'items.id')
+            ->leftJoin('users as transfer_by_user', 'transfers.transfer_by', '=', 'transfer_by_user.id')
+            ->leftJoin('users as accepted_by_user', 'transfers.assign_to', '=', 'accepted_by_user.id')
+            ->where('transfers.is_deleted', false)
+            ->where('transfers.is_accept', 1);
+
+        if (Auth::user()?->role !== 'Admin') {
+            $query->when($role, function ($q, $roleValue) {
+                $q->where('transfers.assign_role', $roleValue);
+            }, function ($q) {
+                $q->whereRaw('1 = 0');
+            });
+        }
+
+        $results = $query->orderByDesc('transfers.date')
+            ->orderByDesc('transfers.time')
+            ->orderByDesc('transfers.created_at')
+            ->get();
+
+        $filename = "sf003_stock_" . date('Y-m-d') . ".csv";
+        $columns = [
+            'ID', 'Date', 'Time', 'Item Code', 'Item Name', 'Item Size',
+            'SF3 Line', 'Accepted Qty', 'Used Qty', 'Transfer By', 'Accepted By',
+            'SF2 Remark', 'SF3 Remark'
+        ];
+
+        $lineMap = [
+            'line_1' => 'L1', 'line_2' => 'L2', 'line_3' => 'L3',
+            'line_4' => 'L4', 'line_5' => 'L5', 'line_6' => 'L6',
+        ];
+
+        $callback = function() use ($results, $columns, $lineMap) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($results as $row) {
+                fputcsv($file, [
+                    $row->id, $row->date, $row->time, $row->item_code, $row->item_name, $row->item_size,
+                    $lineMap[$row->sf3_process] ?? '-',
+                    $row->accepted_quantity, $row->used_quantity,
+                    $row->transfer_by_name, $row->accepted_by_name,
+                    $row->remark, $row->sf003_remark
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ]);
+    }
+
+    protected function exportProduction(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $query = DB::table('sf3_production_reports as reports')
+            ->select(
+                'reports.*',
+                'items.code as item_code',
+                'items.name as item_name',
+                'items.size as item_size',
+                'users.name as created_by_name'
+            )
+            ->leftJoin('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoin('users', 'reports.created_by', '=', 'users.id')
+            ->where('reports.is_deleted', 0);
+
+        if (Auth::user()?->role !== 'Admin') {
+            $query->where('reports.created_by', Auth::id());
+        }
+
+        $results = $query->orderByDesc('reports.report_date')
+            ->orderByDesc('reports.created_at')
+            ->get();
+
+        $filename = "sf003_production_" . date('Y-m-d') . ".csv";
+        $columns = [
+            'ID', 'Item Code', 'Item Name', 'Size', 'Line', 'Date', 'Shift', 'Total Set', 'Actual Set', 'Workman', 'Staff', 'Created By',
+            '7 to 8', '8 to 9', '9 to 10', '10 to 11', '11 to 12', '12 to 1', '1 to 2', '2 to 3', '3 to 4', '4 to 5', '5 to 6', '6 to 7'
+        ];
+
+        $lineMap = [
+            'line_1' => 'L1', 'line_2' => 'L2', 'line_3' => 'L3',
+            'line_4' => 'L4', 'line_5' => 'L5', 'line_6' => 'L6',
+        ];
+
+        $callback = function() use ($results, $columns, $lineMap) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($results as $row) {
+                fputcsv($file, [
+                    $row->id, $row->item_code, $row->item_name, $row->item_size,
+                    $lineMap[$row->sf3_process] ?? '-',
+                    $row->report_date, $row->shift,
+                    $row->total_set_shift, $row->actual_set_shift, $row->manpower_workman, $row->staff_count, $row->created_by_name,
+                    $row->hour_8_9, $row->hour_9_10, $row->hour_10_11, $row->hour_11_12, $row->hour_12_1,
+                    $row->hour_1_2, $row->hour_2_3, $row->hour_3_4, $row->hour_4_5, $row->hour_5_6,
+                    $row->hour_6_7, $row->hour_7_8
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ]);
+    }
+
+    /**
      * Display final stock list from SF3 production reports.
      */
     public function finalStock(Request $request): View
@@ -620,6 +768,70 @@ class SF003Controller extends Controller
         }
 
         return view('backend.production-reports.sf003.final-stock', compact('finalStockReports', 'selectedLine'));
+    }
+
+    /**
+     * Export SF003 final stock data to Excel.
+     */
+    public function exportFinalStock(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $selectedLine = strtolower((string) $request->query('line', 'all'));
+
+        $query = DB::table('sf3_production_reports as reports')
+            ->select(
+                'reports.*',
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.code_sf2 IS NOT NULL AND items.code_sf2 != '' THEN items.code_sf2 ELSE items.code END as item_code"),
+                DB::raw("CASE WHEN items.category = 'sf1-sf2' AND items.name_sf2 IS NOT NULL AND items.name_sf2 != '' THEN items.name_sf2 ELSE items.name END as item_name"),
+                'items.size as item_size',
+                'users.name as created_by_name'
+            )
+            ->leftJoin('items', 'reports.item_id', '=', 'items.id')
+            ->leftJoin('users', 'reports.created_by', '=', 'users.id')
+            ->where('reports.is_deleted', 0)
+            ->when($selectedLine !== 'all', function ($q) use ($selectedLine) {
+                $lineContext = $this->resolveLineContext($selectedLine);
+                $q->where('reports.sf3_process', $lineContext['lineCode']);
+            })
+            ->orderByDesc('reports.report_date')
+            ->orderByDesc('reports.created_at');
+
+        if (Auth::user()?->role !== 'Admin') {
+            $query->where('reports.created_by', Auth::id());
+        }
+
+        $results = $query->get();
+
+        $filename = "sf003_final_stock_" . date('Y-m-d') . ".csv";
+        $columns = [
+            'ID', 'Line', 'Item Code', 'Item Name', 'Item Size',
+            'Report Date', 'Shift', 'Actual Set', 'Total Set', 'Created By'
+        ];
+
+        $lineMap = [
+            'line_1' => 'L1', 'line_2' => 'L2', 'line_3' => 'L3',
+            'line_4' => 'L4', 'line_5' => 'L5', 'line_6' => 'L6',
+        ];
+
+        $callback = function() use ($results, $columns, $lineMap) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            foreach ($results as $row) {
+                fputcsv($file, [
+                    $row->id,
+                    $lineMap[$row->sf3_process] ?? '-',
+                    $row->item_code, $row->item_name, $row->item_size,
+                    $row->report_date, $row->shift,
+                    $row->actual_set_shift, $row->total_set_shift,
+                    $row->created_by_name
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+        ]);
     }
 
     /**

@@ -4,6 +4,8 @@
     $activeTab = strtolower((string) request()->query('tab', 'production'));
     $activeTab = in_array($activeTab, ['stock', 'production'], true) ? $activeTab : 'production';
     $stockCount = $acceptedTransfers->count();
+    $productionCount = $sf3ProductionReports->count();
+    $hasData = ($activeTab === 'stock' && $stockCount > 0) || ($activeTab === 'production' && $productionCount > 0);
     $addProductionUrl = route('admin.production-reports.sf003.production-report');
     $lineProcessMap = [
         'line_1' => 'L1', 'line_2' => 'L2', 'line_3' => 'L3',
@@ -51,17 +53,32 @@
                             @endif
                         </p>
                     </div>
-                    @if($activeTab === 'stock')
-                    <div class="text-sm">
-                        <span class="text-slate-500">Total Records:</span>
-                        <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
+                    <div class="flex items-center gap-3">
+                        @if($hasData)
+                        <a href="{{ route('admin.production-reports.sf003.process.export', ['tab' => $activeTab]) }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Export to Excel</span>
+                        </a>
+                        @else
+                        <button type="button" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-300 text-slate-500 text-sm font-medium rounded-lg cursor-not-allowed opacity-70" title="No data available to export" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                            <span>Export to Excel</span>
+                        </button>
+                        @endif
+
+                        @if($activeTab === 'stock')
+                        <div class="text-sm">
+                            <span class="text-slate-500">Total Records:</span>
+                            <span class="ml-1 font-semibold text-slate-900">{{ $stockCount }}</span>
+                        </div>
+                        @else
+                        <a href="{{ $addProductionUrl }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);" title="Add Production">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            Add Production
+                        </a>
+                        @endif
                     </div>
-                    @else
-                    <a href="{{ $addProductionUrl }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors" style="background: linear-gradient(to right, #141d30, #2d3a52);" title="Add Production">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        Add Production
-                    </a>
-                    @endif
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2 pt-1">

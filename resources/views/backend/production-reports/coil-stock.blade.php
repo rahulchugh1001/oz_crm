@@ -435,13 +435,16 @@
                 </div>
 
                 <div>
-                    <label for="process" class="block text-sm font-semibold text-slate-700 mb-2">Process <span class="text-rose-500">*</span></label>
-                    <select id="process" name="process" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('process') border-rose-500 @enderror">
-                        <option value="available" {{ old('process', 'available') === 'available' ? 'selected' : '' }}>Available</option>
-                        <option value="in_use" {{ old('process') === 'in_use' ? 'selected' : '' }}>In Use</option>
-                        <option value="completed" {{ old('process') === 'completed' ? 'selected' : '' }}>Completed</option>
-                        <option value="out_of_stock" {{ old('process') === 'out_of_stock' ? 'selected' : '' }}>Out Of Stock</option>
-                    </select>
+                    <label for="process_display" class="block text-sm font-semibold text-slate-700 mb-2">Process <span class="text-slate-400 font-normal ml-1">(Automatic)</span></label>
+                    <div class="relative">
+                        <select id="process_display" disabled class="w-full px-3 py-2.5 border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed appearance-none">
+                            <option value="available" selected>Available</option>
+                            <option value="in_use">In Use</option>
+                            <option value="completed">Completed</option>
+                            <option value="out_of_stock">Out Of Stock</option>
+                        </select>
+                        <input type="hidden" id="process" name="process" value="available">
+                    </div>
                     @error('process')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
                 </div>
 
@@ -559,13 +562,16 @@
                 </div>
 
                 <div>
-                    <label for="edit_process" class="block text-sm font-semibold text-slate-700 mb-2">Process <span class="text-rose-500">*</span></label>
-                    <select id="edit_process" name="process" required class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="available" {{ old('process', 'available') === 'available' ? 'selected' : '' }}>Available</option>
-                        <option value="in_use" {{ old('process') === 'in_use' ? 'selected' : '' }}>In Use</option>
-                        <option value="completed" {{ old('process') === 'completed' ? 'selected' : '' }}>Completed</option>
-                        <option value="out_of_stock" {{ old('process') === 'out_of_stock' ? 'selected' : '' }}>Out Of Stock</option>
-                    </select>
+                    <label for="edit_process_display" class="block text-sm font-semibold text-slate-700 mb-2">Process <span class="text-slate-400 font-normal ml-1">(Automatic)</span></label>
+                    <div class="relative">
+                        <select id="edit_process_display" disabled class="w-full px-3 py-2.5 border border-slate-200 bg-slate-50 text-slate-500 rounded-lg cursor-not-allowed appearance-none">
+                            <option value="available">Available</option>
+                            <option value="in_use">In Use</option>
+                            <option value="completed">Completed</option>
+                            <option value="out_of_stock">Out Of Stock</option>
+                        </select>
+                        <input type="hidden" id="edit_process" name="process" value="{{ old('process') }}">
+                    </div>
                 </div>
 
                 <div>
@@ -1496,7 +1502,9 @@
         document.getElementById('edit_coil_size').value = button.getAttribute('data-coil-size') || '';
         document.getElementById('edit_thickness').value = button.getAttribute('data-thickness') || '';
         document.getElementById('edit_net_weight_kg').value = button.getAttribute('data-net-weight') || '';
-        document.getElementById('edit_process').value = button.getAttribute('data-process') || 'available';
+        const processValue = button.getAttribute('data-process') || 'available';
+        document.getElementById('edit_process').value = processValue;
+        document.getElementById('edit_process_display').value = processValue;
         const editStatusToggle = document.getElementById('status-toggle-edit');
         if (editStatusToggle) {
             editStatusToggle.checked = (button.getAttribute('data-status') || '1') === '1';

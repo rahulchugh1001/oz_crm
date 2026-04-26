@@ -124,7 +124,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', 'check.a
     Route::prefix('production-reports/sf003')->name('production-reports.sf003.')->group(function () {
         Route::get('/stock', [SF003Controller::class, 'index'])->name('stock');
         Route::get('/process', [SF003Controller::class, 'process'])->name('process');
+        Route::get('/process/export', [SF003Controller::class, 'exportProcess'])->name('process.export');
         Route::get('/final-stock', [SF003Controller::class, 'finalStock'])->name('final-stock');
+        Route::get('/final-stock/export', [SF003Controller::class, 'exportFinalStock'])->name('final-stock.export');
         Route::get('/final-stock/{encryptedId}', [SF003Controller::class, 'finalStockShow'])->name('final-stock.show');
         Route::get('/production-report/{transferId?}', [SF003Controller::class, 'productionReport'])->name('production-report');
         Route::post('/production-report/{transferId?}', [SF003Controller::class, 'storeProductionReport'])->name('production-report.store');

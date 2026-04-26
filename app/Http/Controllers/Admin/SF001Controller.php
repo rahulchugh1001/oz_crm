@@ -192,11 +192,17 @@ class SF001Controller extends Controller
         $allocatedMachineIds = $allocatedMachines->pluck('machine_id')->toArray();
 
         $allMachines = $coil->machines()
+            ->leftJoin('coil_stock as current_coil', 'machines.coil_id', '=', 'current_coil.id')
             ->where('machines.is_deleted', 0)
             ->where('machines.status', 1)
-            ->whereNotIn('machines.id', $allocatedMachineIds)
-            ->orderBy('name')
-            ->get(['machines.id', 'machines.name', 'machines.machine_code']);
+            ->orderBy('machines.name')
+            ->get([
+                'machines.id', 
+                'machines.name', 
+                'machines.machine_code', 
+                'machines.coil_id as current_coil_id',
+                'current_coil.coil_no as current_coil_no'
+            ]);
 
         $transitions = CoilMachineTrack::query()
             ->with(['machine:id,name,machine_code', 'loadNumber'])
@@ -233,6 +239,8 @@ class SF001Controller extends Controller
             'remark' => 'nullable|string|max:255',
         ]);
 
+
+
         $coil = CoilStock::query()
             ->where('id', $coilId)
             ->where('is_deleted', 0)
@@ -244,17 +252,9 @@ class SF001Controller extends Controller
             ->where('status', 1)
             ->firstOrFail();
 
-        // 1. Check if machine is assigned to this coil
-        $isAssigned = $coil->machines()->where('machines.id', $machine->id)->exists();
-        if (!$isAssigned) {
-            return back()->with('error', 'Selected machine is not assigned to this coil.');
-        }
-
         // 2. Check if machine already has an active load
         if (!empty($machine->coil_id)) {
-             // In multi-load, we might allow loading same coil again if needed? 
-             // But usually it's one active coil per machine.
-             return back()->with('error', 'Machine already has a loaded coil. Please unload first.');
+            return back()->with('error', 'Machine already has a loaded coil. Please unload first.');
         }
 
         // 3. Check weight availability
@@ -263,64 +263,68 @@ class SF001Controller extends Controller
             return back()->with('error', 'Allocation weight exceeds available coil weight.');
         }
 
-        DB::transaction(function () use ($coil, $machine, $loadWeight, $validated) {
-            $remainingCoilWeight = max((float) $coil->net_weight_kg - $loadWeight, 0);
+        try {
+            DB::transaction(function () use ($coil, $machine, $loadWeight, $validated) {
+                $remainingCoilWeight = max((float) $coil->net_weight_kg - $loadWeight, 0);
 
-            // Update Coil Stock
-            $coil->update([
-                'net_weight_kg' => $remainingCoilWeight,
-                'process' => $remainingCoilWeight > 0 ? 'in_use' : 'out_of_stock',
-                'process_type' => 'load',
-            ]);
+                // Update Coil Stock
+                $coil->update([
+                    'net_weight_kg' => $remainingCoilWeight,
+                    'process' => $remainingCoilWeight > 0 ? 'in_use' : 'out_of_stock',
+                    'process_type' => 'load',
+                ]);
 
-            // Update Machine
-            $machine->update(['coil_id' => $coil->id]);
+                // Update Machine
+                $machine->update(['coil_id' => $coil->id]);
 
-            // Create Track
-            $track = CoilMachineTrack::query()->create([
-                'machine_id' => $machine->id,
-                'coil_id' => $coil->id,
-                'load_weight' => $loadWeight,
-                'type' => 'load',
-                'event_at' => now(),
-                'remark' => $validated['remark'] ?? 'Multi-machine allocation',
-                'created_by' => Auth::id(),
-                'status' => 1,
-            ]);
-
-            // Create Allocation State
-            CoilLoadAllocation::query()->create([
-                'coil_id' => $coil->id,
-                'machine_id' => $machine->id,
-                'coil_no' => trim((string) $validated['coil_no']),
-                'allocated_weight' => $loadWeight,
-                'consumed_weight' => 0,
-                'remaining_weight' => $loadWeight,
-                'status' => 'active',
-                'load_track_id' => $track->id,
-            ]);
-
-            // Create Coil Load Number link
-            CoilLoadNumber::query()->create([
-                'coil_id' => $coil->id,
-                'coil_machine_track_id' => $track->id,
-                'coil_no' => trim((string) $validated['coil_no']),
-                'created_by' => Auth::id(),
-            ]);
-
-            // Optional: Log History
-            CoilMachineTrackLog::query()->create([
-                'coil_machine_track_id' => $track->id,
-                'action_type' => 'load',
-                'payload' => json_encode([
+                // Create Track
+                $track = CoilMachineTrack::query()->create([
                     'machine_id' => $machine->id,
                     'coil_id' => $coil->id,
-                    'coil_no' => $validated['coil_no'] ?? null,
                     'load_weight' => $loadWeight,
-                ]),
-                'description' => 'Multi-machine load allocation created.',
-            ]);
-        });
+                    'type' => 'load',
+                    'event_at' => now(),
+                    'remark' => $validated['remark'] ?? 'Multi-machine allocation',
+                    'created_by' => Auth::id(),
+                    'status' => 1,
+                ]);
+
+                // Create Allocation State
+                CoilLoadAllocation::query()->create([
+                    'coil_id' => $coil->id,
+                    'machine_id' => $machine->id,
+                    'coil_no' => trim((string) $validated['coil_no']),
+                    'allocated_weight' => $loadWeight,
+                    'consumed_weight' => 0,
+                    'remaining_weight' => $loadWeight,
+                    'status' => 'active',
+                    'load_track_id' => $track->id,
+                ]);
+
+                // Create Coil Load Number link
+                CoilLoadNumber::query()->create([
+                    'coil_id' => $coil->id,
+                    'coil_machine_track_id' => $track->id,
+                    'coil_no' => trim((string) $validated['coil_no']),
+                    'created_by' => Auth::id(),
+                ]);
+
+                // Optional: Log History
+                CoilMachineTrackLog::query()->create([
+                    'coil_machine_track_id' => $track->id,
+                    'action_type' => 'load',
+                    'payload' => json_encode([
+                        'machine_id' => $machine->id,
+                        'coil_id' => $coil->id,
+                        'coil_no' => $validated['coil_no'] ?? null,
+                        'load_weight' => $loadWeight,
+                    ]),
+                    'description' => 'Multi-machine load allocation created.',
+                ]);
+            });
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to allocate weight: ' . $e->getMessage());
+        }
 
         return back()->with('success', "Weight allocated to {$machine->name} successfully.");
     }
@@ -415,7 +419,7 @@ class SF001Controller extends Controller
                 'status' => 'unloaded',
                 'consumed_weight' => $consumedInThisProcess > 0 ? $consumedInThisProcess : 0,
                 'remaining_weight' => 0,
-                'unload_track_id' => null, 
+                'unload_track_id' => null,
             ]);
 
             // 4. Create Track entry for Unload
@@ -590,8 +594,8 @@ class SF001Controller extends Controller
         ]);
 
         CoilManufacture::query()->create([
-            'name'       => trim((string) $validated['name']),
-            'status'     => 1,
+            'name' => trim((string) $validated['name']),
+            'status' => 1,
             'is_deleted' => 0,
         ]);
 
@@ -613,12 +617,12 @@ class SF001Controller extends Controller
         }
 
         $validated = $request->validate([
-            'name'   => 'required|string|max:100|unique:coil_manufacture,name,' . $id,
+            'name' => 'required|string|max:100|unique:coil_manufacture,name,' . $id,
             'status' => 'required|in:0,1',
         ]);
 
         $manufacturer->update([
-            'name'   => trim((string) $validated['name']),
+            'name' => trim((string) $validated['name']),
             'status' => (int) $validated['status'],
         ]);
 
@@ -1059,16 +1063,16 @@ class SF001Controller extends Controller
         $filename = "sf001_item_stock_" . date('Y-m-d_H-i-s') . ".csv";
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=$filename",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
         $columns = ['Item Code', 'Item Name', 'Size', 'Total Production', 'In Stock', 'Transferred', 'Rejected', 'Ballcage', 'Last Stock Update'];
 
-        $callback = function() use($itemStocks, $columns) {
+        $callback = function () use ($itemStocks, $columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns);
 
@@ -1102,7 +1106,7 @@ class SF001Controller extends Controller
             ->where('is_deleted', false)
             ->where('is_ballcage', true)
             ->exists();
-            
+
         $allowedProcesses = $hasBallcage ? 'CED,ZINC,PPC' : 'CED,ZINC';
 
         $validated = $request->validate([
