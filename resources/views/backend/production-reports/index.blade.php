@@ -43,10 +43,16 @@
                         <p class="text-sm text-slate-500">Manage Roll Forming (SF1) production reports and data</p>
                     </div>
                 </div>
-                <a href="{{ route('admin.production-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105" style="background: linear-gradient(to right, #141d30, #2d3a52);">
-                    <i data-lucide="plus" class="w-4 h-4"></i>
-                    <span>Add New Report</span>
-                </a>
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('admin.production-reports.export', ['mode' => $mode, 'search' => $search]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Export to Excel</span>
+                    </a>
+                    <a href="{{ route('admin.production-reports.create') }}" class="inline-flex items-center gap-2 px-4 py-2 text-white font-semibold rounded-lg hover:shadow-lg transition-all hover:scale-105" style="background: linear-gradient(to right, #141d30, #2d3a52);">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Add New Report</span>
+                    </a>
+                </div>
             </div>
 
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mt-4">

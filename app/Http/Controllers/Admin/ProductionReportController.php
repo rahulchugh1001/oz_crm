@@ -740,4 +740,94 @@ class ProductionReportController extends Controller
         return redirect()->route('admin.production-reports.index')
             ->with('success', 'Production report deleted successfully.');
     }
+
+    /**
+     * Export production reports to CSV/Excel.
+     */
+    public function export(Request $request)
+    {
+        $search = trim((string) $request->query('search', ''));
+        $mode = $request->query('mode', 'active');
+
+        $query = ProductionReport::query();
+
+        if ($mode === 'deleted') {
+            $query->where('is_deleted', true);
+        } elseif ($mode === 'draft') {
+            $query->where('is_deleted', false)->where('is_draft', true);
+        } elseif ($mode === 'all') {
+            // no filter
+        } elseif ($mode === 'ballcage') {
+            $query->where('is_deleted', false)->where('is_ballcage', true);
+        } else {
+            $mode = 'active';
+            $query->where('is_deleted', false)->where('is_draft', false);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->whereHas('machine', function ($builder) use ($search) {
+                    $builder->where('name', 'like', "%{$search}%");
+                })->orWhere('report_date', 'like', "%{$search}%")
+                    ->orWhere('shift', 'like', "%{$search}%");
+            });
+        }
+
+        $reports = $query->with(['machine', 'slideSize'])->latest()->get();
+
+        $filename = "production_reports_" . date('Y-m-d_H-i-s') . ".csv";
+
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = [
+            'ID', 'Ballcage', 'Machine', 'Slide Size', 'Date', 'Shift', 
+            'Total Set/Shift', 'Set/Hour', 
+            'Hour 1', 'Hour 2', 'Hour 3', 'Hour 4', 'Hour 5', 'Hour 6', 
+            'Hour 7', 'Hour 8', 'Hour 9', 'Hour 10', 'Hour 11', 'Hour 12', 
+            'Actual Set', 'Workman', 'Staff'
+        ];
+
+        $callback = function() use($reports, $columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+
+            foreach ($reports as $report) {
+                fputcsv($file, [
+                    $report->id,
+                    $report->is_ballcage ? 'Yes' : 'No',
+                    $report->machine->name ?? '-',
+                    $report->slideSize->name ?? '-',
+                    $report->report_date,
+                    $report->shift,
+                    $report->total_set_shift,
+                    $report->set_per_hour,
+                    $report->hour_8_9,
+                    $report->hour_9_10,
+                    $report->hour_10_11,
+                    $report->hour_11_12,
+                    $report->hour_12_1,
+                    $report->hour_1_2,
+                    $report->hour_2_3,
+                    $report->hour_3_4,
+                    $report->hour_4_5,
+                    $report->hour_5_6,
+                    $report->hour_6_7,
+                    $report->hour_7_8,
+                    $report->actual_set_shift,
+                    $report->workman_count,
+                    $report->staff_count,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }
