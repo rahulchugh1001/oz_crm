@@ -44,7 +44,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    @if($reports->isNotEmpty())
+                    @if($productionReports->isNotEmpty())
                     <a href="{{ route('admin.production-reports.export', ['mode' => $mode, 'search' => $search]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 hover:shadow-lg transition-all hover:scale-105">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         <span>Export to Excel</span>
