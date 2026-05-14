@@ -111,15 +111,32 @@
                                 data-item-size="{{ $item->size }}"
                                 data-type="{{ $tabType }}"
                                 data-available-stock="{{ (int) $item->pending_quantity }}"
-                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-white rounded-lg hover:opacity-90 transition-all"
+                                class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold text-white rounded-lg hover:shadow-md transition-all active:scale-95 shadow-sm whitespace-nowrap"
                                 style="background: linear-gradient(to right, #141d30, #2d3a52);"
                             >
                                 <i data-lucide="arrow-right-left" class="w-3 h-3"></i>
                                 Transfer
                             </button>
+                            
+{{-- 
+                            <button
+                                type="button"
+                                onclick="openSelfTransferModal(this)"
+                                data-item-id="{{ $item->id }}"
+                                data-item-code="{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->code_sf2 : $item->code }}"
+                                data-item-name="{{ !empty($item->code_sf2) && !empty($item->name_sf2) ? $item->name_sf2 : $item->name }}"
+                                data-type="{{ $tabType }}"
+                                class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-semibold text-white rounded-lg hover:shadow-md transition-all active:scale-95 shadow-sm whitespace-nowrap"
+                                style="background: linear-gradient(to right, #6366f1, #a855f7);"
+                            >
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                Self Transfer
+                            </button>
+--}}
+
                             <a href="{{ route('admin.production-reports.sf002.sf2-stock.history', $item->id) }}"
-                               class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-300 rounded-lg hover:bg-slate-200 transition-all">
-                                <i data-lucide="history" class="w-3 h-3"></i>
+                               class="inline-flex items-center gap-1.5 px-3 py-1 text-[11px] font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95 whitespace-nowrap">
+                                <i data-lucide="history" class="w-3 h-3 text-slate-400"></i>
                                 History
                             </a>
                         </div>

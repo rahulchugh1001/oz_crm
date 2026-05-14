@@ -10,6 +10,63 @@
     <span class="font-medium text-slate-900">Coil Stock</span>
 @endsection
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Custom Select2 Premium Styling */
+    .select2-container--default .select2-selection--single {
+        border-color: #e2e8f0;
+        border-radius: 0.75rem;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        transition: all 0.2s;
+        font-size: 0.75rem;
+    }
+    .select2-container--default .select2-selection--single:focus {
+        border-color: #6366f1;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1e293b;
+        padding-left: 0.75rem;
+        line-height: 38px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+        right: 8px;
+    }
+    .select2-dropdown {
+        border-color: #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        z-index: 9999;
+    }
+    .select2-search--dropdown {
+        padding: 0.5rem;
+    }
+    .select2-search--dropdown .select2-search__field {
+        border-radius: 0.5rem;
+        border-color: #e2e8f0;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .select2-results__option {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #6366f1;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: #f1f5f9;
+        color: #6366f1;
+    }
+</style>
+@endpush
+
 @section('content')
 @php
     $machinesForJs = $machines->map(function ($machine) {
@@ -58,6 +115,55 @@
                     Add Coil
                 </button>
             </div>
+        </div>
+
+        {{-- Search and Filter Section --}}
+        <div class="px-4 py-3 border-b border-slate-200 bg-slate-50/50">
+            <form action="{{ route('admin.production-reports.sf001.coil-stock') }}" method="GET" class="flex flex-wrap items-center gap-3">
+                <div class="flex-1 min-w-[200px]">
+                    <div class="relative">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by coil name, size, thickness..." class="w-full rounded-xl border-slate-200 pl-9 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-48">
+                    <select name="manufacture_id" data-placeholder="Select Supplier" class="select2-basic w-full rounded-xl border-slate-200 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">All Suppliers</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ request('manufacture_id') == $supplier->id ? 'selected' : '' }}>{{ $supplier->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-40">
+                    <select name="process" data-placeholder="Select Process" class="select2-basic w-full rounded-xl border-slate-200 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">All Processes</option>
+                        <option value="available" {{ request('process') === 'available' ? 'selected' : '' }}>Available</option>
+                        <option value="in_use" {{ request('process') === 'in_use' ? 'selected' : '' }}>In Use</option>
+                        <option value="completed" {{ request('process') === 'completed' ? 'selected' : '' }}>Completed</option>
+                        <option value="out_of_stock" {{ request('process') === 'out_of_stock' ? 'selected' : '' }}>Out Of Stock</option>
+                    </select>
+                </div>
+                <div class="w-48">
+                    <select name="machine_id" data-placeholder="Select Machine" class="select2-basic w-full rounded-xl border-slate-200 text-xs focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">All Machines</option>
+                        @foreach($machines as $machine)
+                            <option value="{{ $machine->id }}" {{ request('machine_id') == $machine->id ? 'selected' : '' }}>{{ $machine->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700 transition-colors">
+                    <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                    Filter
+                </button>
+                @if(request()->anyFilled(['search', 'manufacture_id', 'process', 'machine_id']))
+                    <a href="{{ route('admin.production-reports.sf001.coil-stock') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        Clear
+                    </a>
+                @endif
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -226,6 +332,7 @@
                                     <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                                 </a>
 
+{{-- 
                                 <form action="{{ route('admin.production-reports.sf001.coil-stock.destroy', $coil->id) }}" method="POST" class="inline js-swal-delete-form" data-delete-title="Delete coil stock?" data-delete-text="Are you sure you want to delete coil {{ $coil->coil_no }}?">
                                     @csrf
                                     @method('DELETE')
@@ -233,6 +340,7 @@
                                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                                     </button>
                                 </form>
+--}}
                             </div>
                         </td>
                     </tr>
@@ -784,6 +892,18 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.select2-basic').select2({
+            placeholder: function() {
+                return $(this).data('placeholder');
+            },
+            allowClear: true,
+            width: '100%'
+        });
+    });
+</script>
 <script>
     (() => {
         const rawMachines = @json($machinesForJs);

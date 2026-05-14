@@ -23,7 +23,7 @@ class SF001Controller extends Controller
     /**
      * Display Coil Stock page for SF001.
      */
-    public function coilStock(): View
+    public function coilStock(Request $request): View
     {
         $suppliers = CoilManufacture::query()
             ->where('is_deleted', 0)
@@ -37,7 +37,7 @@ class SF001Controller extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'machine_code', 'coil_id']);
 
-        $coils = CoilStock::query()
+        $query = CoilStock::query()
             ->with([
                 'manufacture:id,name',
                 'machines' => function ($query) {
@@ -47,9 +47,38 @@ class SF001Controller extends Controller
                         ->select('machines.id', 'machines.name', 'machines.machine_code', 'machines.coil_id');
                 },
             ])
-            ->where('is_deleted', 0)
-            ->orderByDesc('id')
-            ->get();
+            ->where('is_deleted', 0);
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('coil_no', 'like', "%{$search}%")
+                    ->orWhere('coil_size', 'like', "%{$search}%")
+                    ->orWhere('thickness', 'like', "%{$search}%")
+                    ->orWhereHas('manufacture', function ($mq) use ($search) {
+                        $mq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->filled('manufacture_id')) {
+            $query->where('manufacture_id', $request->input('manufacture_id'));
+        }
+
+        if ($request->filled('process')) {
+            $query->where('process', $request->input('process'));
+        }
+
+        if ($request->filled('machine_id')) {
+            $machineId = $request->input('machine_id');
+            $query->whereHas('allocations', function ($aq) use ($machineId) {
+                $aq->where('machine_id', $machineId)
+                   ->where('status', 'active');
+            });
+        }
+
+        $coils = $query->orderByDesc('id')->get();
 
         $loadedMachinesByCoil = CoilLoadAllocation::query()
             ->with(['machine:id,name,machine_code'])
@@ -193,6 +222,7 @@ class SF001Controller extends Controller
 
         $allMachines = $coil->machines()
             ->leftJoin('coil_stock as current_coil', 'machines.coil_id', '=', 'current_coil.id')
+            ->leftJoin('coil_manufacture as supplier', 'current_coil.manufacture_id', '=', 'supplier.id')
             ->where('machines.is_deleted', 0)
             ->where('machines.status', 1)
             ->orderBy('machines.name')
@@ -201,7 +231,9 @@ class SF001Controller extends Controller
                 'machines.name', 
                 'machines.machine_code', 
                 'machines.coil_id as current_coil_id',
-                'current_coil.coil_no as current_coil_no'
+                'current_coil.coil_no as current_coil_no',
+                'supplier.name as supplier_name',
+                'current_coil.id as coil_id'
             ]);
 
         $transitions = CoilMachineTrack::query()

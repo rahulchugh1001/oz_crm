@@ -205,6 +205,8 @@
                                         <option value="{{ $machine->id }}" 
                                             @if($machine->current_coil_id) disabled @endif
                                             data-current-coil="{{ $machine->current_coil_no }}"
+                                            data-supplier="{{ $machine->supplier_name }}"
+                                            data-coil-id="{{ $machine->coil_id }}"
                                             data-is-same="{{ $machine->current_coil_id == $coil->id ? '1' : '0' }}"
                                         >
                                             {{ $machine->name }} ({{ $machine->machine_code }})
@@ -642,7 +644,13 @@
                         li.classList.add('ss-disabled');
                         const isSame = opt.dataset.isSame === '1';
                         const currentCoil = opt.dataset.currentCoil || 'Unknown Coil';
-                        const note = isSame ? 'Already loaded with this coil' : `Running: ${currentCoil}`;
+                        const supplier = opt.dataset.supplier || '';
+                        const coilId = opt.dataset.coilId || '';
+                        
+                        let note = isSame ? 'Already loaded with this coil' : `Running: ${currentCoil}`;
+                        if (supplier) note += ` (${supplier})`;
+                        if (coilId) note += ` [${coilId}]`;
+                        
                         const noteClass = isSame ? 'text-indigo-500' : 'text-rose-500';
                         
                         li.innerHTML = `
